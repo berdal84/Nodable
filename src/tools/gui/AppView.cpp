@@ -166,18 +166,15 @@ void AppView::init(App* _app)
     // Setup Platform/Renderer bindings
     if( !ImGui_ImplSDL2_InitForOpenGL(m_sdl_window, m_sdl_gl_context) )
     {
-        LOG_ERROR("tools::App", "Unable to init_ex NFD\n");
-        VERIFY(false, "Unable to flag_initialized NFD");
+        LOG_ERROR("tools::App", "Unable to ImGui_ImplSDL2_InitForOpenGL\n");
     }
     if( !ImGui_ImplOpenGL3_Init(/* default glsl_version*/) )
     {
-        LOG_ERROR("tools::App", "Unable to init_ex NFD\n");
-        VERIFY(false, "Unable to flag_initialized NFD");
+        LOG_ERROR("tools::App", "Unable to ImGui_ImplOpenGL3_Init\n");
     }
     if (NFD_Init() != NFD_OKAY)
     {
-        LOG_ERROR("tools::App", "Unable to init_ex NFD\n");
-        VERIFY(false, "Unable to flag_initialized NFD");
+        LOG_ERROR("tools::App", "Unable to NFD_Init\n");
     }
 
     show_splashscreen = cfg->show_splashscreen_default;
