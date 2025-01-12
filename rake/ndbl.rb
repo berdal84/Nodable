@@ -87,8 +87,10 @@ ndbl_test.link_library |= [
     ndbl_core
 ]
 
-# On GitHub actions, the only runner able to run this is the macos one
-if ENV["NDBL_ENABLE_GUI_TEST"] or (GITHUB_ACTIONS and BUILD_OS_MACOS)
+# On GitHub actions, I couldn't run this test with Linux yet.
+if ENV["NDBL_SKIP_GUI_TEST"]
+    puts "NDBL_SKIP_GUI_TEST is ON, skip GUI specs."
+else
     ndbl_test.sources |= [
         "src/ndbl/gui/Nodable.specs.cpp"
     ]
@@ -96,10 +98,7 @@ if ENV["NDBL_ENABLE_GUI_TEST"] or (GITHUB_ACTIONS and BUILD_OS_MACOS)
         ndbl_gui,
         $text_editor
     ]
-else
-    puts "Nodable GUI tests will be disable, export NDBL_ENABLE_GUI_TEST env var to enable them."
 end
-
 
 #---------------------------------------------------------------------------
 task :ndbl => 'ndbl:build'

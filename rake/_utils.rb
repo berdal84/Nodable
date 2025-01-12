@@ -2,9 +2,8 @@ require "rbconfig"
 require 'json'
 
 VERBOSE            = false
-C_COMPILER         = "clang"
-CXX_COMPILER       = "clang++"
-COMPILER_FOUND     = system "#{C_COMPILER} --version" || false
+C_COMPILER         = "clang-15"
+CXX_COMPILER       = "clang++-15"
 BUILD_OS           = RbConfig::CONFIG['build_os']
 HOST_OS            = RbConfig::CONFIG['host_os']
 TARGET_OS          = RbConfig::CONFIG['target_os']
@@ -16,26 +15,19 @@ OBJ_DIR            = "#{BUILD_DIR}/obj"
 DEP_DIR            = "#{BUILD_DIR}/dep"
 BIN_DIR            = "#{BUILD_DIR}/bin"
 BUILD_OS_LINUX     = BUILD_OS.include?("linux")
-BUILD_OS_MACOS     = BUILD_OS.include?("darwin")
-BUILD_OS_MINGW     = BUILD_OS.include?("mingw")
 GITHUB_ACTIONS     = ENV["GITHUB_ACTIONS"]
-MACOSX_VERSION_MIN = "12.0" # GitHub Actions does not support 11.0
-CMAKE_INSTALL_PREFIX_MINGW = "\"c:\\Program Files (x86)\\nodable-build-dependencies\""
 
 if VERBOSE
     system "echo Ruby version: && ruby -v"
     puts "BUILD_OS_LINUX:     #{BUILD_OS_LINUX}"
-    puts "BUILD_OS_MACOS:     #{BUILD_OS_MACOS}"
-    puts "BUILD_OS_MINGW:     #{BUILD_OS_MINGW}"
-    
     puts "COMPILER_FOUND:     #{COMPILER_FOUND}"
     puts "BUILD_TYPE_RELEASE: #{BUILD_TYPE_RELEASE}"
     puts "BUILD_TYPE_DEBUG:   #{BUILD_TYPE_DEBUG}"
 end
-
+COMPILER_FOUND = system "#{C_COMPILER} --version" || false
 if not COMPILER_FOUND
-    raise "Unable to find #{C_COMPILER}, this compiler is required, please install an retry."
-elsif (not BUILD_OS_LINUX) and (not BUILD_OS_MACOS) and (not BUILD_OS_MINGW)
+    raise "Unable to find #{C_COMPILER} from path."
+elsif (not BUILD_OS_LINUX)
     raise "Unable to determine the operating system"
 end
 
@@ -144,12 +136,7 @@ def build_static_library( target )
 end
 
 def get_binary( target )
-    path = "#{BIN_DIR}/#{target.name}"
-    if BUILD_OS_MINGW
-        path.ext(".exe")
-    else
-        path
-    end
+    "#{BIN_DIR}/#{target.name}"
 end
 
 def build_executable_binary( target )

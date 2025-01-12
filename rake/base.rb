@@ -52,78 +52,13 @@ def new_target_from_base(name, type)
         
     target.linker_flags |= [
         "-L#{BUILD_DIR}/lib",
-        "-v"
+        "-v", #verbose
+        "-lGL", # opengl
+        "-lfreetype -lpng -lz -lbrotlidec -lbz2",
+        "-lSDL2 -lSDL2main",
+        #"-lcpptrace -ldwarf -lz -lzstd -ldl", # https://github.com/jeremy-rifkin/cpptrace?tab=readme-ov-file#use-without-cmake
+        "-lnfd `pkg-config --cflags --libs gtk+-3.0`",
     ]
-
-    if BUILD_OS_LINUX or BUILD_OS_MACOS
-
-        target.linker_flags |= [
-            "-lGL", # opengl
-            "-lfreetype -lpng -lz -lbrotlidec -lbz2",
-            "-lSDL2 -lSDL2main",
-            #"-lcpptrace -ldwarf -lz -lzstd -ldl", # https://github.com/jeremy-rifkin/cpptrace?tab=readme-ov-file#use-without-cmake
-            "-lnfd `pkg-config --cflags --libs gtk+-3.0`",
-        ]
-
-        if BUILD_OS_MACOS
-
-            target.linker_flags |= [
-                "-lnfd -framework CoreFoundation -framework Cocoa"
-            ]
-
-            target.compiler_flags |= [
-                "-mmacosx-version-min=#{MACOSX_VERSION_MIN}",
-            ]
-        end
-
-    elsif BUILD_OS_MINGW
-
-        target.linker_flags |= [
-            "-lopengl32",
-            "-lfreetype",
-            "-lSDL2main -lSDL2",
-            #"-lcpptrace -ldbghelp", # https://github.com/jeremy-rifkin/cpptrace?tab=readme-ov-file#use-without-cmake
-            "-lnfd -lole32 -luuid -lshell32",
-            "-luser32",
-            "-lkernel32",
-            "-lgdi32",
-            "-limm32",
-            "-lshell32",
-            "-Xlinker /SUBSYSTEM:CONSOLE", # LINK : fatal error LNK1561: entry point must be defined (WinMain vs main, here we want to use main)
-            "-Xlinker /NODEFAULTLIB"
-        ]
-
-        # see https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features?view=msvc-170#c-runtime-lib-files
-        if BUILD_TYPE_DEBUG
-            target.linker_flags |= [
-                "-lmsvcrtd",
-                "-lucrtd",
-                "-lvcruntimed",
-                "-llibcpmtd",
-            ]
-        else
-            target.linker_flags |= [
-                "-lmsvcrt",
-                "-lucrt",
-                "-lvcruntime",
-                "-llibcpmt",
-            ]
-        end
-
-        target.includes |= [
-            "#{CMAKE_INSTALL_PREFIX_MINGW}\\include", # windows does not add to the path automatically
-        ]
-
-        target.linker_flags |= [
-            "-L#{CMAKE_INSTALL_PREFIX_MINGW}\\lib", # windows does not add to the path automatically
-        ]
-
-        target.defines |= [
-            "WIN32", # to have an MSVC-like macro 
-            "NOMINMAX", # in WIN32, min and max are macros by default, it creates conflicts with std::min/std::max
-        ] 
-
-    end
 
     target
 end

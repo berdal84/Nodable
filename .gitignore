@@ -51,16 +51,10 @@
 build/Nodable.vcxproj.user
 
 *.db
-
 _screenshots/
-/_build
 /out
 /install
-/out/build/x64-Debug
-/build
-/nodable/install/
-/bin/
-/cmake-**
+/build-**
 /.idea
 .gitconfig
 .cache
