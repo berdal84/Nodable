@@ -1,7 +1,6 @@
 #include "ASTFunctionCall.h"
 
 #include "tools/core/log.h"
-#include "tools/core/memory/memory.h"
 #include "tools/core/reflection/Type.h"
 
 using namespace ndbl;

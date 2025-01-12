@@ -11,7 +11,8 @@ namespace :libs do
         'googletest:install',
         'nfd:install',
         'sdl:install',
-        # then .o
+        'cpptrace:install',
+        # then .o        
         'whereami:build',
         'gl3w:build',
         'imgui:build',
@@ -84,6 +85,11 @@ namespace :libs do
     namespace :sdl do
        sdl = CMakeTarget.new(name: "sdl", path: "libs/SDL" )
        tasks_for_cmake_target( sdl )
+    end
+
+    namespace :cpptrace do
+       cpptrace = CMakeTarget.new(name: "cpptrace", path: "libs/cpptrace" )
+       tasks_for_cmake_target( cpptrace )
     end
 
 end # namespace libs

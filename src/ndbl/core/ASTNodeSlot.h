@@ -1,8 +1,6 @@
 #pragma once
 #include "ASTNodeSlotFlag.h"
 #include "tools/core/Signals.h"
-#include "tools/core/memory/memory.h"
-#include "tools/core/types.h"
 #include <vector>
 
 namespace ndbl

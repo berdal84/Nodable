@@ -9,7 +9,6 @@
 #include "tools/core/log.h"
 #include "tools/core/System.h"
 #include "tools/core/EventManager.h"
-#include "tools/core/memory/memory.h"
 #include "tools/gui/TextureManager.h"
 #include "tools/gui/FontManager.h"
 

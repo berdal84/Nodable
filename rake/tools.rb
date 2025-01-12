@@ -25,7 +25,7 @@ $tools_gui.sources |= FileList[
     "src/tools/gui/geometry/BezierCurveSegment2D.cpp",
     "src/tools/gui/geometry/BoxShape2D.cpp",
     "src/tools/gui/geometry/Rect.cpp",
-    "src/tools/gui/geometry/SpatialNode2D.cpp",
+    "src/tools/gui/geometry/SpatialNode.cpp",
     "src/tools/gui/geometry/TRSTransform2D.cpp",
     "src/tools/gui/Action.cpp",
     "src/tools/gui/ActionManager.cpp",
@@ -57,7 +57,7 @@ tools_test.sources |= FileList[
     "src/tools/core/Delegate.specs.cpp",
     "src/tools/core/string.specs.cpp",
     "src/tools/core/reflection/reflection.specs.cpp",
-    "src/tools/gui/geometry/SpatialNode2D.specs.cpp",
+    "src/tools/gui/geometry/SpatialNode.specs.cpp",
     "src/tools/gui/geometry/Rect.specs.cpp"
 ]
 tools_test.linker_flags |= [

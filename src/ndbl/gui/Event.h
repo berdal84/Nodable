@@ -1,7 +1,6 @@
 #pragma once
 #include <utility>
 
-#include "tools/core/memory/memory.h"
 #include "tools/core/EventManager.h"
 
 #include "ndbl/core/Graph.h"

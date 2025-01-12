@@ -56,7 +56,7 @@ def new_target_from_base(name, type)
         "-lGL", # opengl
         "-lfreetype -lpng -lz -lbrotlidec -lbz2",
         "-lSDL2 -lSDL2main",
-        #"-lcpptrace -ldwarf -lz -lzstd -ldl", # https://github.com/jeremy-rifkin/cpptrace?tab=readme-ov-file#use-without-cmake
+        "-lcpptrace -ldwarf -lz -lzstd -ldl", # https://github.com/jeremy-rifkin/cpptrace?tab=readme-ov-file#use-without-cmake
         "-lnfd `pkg-config --cflags --libs gtk+-3.0`",
     ]
 
