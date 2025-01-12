@@ -29,7 +29,7 @@ jobs:
 
       - name: Install Dependencies
         shell: bash
-        run: rake install --trace
+        run: sudo rake install --trace
 
       - name: Build
         shell: bash
