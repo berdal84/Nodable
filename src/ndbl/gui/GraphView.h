@@ -50,7 +50,7 @@ namespace ndbl
         void                   update(float dt);
         bool                   draw(float dt);
         void                   add_action_to_node_menu(Action_CreateNode* _action);
-        void                   frame_nodes(FrameMode mode );
+        void                   frame_content(FrameMode mode );
         void                   reset(); // unfold and frame the whole graph
         bool                   has_an_active_tool() const;
         Selection&             selection() { return _m_selection; }
@@ -78,7 +78,6 @@ namespace ndbl
         void                   _update(float dt);
         void                   _on_graph_change();
         void                   _on_selection_change(Selection::EventType, Selection::Element );
-        void                   _frame_views(const std::vector<ASTNodeView*>&, const Vec2& pivot );
         void                   _draw_create_node_context_menu(ASTNodeViewContextualMenu&, ASTNodeSlotView* dragged_slotview = nullptr );
         void                   _create_constraints__align_top_recursively(const std::vector<ASTNode*>& follower, ndbl::ASTNode *leader);
         void                   _create_constraints__align_down(ASTNode* follower, const std::vector<ASTNode*>& leader);

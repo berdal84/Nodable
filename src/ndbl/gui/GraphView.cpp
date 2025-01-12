@@ -635,26 +635,6 @@ void GraphView::_update(float dt)
             view->update( dt, ScopeViewFlags_RECURSE );
 }
 
-void GraphView::_frame_views(const std::vector<ASTNodeView*>& _views, const Vec2& pivot)
-{
-    if (_views.empty())
-    {
-        LOG_VERBOSE("GraphView", "Unable to frame views vector. Reason: is empty.\n");
-        return;
-    }
-
-    BoxShape2D views_bbox{ASTNodeView::bounding_rect(_views, WORLD_SPACE) };
-    const Vec2 desired_pivot_pos = _m_shape.pivot( pivot * 0.95f, WORLD_SPACE); // 5%  margin
-    const Vec2 pivot_pos         = views_bbox.pivot(pivot, WORLD_SPACE);
-    const Vec2 delta             = desired_pivot_pos - pivot_pos;
-
-    // apply the translation
-    // TODO: Instead of applying a translation to all views, apply it to all scope views
-    for (ASTNode* node : graph()->nodes() )
-        if ( ASTNodeView* view = node->component<ASTNodeView>() )
-            view->spatial_node()->translate( delta );
-}
-
 void GraphView::_unfold()
 {
     const Config* cfg = get_config();
@@ -672,28 +652,50 @@ void GraphView::add_action_to_node_menu(Action_CreateNode* _action )
     _m_create_node_menu.add_action(_action);
 }
 
-void GraphView::frame_nodes(FrameMode mode )
+void GraphView::frame_content(FrameMode mode )
 {
+    const Vec2  pivot = CENTER;
+    const float pivot_margin_ratio = 0.05f;
+
     switch (mode)
     {
         case FRAME_ALL:
         {
-            if( graph()->is_empty() )
+            ASTScope* root_scope = graph()->root_scope();
+            if ( root_scope == nullptr )
+            {
                 return;
+            }
 
-            std::vector<ASTNodeView*> views;
-            for(ASTNode* node : graph()->nodes())
-                views.push_back(node->component<ASTNodeView>() );
-            _frame_views( views, CENTER );
+            // compute the delta to apply
+            ASTScopeView* scopeview = root_scope->view();
+            const BoxShape2D box{ scopeview->content_rect() };
+            const Vec2 delta = _m_shape.pivot( TOP_LEFT  * ( 1.f - pivot_margin_ratio), WORLD_SPACE) - box.pivot( TOP_LEFT, WORLD_SPACE);
+
+            // apply the delta
+            root_scope->node()
+                      ->component<ASTNodeView>()
+                      ->translate( delta );
             break;
         }
 
         case FRAME_SELECTION_ONLY:
         {
-            if ( _m_selection.contains<ASTNodeView*>())
+            auto selected_nodeviews = _m_selection.collect<ASTNodeView*>();
+            if ( selected_nodeviews.empty() )
             {
-                _frame_views(_m_selection.collect<ASTNodeView*>(), CENTER );
+                return;
             }
+
+            // compute the delta to apply
+            const Rect rect = ASTNodeView::bounding_rect( selected_nodeviews, WORLD_SPACE);
+            const BoxShape2D box{ rect };
+            const Vec2 delta =  _m_shape.pivot( pivot  * ( 1.f - pivot_margin_ratio), WORLD_SPACE) - box.pivot(pivot, WORLD_SPACE);
+
+            // apply the delta
+            for (ASTNode* node : graph()->nodes() )
+                if ( ASTNodeView* view = node->component<ASTNodeView>() )
+                    view->spatial_node()->translate( delta );
             break;
         }
         default:

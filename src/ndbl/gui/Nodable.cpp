@@ -184,7 +184,7 @@ void Nodable::update()
             {
                 auto _event = reinterpret_cast<Event_FrameSelection*>( event );
                 VERIFY(graph_view, "a graph_view is required");
-                graph_view->frame_nodes(_event->data.mode);
+                graph_view->frame_content(_event->data.mode);
                 break;
             }
 
