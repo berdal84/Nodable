@@ -5,21 +5,21 @@ def new_target_from_base(name, type)
 
     target = new_empty_target(name, type)
     target.includes |= FileList[
+        # internal
         "src",
         "src/ndbl",
         "src/tools",
+        # external
         "libs",
-        "libs/whereami/src",
-        "libs/imgui",
-        "libs/imgui",
-        "libs/glm",
-        "libs/gl3w/GL",
+        "libs/freetype/include/",
         "libs/gl3w",
-        "libs/SDL/include",
+        "libs/gl3w/GL",
+        "libs/glm",
         "libs/IconFontCppHeaders",
-        "/usr/include/X11/mesa/GL",
-        "#{BUILD_DIR}/include",
-        "#{BUILD_DIR}/include/freetype2"
+        "libs/imgui",
+        "libs/imgui",
+        "libs/SDL/include",
+        "libs/whereami/src",
     ]
 
     target.asset_folder_path = "assets" # a single folder
@@ -49,15 +49,16 @@ def new_target_from_base(name, type)
         "--std=c++20",
         "-fno-char8_t"
     ]
-        
+       
     target.linker_flags |= [
         "-L#{BUILD_DIR}/lib",
         "-v", #verbose
-        "-lGL", # opengl
-        "-lfreetype -lpng -lz -lbrotlidec -lbz2",
-        "-lSDL2 -lSDL2main",
-        "-lcpptrace -ldwarf -lz -lzstd -ldl", # https://github.com/jeremy-rifkin/cpptrace?tab=readme-ov-file#use-without-cmake
-        "-lnfd `pkg-config --cflags --libs gtk+-3.0`",
+        "-lnfd", #NativeFileDialog
+        "-lcpptrace -ldwarf -lz -lzstd -ldl", # CPPTrace, see https://github.com/jeremy-rifkin/cpptrace?tab=readme-ov-file#use-without-cmake
+        "`pkg-config --libs gl`", #OpenGL           
+        "`pkg-config --cflags --libs gtk+-3.0`", #NativeFileDialog  deps  
+        "`pkg-config --libs freetype2`",
+        "`pkg-config --libs --static sdl2`",
     ]
 
     target

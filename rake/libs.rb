@@ -3,22 +3,25 @@ require_relative "_utils"
 require_relative "_cmake"
 
 task :libs => 'libs:build'
+
 namespace :libs do
 
-    task :build => [
-        # compile .a/.lib first
+    task :install => [
+        'install_system_deps',
+        # compile .a/.lib
         'freetype:install',
         'googletest:install',
         'nfd:install',
         'sdl:install',
-        'cpptrace:install',
-        # then .o        
-        'whereami:build',
-        'gl3w:build',
-        'imgui:build',
-        'lodepng:build',
-        'text_editor:build',
-    ]
+        'cpptrace:install'
+    ]; 
+
+    task :install_system_deps do 
+        if not BUILD_OS_LINUX
+            raise "Your system (#{BUILD_OS}) is not supported by this script"
+        end
+        sh "sudo apt-get update && sudo apt-get install libegl1-mesa-dev libdbus-1-dev libgtk-3-dev"
+    end
 
     namespace :gl3w do
         $gl3w = new_target_from_base("gl3w", TargetType::OBJECTS)
