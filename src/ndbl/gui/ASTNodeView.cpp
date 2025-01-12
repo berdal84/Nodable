@@ -753,39 +753,35 @@ Rect ASTNodeView::get_rect_ex(tools::Space space, NodeViewFlags flags) const
     if( (flags & NodeViewFlag_WITH_RECURSION) == 0 )
         return this->get_rect(space);
 
-    std::vector<Rect> rects;
+    Rect result;
 
     if ( m_view_state.visible() )
-        rects.push_back( this->get_rect(space) );
-
-    auto visit = [&](ASTNode* node)
     {
-        auto* view = node->component<ASTNodeView>();
-        if( !view )
-            return;
-        if( !view->m_view_state.visible() )
-            return;
-        if( view->m_view_state.selected() && (flags & NodeViewFlag_EXCLUDE_UNSELECTED) )
-            return;
-        if( view->m_view_state.pinned() && (flags & NodeViewFlag_WITH_PINNED ) == 0 )
-            return;
-        if( ASTUtils::is_output_node_in_expression(view->node(), this->node()) )
-        {
-            Rect rect = view->get_rect_ex(space, flags);
-            rects.push_back( rect );
-        }
-    };
-
-    if ( ASTScope* _internal_scope = node()->internal_scope() )
-        for (ASTNode* _node : _internal_scope->backbone() ) // TODO: use ASTScopeView's content_rect instead?
-            visit(_node);
-
-    for (ASTNode* _node : node()->inputs() )
-    {
-        visit(_node);
+        result = this->get_rect(space);
     }
 
-    Rect result = Rect::bounding_rect(rects);
+    // TEMPORARILY DISABLED: we need a flag here to disable this type of "INNER_RECURSION"
+    // if ( ASTScope* _internal_scope = node()->internal_scope() )
+    // {
+    //      result = result.bounding_rect(result, _internal_scope->view()->content_rect() );
+    // }
+
+    for (ASTNode* input_node : node()->inputs() )
+    {
+        auto* view = input_node->component<ASTNodeView>();
+        if( !view )
+            continue;
+        if( !view->m_view_state.visible() )
+            continue;
+        if( view->m_view_state.selected() && (flags & NodeViewFlag_EXCLUDE_UNSELECTED) )
+            continue;
+        if( view->m_view_state.pinned() && (flags & NodeViewFlag_WITH_PINNED ) == 0 )
+            continue;
+        if( ASTUtils::is_output_node_in_expression( input_node, node() ) )
+        {
+            result = result.bounding_rect(result,  view->get_rect_ex(space, flags) );
+        }
+    }
 
 #if DEBUG_DRAW
     Rect screen_rect = result;
