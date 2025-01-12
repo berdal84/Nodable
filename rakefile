@@ -1,0 +1,37 @@
+require 'fileutils'
+require 'rake/clean'
+
+require_relative 'rake/_utils'
+require_relative 'rake/libs'
+require_relative 'rake/base'
+require_relative 'rake/tools'
+require_relative 'rake/ndbl'
+
+CLEAN.include [OBJ_DIR, DEP_DIR] # intermediate files
+CLOBBER.include [BUILD_DIR] # final files
+
+task :default => :help
+
+desc "says hello"
+task :help do
+    print("Welcome to Nodable's rakefile.\nFor more info, run: rake --tasks\n")
+end
+
+desc "Install system dependencies"
+task :install => [] do
+    if BUILD_OS_LINUX
+        cmd = "sudo apt-get update && sudo apt-get install libegl1-mesa-dev libdbus-1-dev libgtk-3-dev"
+        puts "We need to escalate privileges to run:"
+        sh cmd or raise "Unable to install packages"
+    elsif BUILD_OS_MACOS
+        sh "brew install mesalib-glw" or raise "Unable to install packages"
+    elsif BUILD_OS_MINGW
+        puts "No system dependencies to install for #{BUILD_OS}"
+    else
+        raise "Your system (#{BUILD_OS}) is not supported by this script"
+    end
+end
+
+task :build => ['libs:build', 'tools:build', 'ndbl:build'] do puts "Build DONE" end
+task :test  => ['tools:test', 'ndbl:test']
+task :pack  => ['ndbl:pack'] do puts "Pack DONE" end

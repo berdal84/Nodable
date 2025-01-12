@@ -12,75 +12,39 @@ on:
 
 jobs:
   build:
-    runs-on: [ubuntu-20.04]
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-2022, macos-13] # macos-12 is deprecated https://github.com/actions/runner-images/issues/10721
+      fail-fast: false # see https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs#handling-failures
+    runs-on: ${{ matrix.os }}
     env:
-      BUILD_TYPE: Release # possible options: MinSizeRel Release, Debug, RelWithDebInfo
-      BUILD_PATH: cmake-build
-      INSTALL_PATH: out
+      # Those are read by rake script
+      BUILD_TYPE:  debug # release|debug
+      VERBOSE: true
     steps:
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install libegl1-mesa-dev libdbus-1-dev libgtk-3-dev
-
       - name: Git Checkout
         uses: actions/checkout@v4
         with:
           submodules: true
 
-      - name: Create Build Environment
-        # Some projects don't allow in-source building, so create a separate build directory
-        # We'll use this as our working directory for all subsequent commands
-        run: cmake -E make_directory ${{env.BUILD_PATH}}
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
 
-      - name: Configure CMake
+      - name: Install Dependencies
         shell: bash
-        working-directory: ${{env.BUILD_PATH}}
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DGITHUB_REF_NAME=${{github.ref_name}} -DGITHUB_SHA=${{github.sha}}
+        run: rake install --trace
 
       - name: Build
-        working-directory: ${{env.BUILD_PATH}}
         shell: bash
-        run: cmake --build . --config ${{env.BUILD_TYPE}} --target install
+        run: rake build --trace
 
-      - name: CTest
-        working-directory: ${{env.BUILD_PATH}}
+      - name: Test
         shell: bash
-        run: ctest -C ${{env.BUILD_TYPE}} --verbose  --output-on-failure
-
-      - name: CPack
-        working-directory: ${{env.BUILD_PATH}}
-        shell: bash
-        run: cpack -C ${{env.BUILD_TYPE}}
+        run: rake test --trace
 
       - name: Binary Artifact
         uses: actions/upload-artifact@v4
         with:
           name: nodable-${{ runner.os }}
-          path: ${{env.INSTALL_PATH}}/app/*
-
-      - name: Package Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: nodable-package-${{ runner.os }}
-          path: |
-            !${{env.INSTALL_PATH}}/package/_CPack_Packages
-            ${{env.INSTALL_PATH}}/package/*.*
-
-  doxygen:
-    runs-on: [ubuntu-20.04]
-    needs: [build]
-    if: ${{ success() }} # see https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
-    steps:
-      - name: Git recursive checkout
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install doxygen
-
-      - name: Generate documentation
-        run: cd docs && doxygen
-
-      - name: Upload documentation artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Nodable-Technical-Documentation
-          path: ${{runner.workspace}}/Nodable/docs/doxygen
+          path: build-${{env.BUILD_TYPE}}/nodable
