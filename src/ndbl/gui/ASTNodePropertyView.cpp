@@ -3,7 +3,6 @@
 #include "tools/core/Component.h"
 #include "ndbl/core/language/Nodlang.h"
 #include "ndbl/core/ASTNode.h"
-#include "ndbl/core/Interpreter.h"
 #include "ASTNodeView.h"
 #include "Config.h"
 
@@ -69,11 +68,10 @@ bool ASTNodePropertyView::draw(ViewDetail _detail)
     if ( !_state.visible() )
         return false;
 
-    bool            changed            = false;
-    ASTNodeProperty*       property           = get_property();
+    bool               changed            = false;
+    ASTNodeProperty*   property           = get_property();
     ASTNode*           node               = get_node();
     ASTNodeType        node_type          = node->type();
-    bool            was_visited_by_interpreter = get_interpreter()->was_visited( node );
 
     /*
      * Handle input visibility
@@ -92,8 +90,6 @@ bool ASTNodePropertyView::draw(ViewDetail _detail)
         this->show |= node_type == ASTNodeType_VARIABLE;
         this->show |= node_type == ASTNodeType_VARIABLE_REF;
 
-        // During debugging we want to see everything if we visited this node
-        this->show |= was_visited_by_interpreter;
         // Always show when connected to a variable
         if ( const ASTNodeSlot* connected_slot = get_connected_slot() )
             switch ( connected_slot->node->type() )

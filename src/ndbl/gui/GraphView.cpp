@@ -14,7 +14,6 @@
 #include "ndbl/core/ASTUtils.h"
 #include "ndbl/core/ASTNodeSlot.h"
 
-#include "ndbl/core/Interpreter.h"
 #include "Config.h"
 #include "Event.h"
 #include "Nodable.h"
@@ -227,11 +226,8 @@ bool GraphView::draw(float dt)
 
     _m_hovered = {};
 
-    Config*         cfg                    = get_config();
-    Interpreter*    interpreter            = get_interpreter();
-
-    ImDrawList*     draw_list              = ImGui::GetWindowDrawList();
-    const bool      enable_edition         = interpreter->is_program_stopped();
+    Config*         cfg       = get_config();
+    ImDrawList*     draw_list = ImGui::GetWindowDrawList();
 
     // Draw Scopes
     std::vector<ASTScope*> scopes_to_draw = graph()->scopes();
@@ -422,34 +418,6 @@ bool GraphView::draw(float dt)
             }
             else
                 _m_hovered = {nodeview};
-        }
-
-        // VM Cursor (scroll to the next node when VM is debugging)
-        if (interpreter->is_debugging())
-            if (interpreter->is_next_node( nodeview->node() ))
-                ImGui::SetScrollHereY();
-    }
-
-    // Virtual Machine cursor
-    if (interpreter->is_program_running())
-    {
-        const ASTNode* node = interpreter->get_next_node();
-        if (const ASTNodeView* view = node->component<ASTNodeView>())
-        {
-            Vec2 left = view->get_rect().left();
-            Vec2 interpreter_cursor_pos = Vec2::round(left);
-            draw_list->AddCircleFilled(interpreter_cursor_pos, 5.0f, ImColor(255, 0, 0));
-
-            Vec2 linePos = interpreter_cursor_pos + Vec2(-10.0f, 0.5f);
-            linePos += Vec2( glm::sin(float(App::get_time()) * 12.0f) * 4.0f, 0.f); // wave
-            float size = 20.0f;
-            float width = 2.0f;
-            ImColor color = ImColor(255, 255, 255);
-
-            // arrow ->
-            draw_list->AddLine(linePos - Vec2(1.f, 0.0f), linePos - Vec2(size, 0.0f), color, width);
-            draw_list->AddLine(linePos, linePos - Vec2(size * 0.5f, -size * 0.5f), color, width);
-            draw_list->AddLine(linePos, linePos - Vec2(size * 0.5f, size * 0.5f), color, width);
         }
     }
 

@@ -11,8 +11,6 @@
 #include "tools/gui/AppView.h"
 
 #include "ndbl/core/ASTUtils.h"
-#include "ndbl/core/Interpreter.h"
-#include "ndbl/core/Register.h"
 #include "ndbl/core/language/Nodlang.h"
 
 #include "Config.h"
@@ -97,14 +95,8 @@ void NodableView::init(Nodable * _app)
     action_manager->new_action<Event_CreateNode>(ICON_FA_FILE " Integer Literal", Shortcut{}, EventPayload_CreateNode{CreateNodeType_LITERAL_INTEGER, create_variable_node_signature<int>() } );
     action_manager->new_action<Event_CreateNode>(ICON_FA_FILE " String Literal", Shortcut{}, EventPayload_CreateNode{CreateNodeType_LITERAL_STRING, create_variable_node_signature<std::string>() } );
     // (to create functions/operators from the API)
-    const Nodlang* language = get_language();
-    VERIFY(language != nullptr, "NodableView: language is null. Did you call init_language() ?");
-    for ( const IInvokable* invokable: language->get_api() )
-    {
-        std::string label;
-        language->serialize_invokable_sig( label, invokable );
-        action_manager->new_action<Event_CreateNode>(label.c_str(), Shortcut{}, EventPayload_CreateNode{CreateNodeType_FUNCTION, invokable->get_sig() } );
-    }
+    // TODO: add a list of preset to create operators/functions
+    // action_manager->new_action<Event_CreateNode>(label.c_str(), Shortcut{}, EventPayload_CreateNode{CreateNodeType_FUNCTION, invokable->get_sig() } );
 
     LOG_VERBOSE("ndbl::NodableView", "init_ex " OK "\n");
 }
@@ -175,7 +167,6 @@ void NodableView::draw()
 
     EventManager*   event_manager   = get_event_manager();
     Config*         cfg             = get_config();
-    Interpreter*    interpreter     = get_interpreter();
     tools::Config*  tools_cfg       = tools::get_config();
     bool            redock_all      = true;
     File*           current_file    = m_app->get_current_file();
@@ -210,7 +201,6 @@ void NodableView::draw()
             ImGui::EndMenu();
         }
 
-        bool interpreter_is_stopped = interpreter->is_program_stopped();
         if (ImGui::BeginMenu("Edit"))
         {
             if (current_file_history)
@@ -219,7 +209,7 @@ void NodableView::draw()
                 ImGuiEx::MenuItem_EventTrigger<Event_Redo>();
                 ImGui::Separator();
             }
-            if (ImGui::MenuItem("Delete Node", "Del.", false, has_selection && interpreter_is_stopped))
+            if (ImGui::MenuItem("Delete Node", "Del.", false, has_selection ))
                 event_manager->dispatch( EventID_DELETE_NODE );
 
             ImGui::EndMenu();
@@ -276,7 +266,7 @@ void NodableView::draw()
         if (ImGui::BeginMenu("Graph"))
         {
 
-            if (ImGui::MenuItem("Reset", NULL, false, interpreter_is_stopped))
+            if (ImGui::MenuItem("Reset"))
                 event_manager->dispatch( EventID_RESET_GRAPH );
 
             ImGuiEx::MenuItem_EventTrigger<Event_ArrangeSelection>(false, has_selection);
@@ -290,28 +280,6 @@ void NodableView::draw()
             ImGui::Separator();
 
             ImGuiEx::MenuItem_EventTrigger<Event_ToggleIsolationFlags>(cfg->isolation);
-
-            ImGui::EndMenu();
-        }
-
-        if ( cfg->has_flags(ConfigFlag_EXPERIMENTAL_INTERPRETER) && ImGui::BeginMenu("Interpreter") )
-        {
-            bool interpreter_is_debugging = interpreter->is_debugging();
-
-            if (ImGui::MenuItem(ICON_FA_PLAY" Run", "", false, interpreter_is_stopped))
-                m_app->run_program();
-
-            if (ImGui::MenuItem(ICON_FA_BUG" Debug", "", false, interpreter_is_stopped))
-                m_app->debug_program();
-
-            if (ImGui::MenuItem(ICON_FA_ARROW_RIGHT" Step Over", "", false, interpreter_is_debugging))
-                m_app->step_over_program();
-
-            if (ImGui::MenuItem(ICON_FA_STOP" Stop", "", false, !interpreter_is_stopped))
-                m_app->stop_program();
-
-            if (ImGui::MenuItem(ICON_FA_UNDO " Reset", "", false, interpreter_is_stopped))
-                m_app->reset_program();
 
             ImGui::EndMenu();
         }
@@ -366,7 +334,6 @@ void NodableView::draw()
                 };
                 checkbox_flag("Hybrid history"       , ConfigFlag_EXPERIMENTAL_HYBRID_HISTORY);
                 checkbox_flag("Multi-Selection"      , ConfigFlag_EXPERIMENTAL_MULTI_SELECTION);
-                checkbox_flag("Interpreter"          , ConfigFlag_EXPERIMENTAL_INTERPRETER);
                 ImGui::EndMenu();
             }
             ImGui::EndMenu();
@@ -432,8 +399,6 @@ void NodableView::draw()
         draw_config_window();
         draw_imgui_config_window();
 
-        if ( cfg->has_flags(ConfigFlag_EXPERIMENTAL_INTERPRETER) )
-            draw_interpreter_window();
         if ( draw_node_properties_window() )
             m_app->get_current_file()->set_text_dirty();
         draw_help_window();
@@ -543,123 +508,6 @@ bool NodableView::draw_node_properties_window()
     }
     ImGui::End();
     return changed;
-}
-
-void NodableView::draw_interpreter_window()
-{
-    Config* cfg = get_config();
-    if (ImGui::Begin( cfg->ui_interpreter_window_label))
-    {
-        auto* interpreter = get_interpreter();
-
-        ImGui::Text("Interpreter:");
-        ImGui::SameLine();
-        ImGuiEx::DrawHelper("%s", "The interpreter is a sort of implementation of \n"
-                                  "an imaginary hardware able to run a set of simple instructions. This is still WIP.");
-        ImGui::Separator();
-
-        const Code *code = interpreter->get_program_asm_code();
-
-        // VM state
-        {
-            ImGui::Indent();
-            ImGui::Text("State:         %s", interpreter->is_program_running() ? "running" : "stopped");
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "When the interpreter is running, you cannot edit the code or the graph.");
-            ImGui::Text("Debug:         %s", interpreter->is_debugging() ? "ON" : "OFF");
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "When debugging is ON, you can run a program step by step.");
-            ImGui::Text("Has program:   %s", code ? "YES" : "NO");
-            if (code) {
-                ImGui::Text("Program over:  %s", !interpreter->is_there_a_next_instr() ? "YES" : "NO");
-            }
-            ImGui::Unindent();
-        }
-
-        // VM Registers
-        ImGui::Separator();
-        ImGui::Text("CPU:");
-        ImGui::SameLine();
-        ImGuiEx::DrawHelper("%s", "This is the interpreter's CPU"
-                                  "\nIt contains few registers to store temporary values "
-                                  "\nlike instruction pointer, last primary_child's value or last comparison result");
-        ImGui::Indent();
-        {
-            ImGui::Separator();
-            ImGui::Text("registers:");
-            ImGui::Separator();
-
-            ImGui::Indent();
-
-            auto draw_register_value = [&](Register _register) {
-                ImGui::Text("%4s: %12s", Register_to_string(_register),
-                            interpreter->read_cpu_register(_register).to_string().c_str());
-            };
-
-            draw_register_value(Register_rax);
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "primary accumulator");
-            draw_register_value(Register_rdx);
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "state register");
-            draw_register_value(Register_eip);
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "instruction pointer");
-
-            ImGui::Unindent();
-        }
-        ImGui::Unindent();
-
-        // Assembly-like code
-        ImGui::Separator();
-        ImGui::Text("Memory:");
-        ImGui::SameLine();
-        ImGuiEx::DrawHelper("%s", "Memory.");
-        ImGui::Separator();
-        {
-            ImGui::Indent();
-
-            ImGui::Text("Bytecode:");
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "The bytecode is the result of the Compilation process."
-                                          "\nAfter source code has_flags been parsed to a syntax tree, "
-                                          "\nthe tree (or graph) is converted by the Compiler to an Assembly-like code.");
-            ImGui::Checkbox("Auto-scroll ?", &m_scroll_to_curr_instr);
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "to scroll automatically to the current instruction");
-            ImGui::Separator();
-            {
-                ImGui::BeginChild("AssemblyCodeChild", ImGui::GetContentRegionAvail(), true);
-
-                if (code) {
-                    auto current_instr = interpreter->get_next_instr();
-                    for (Instruction *each_instr: code->get_instructions()) {
-                        auto str = Instruction::to_string(*each_instr);
-                        if (each_instr == current_instr) {
-                            if (m_scroll_to_curr_instr && interpreter->is_program_running()) {
-                                ImGui::SetScrollHereY();
-                            }
-                            ImGui::TextColored(ImColor(200, 0, 0), ">%s", str.c_str());
-                            ImGui::SameLine();
-                            ImGuiEx::DrawHelper("%s", "This is the next instruction to evaluate");
-                        } else {
-                            ImGui::Text(" %s", str.c_str());
-                        }
-                    }
-                } else {
-                    ImGui::TextWrapped("Nothing loaded, try to compile, run or debug.");
-                    ImGui::SameLine();
-                    ImGuiEx::DrawHelper("%s", "To see a compiled program here you need first to:"
-                                                  "\n- Select a piece of code in the text editor"
-                                                  "\n- Click on \"Compile\" button."
-                                                  "\n- Ensure there is no errors in the status bar (bottom).");
-                }
-                ImGui::EndChild();
-            }
-            ImGui::Unindent();
-        }
-    }
-    ImGui::End();
 }
 
 void NodableView::draw_startup_window(ImGuiID dockspace_id)
@@ -910,51 +758,6 @@ void NodableView::draw_toolbar_window()
         ImGui::PopStyleVar();
         ImGui::PushFont(font_manager->get_font(FontSlot_ToolBtn));
         ImGui::BeginGroup();
-
-        if ( cfg->has_flags(ConfigFlag_EXPERIMENTAL_INTERPRETER) )
-        {
-            Interpreter* interpreter = get_interpreter();
-            bool running             = interpreter->is_program_running();
-            bool debugging           = interpreter->is_debugging();
-            bool stopped             = interpreter->is_program_stopped();
-
-
-            // compile
-            if (ImGui::Button(ICON_FA_DATABASE " compile", button_size) && stopped) {
-                m_app->compile_and_load_program();
-            }
-            ImGui::SameLine();
-
-            // run
-            if (running) ImGui::PushStyleColor(ImGuiCol_Button, cfg->tools_cfg->button_activeColor);
-
-            if (ImGui::Button(ICON_FA_PLAY " run", button_size) && stopped) {
-                m_app->run_program();
-            }
-            if (running) ImGui::PopStyleColor();
-
-            ImGui::SameLine();
-
-            // debug
-            if (debugging) ImGui::PushStyleColor(ImGuiCol_Button, cfg->tools_cfg->button_activeColor);
-            if (ImGui::Button(ICON_FA_BUG " debug", button_size) && stopped) {
-                m_app->debug_program();
-            }
-            if (debugging) ImGui::PopStyleColor();
-            ImGui::SameLine();
-
-            // stepOver
-            if (ImGui::Button(ICON_FA_ARROW_RIGHT " step over", button_size) && interpreter->is_debugging()) {
-                interpreter->debug_step_over();
-            }
-            ImGui::SameLine();
-
-            // stop
-            if (ImGui::Button(ICON_FA_STOP " stop", button_size) && !stopped) {
-                m_app->stop_program();
-            }
-            ImGui::SameLine();
-        }
 
         // reset
         if (ImGui::Button(ICON_FA_UNDO " regen. graph", button_size)) {

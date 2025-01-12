@@ -108,3 +108,11 @@ TEST(TypeDescriptor, is_floating_point)
     EXPECT_FALSE( type::get<u64_t>()->is_floating_point() );
     EXPECT_FALSE( type::get<std::string>()->is_integer() );
 }
+
+TEST(TypeDescriptor, pass_by_ref_argument )
+{
+    FunctionDescriptor f;
+    f.init<double(double &, double)>("=");
+    EXPECT_TRUE(f.arg_at(0).pass_by_ref);
+    EXPECT_FALSE(f.arg_at(1).pass_by_ref);
+}

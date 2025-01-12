@@ -144,24 +144,12 @@ namespace ndbl{
 
         // Language definition -------------------------------------------------------------------------
 
-    private:
-        const tools::IInvokable* find_function(u32_t _hash) const;
     public:
-        const tools::IInvokable* find_function(const char* _signature ) const;           // Find a function by signature as string (ex:   "int multiply(int,int)" )
-        const tools::IInvokable* find_function(const tools::FunctionDescriptor*) const;               // Find a function by signature (strict first, then cast allowed)
-        const tools::IInvokable* find_function_exact(const tools::FunctionDescriptor*) const;         // Find a function by signature (no cast allowed).
-        const tools::IInvokable* find_function_fallback(const tools::FunctionDescriptor*) const;      // Find a function by signature (casts allowed).
-        const tools::IInvokable* find_operator_fct(const tools::FunctionDescriptor*) const;           // Find an operator's function by signature (strict first, then cast allowed)
-        const tools::IInvokable* find_operator_fct_exact(const tools::FunctionDescriptor*) const;     // Find an operator's function by signature (no cast allowed).
-        const tools::IInvokable* find_operator_fct_fallback(const tools::FunctionDescriptor*) const;  // Find an operator's function by signature (casts allowed).
+        bool                   is_operator(const tools::FunctionDescriptor*) const;
         const tools::Operator* find_operator(const std::string& , tools::Operator_t) const;// Find an operator by symbol and type (unary, binary or ternary).
-        const std::vector<const tools::IInvokable*>& get_api()const { return m_functions; } // Get all the functions registered in the language.
-        ASTToken_t               to_literal_token(const tools::TypeDescriptor*) const;
-        const tools::TypeDescriptor*    get_type(ASTToken_t _token)const;                              // Get the type corresponding to a given token_t (must be a type keyword)
-        void                  add_function(const tools::IInvokable*);                     // Adds a new function (regular or operator's implementation).
-        int                   get_precedence(const tools::FunctionDescriptor*)const;                // Get the precedence of a given function (precedence may vary because function could be an operator implementation).
-
-        template<typename T> void load_library(); // Instantiate a library from its type (uses reflection to get all its static methods).
+        ASTToken_t             to_literal_token(const tools::TypeDescriptor*) const;
+        int                    get_precedence(const tools::FunctionDescriptor*)const;                // Get the precedence of a given function (precedence may vary because function could be an operator implementation).
+        const tools::TypeDescriptor* get_type(ASTToken_t _token)const;                              // Get the type corresponding to a given token_t (must be a type keyword)
     private:
         struct {
             std::vector<std::tuple<const char*, ASTToken_t>>                  keywords;
@@ -171,9 +159,6 @@ namespace ndbl{
         } m_definition; // language definition
 
         std::vector<const tools::Operator*>               m_operators;                // the allowed operators (!= implementations).
-        std::vector<const tools::IInvokable*>             m_operators_impl;           // operators' implementations.
-        std::vector<const tools::IInvokable*>             m_functions;                // all the functions (including operator's).
-        std::unordered_map<u32_t , const tools::IInvokable*> m_functions_by_signature; // Functions indexed by signature hash
         std::unordered_map<ASTToken_t, char>                 m_single_char_by_keyword;
         std::unordered_map<ASTToken_t, const char*>          m_keyword_by_token_t;       // token_t to string (ex: Token_t::keyword_double => "double").
         std::unordered_map<std::type_index, const char*>  m_keyword_by_type_id;
@@ -182,18 +167,6 @@ namespace ndbl{
         std::unordered_map<std::type_index, ASTToken_t>      m_token_t_by_type_id;
         std::unordered_map<ASTToken_t, const tools::TypeDescriptor*>   m_type_by_token_t;          // token_t to type. Works only if token_t refers to a type keyword.
     };
-
-    template<typename T>
-    void Nodlang::load_library()
-    {
-        T library; // Libraries are static and this will force static code to run. TODO: add load/release methods
-
-        auto class_desc = tools::type::get_class<T>();
-        for(const tools::IInvokable* method : class_desc->get_statics() )
-        {
-            add_function(method);
-        }
-    }
 
     [[nodiscard]]
     Nodlang* init_language();

@@ -386,14 +386,8 @@ add_library(
     src/ndbl/core/ASTToken.cpp
     src/ndbl/core/ASTTokenRibbon.cpp
     src/ndbl/core/ASTVariable.cpp
-    src/ndbl/core/Interpreter.cpp
     src/ndbl/core/ASTWhileLoop.cpp
-    src/ndbl/core/Code.cpp
-    src/ndbl/core/Compiler.cpp
-    src/ndbl/core/Instruction.cpp
     src/ndbl/core/language/Nodlang.cpp
-    src/ndbl/core/language/Nodlang_biology.cpp
-    src/ndbl/core/language/Nodlang_math.cpp
     src/ndbl/core/NodableHeadless.cpp
     src/ndbl/core/NodableHeadless.h
 )
@@ -424,7 +418,6 @@ add_executable(
     src/ndbl/core/language/Nodlang.parse_function_call.specs.cpp
     src/ndbl/core/language/Nodlang.parse_token.specs.cpp
     src/ndbl/core/language/Nodlang.parse_and_serialize.specs.cpp
-    src/ndbl/core/Interpreter.specs.cpp
 )
 target_link_libraries(test-ndbl-core PUBLIC gtest_main gtest ndbl-core)
 add_test(NAME test_ndbl_core COMMAND test-ndbl-core)
@@ -432,28 +425,6 @@ add_test(NAME test_ndbl_core COMMAND test-ndbl-core)
 # Benchmarks
 add_executable(bench-ndbl-core-Nodlang src/ndbl/core/language/Nodlang.bench.cpp)
 target_link_libraries(bench-ndbl-core-Nodlang PUBLIC benchmark::benchmark ndbl-core)
-
-# 2.1) Nodable CLI
-#-----------------
-
-ndbl_log("Checking ...")
-if (NOT NDBL_CONFIGURED_DIR)
-    ndbl_err("Variable NDBL_CONFIGURED_DIR must be set in main CMakeLists.txt")
-endif ()
-
-add_executable(
-    ndbl-cli
-    src/ndbl/cli/main.cpp
-    src/ndbl/cli/CLI.cpp
-)
-
-target_link_libraries(ndbl-cli PUBLIC ndbl-core)
-set_target_properties(ndbl-cli PROPERTIES POSITION_INDEPENDENT_CODE FALSE)       # required to run well on recent os (ex: ubuntu)
-set_target_properties(ndbl-cli PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${BUILD_PATH}") # fix working directory for visual studio
-set_target_properties(ndbl-cli PROPERTIES OUTPUT_NAME "cli")
-
-# Installation :
-install(TARGETS ndbl-cli DESTINATION . RUNTIME PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE)
 
 # 2.1) Nodable GUI
 #------------------

@@ -32,7 +32,6 @@ namespace ndbl
         ConfigFlag_DRAW_DEBUG_LINES                  = 1 << 0,
         ConfigFlag_EXPERIMENTAL_HYBRID_HISTORY       = 1 << 2,
         ConfigFlag_EXPERIMENTAL_MULTI_SELECTION      = 1 << 3,
-        ConfigFlag_EXPERIMENTAL_INTERPRETER          = 1 << 4,
     };
 
     struct Config

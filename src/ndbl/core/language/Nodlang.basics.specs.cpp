@@ -13,31 +13,6 @@ TEST_F(Language_basics, can_get_add_operator_with_short_identifier )
     EXPECT_TRUE(get_language()->find_operator("+", Operator_t::Binary));
     EXPECT_TRUE(get_language()->find_operator("-", Operator_t::Unary));
 }
-
-TEST_F(Language_basics, can_get_add_operator_with_signature )
-{
-    FunctionDescriptor f;
-    f.init<double(double, double)>("+");
-    EXPECT_TRUE(get_language()->find_operator_fct(&f));
-}
-
-TEST_F(Language_basics, can_get_invert_operator_with_signature )
-{
-    FunctionDescriptor f;
-    f.init<double(double)>("-");
-    EXPECT_TRUE(get_language()->find_operator_fct(&f));
-}
-
-TEST_F(Language_basics, by_ref_assign )
-{
-    FunctionDescriptor f;
-    f.init<double(double &, double)>("=");
-    const IInvokable* invokable  = get_language()->find_operator_fct(&f);
-
-    EXPECT_TRUE(invokable != nullptr);
-    EXPECT_TRUE(invokable->get_sig()->arg_at(0).pass_by_ref);
-}
-
 TEST_F(Language_basics, token_t_to_type)
 {
     EXPECT_EQ(get_language()->get_type(ASTToken_t::keyword_bool)  , type::get<bool>());

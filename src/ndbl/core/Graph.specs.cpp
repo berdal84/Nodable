@@ -83,10 +83,8 @@ TEST_F(Graph_, clear)
 
     FunctionDescriptor  f;
     f.init<int(int, int)>("+");
-    const IInvokable*   invokable = app.get_language()->find_operator_fct_exact(&f);
-    ASTVariable*       variable  = graph->create_variable(type::get<int>(), "var");
 
-    EXPECT_TRUE(invokable != nullptr);
+    ASTVariable* variable  = graph->create_variable(type::get<int>(), "var");
     auto operator_node = graph->create_operator(f);
 
     EXPECT_TRUE(graph->edges().empty() );

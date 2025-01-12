@@ -31,8 +31,6 @@
 #include "ndbl/core/ASTVariable.h"
 #include "ndbl/core/ASTVariableRef.h"
 #include "ndbl/core/ASTWhileLoop.h"
-#include "ndbl/core/language/Nodlang_biology.h"
-#include "ndbl/core/language/Nodlang_math.h"
 
 using namespace ndbl;
 using namespace tools;
@@ -139,12 +137,6 @@ Nodlang::Nodlang(bool _strict)
         ASSERT(std::find(m_operators.begin(), m_operators.end(), op) == m_operators.end());
         m_operators.push_back(op);
     }
-
-    // A.3. Load libraries
-    //---------------------
-
-    load_library<Nodlang_math>();     // contains all operator implementations
-    load_library<Nodlang_biology>();  // a function to convert RNA (library is wip)
 }
 
 Nodlang::~Nodlang()
@@ -1749,111 +1741,9 @@ std::string& Nodlang::serialize_cond_struct(std::string &_out, const ASTIf* if_n
 
 // Language definition ------------------------------------------------------------------------------------------------------------
 
-const IInvokable* Nodlang::find_function(const char* _signature_hint) const
-{
-    if (_signature_hint == nullptr)
-    {
-        return nullptr;
-    }
-
-    return find_function( Hash::hash(_signature_hint) );
-}
-
-const tools::IInvokable* Nodlang::find_function(u32_t _hash) const
-{
-    auto found = m_functions_by_signature.find(_hash);
-    if ( found != m_functions_by_signature.end())
-    {
-        return found->second;
-    }
-    return nullptr;
-}
-
-const tools::IInvokable* Nodlang::find_function(const FunctionDescriptor* _type) const
-{
-    if (!_type)
-    {
-        return nullptr;
-    }
-    auto exact = find_function_exact(_type);
-    if (!exact) return find_function_fallback(_type);
-    return exact;
-}
-
 std::string& Nodlang::serialize_property(std::string& _out, const ASTNodeProperty* _property) const
 {
     return serialize_token(_out, _property->token());
-}
-
-const tools::IInvokable* Nodlang::find_function_exact(const FunctionDescriptor* _other_type) const
-{
-    for(auto* invokable : m_functions)
-        if ( invokable->get_sig()->is_exactly(_other_type) )
-            return invokable;
-    return nullptr;
-}
-
-const tools::IInvokable* Nodlang::find_function_fallback(const FunctionDescriptor* _other_type) const
-{
-    for(auto* invokable : m_functions)
-        if ( invokable->get_sig()->is_compatible(_other_type) )
-            return invokable;
-    return nullptr;
-}
-
-const tools::IInvokable* Nodlang::find_operator_fct_exact(const FunctionDescriptor* _other_type) const
-{
-    if (!_other_type)
-        return nullptr;
-
-    for(auto* invokable : m_operators_impl)
-        if ( invokable->get_sig()->is_exactly(_other_type) )
-            return invokable;
-
-    return nullptr;
-}
-
-const tools::IInvokable* Nodlang::find_operator_fct(const FunctionDescriptor *_type) const
-{
-    if (!_type)
-    {
-        return nullptr;
-    }
-    const tools::IInvokable* invokable = find_operator_fct_exact(_type);
-    if (invokable != nullptr)
-        return invokable;
-    return find_operator_fct_fallback(_type);
-}
-
-const tools::IInvokable* Nodlang::find_operator_fct_fallback(const FunctionDescriptor* _other_type) const
-{
-    if (!_other_type)
-        return nullptr;
-
-    for(auto* invokable : m_operators_impl)
-        if ( invokable->get_sig()->is_compatible(_other_type) )
-            return invokable;
-
-    return nullptr;
-}
-
-void Nodlang::add_function(const tools::IInvokable* _invokable)
-{
-    m_functions.push_back(_invokable);
-
-    std::string type_as_string;
-    serialize_func_sig(type_as_string, _invokable->get_sig());
-
-    // Stops if no operator having the same identifier and argument count is found
-    if (!find_operator(_invokable->get_sig()->get_identifier(), static_cast<Operator_t>(_invokable->get_sig()->arg_count())))
-    {
-        LOG_VERBOSE("Nodlang", "add function: %s (in m_functions)\n", type_as_string.c_str());
-        return;
-    }
-
-    // Register the invokable as an operator implementation
-    m_operators_impl.push_back(_invokable);
-    LOG_VERBOSE("Nodlang", "add operator: %s (in m_functions and m_operator_implems)\n", type_as_string.c_str());
 }
 
 const Operator *Nodlang::find_operator(const std::string &_identifier, Operator_t operator_type) const
@@ -1868,6 +1758,19 @@ const Operator *Nodlang::find_operator(const std::string &_identifier, Operator_
         return *found;
 
     return nullptr;
+}
+
+bool Nodlang::is_operator(const FunctionDescriptor* descriptor) const
+{
+    switch ( descriptor->arg_count() )
+    {
+        case 1:
+            return find_operator( descriptor->name(), tools::Operator_t::Unary );
+        case 2:
+            return find_operator( descriptor->name(), tools::Operator_t::Binary );
+        default:
+            return false;
+    }
 }
 
 std::string& Nodlang::serialize_default_buffer(std::string& _out, ASTToken_t _token_t) const

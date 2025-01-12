@@ -3,7 +3,6 @@
 #include "tools/gui/ImGuiTypeConvert.h"
 #include "ndbl/core/Graph.h"
 #include "ndbl/core/ASTNode.h"
-#include "ndbl/core/Interpreter.h"
 #include "ndbl/core/language/Nodlang.h"
 #include "ndbl/core/ASTUtils.h"
 
@@ -168,12 +167,9 @@ void FileView::draw(float dt)
             auto old_selected_text = m_text_editor.GetSelectedText();
             auto old_line_text = m_text_editor.GetCurrentLineText();
 
-            bool is_running = get_interpreter()->is_program_running();
-            auto allow_keyboard = !is_running &&
-                                  !m_graph_view->has_an_active_tool();
+            auto allow_keyboard = !m_graph_view->has_an_active_tool();
 
-            auto allow_mouse = !is_running &&
-                               !m_graph_view->has_an_active_tool() &&
+            auto allow_mouse = !m_graph_view->has_an_active_tool() &&
                                !ImGui::IsAnyItemHovered() &&
                                !ImGui::IsAnyItemFocused();
 
@@ -344,22 +340,6 @@ void FileView::draw_info_panel() const
     ImGui::Text("Edge count: %zu", m_file->graph()->edges().size());
     ImGui::Unindent();
     ImGui::NewLine();
-
-    // Language browser (list functions/operators)
-    if (ImGui::TreeNode("Language"))
-    {
-        const Nodlang* language = get_language();
-
-        ImGui::Columns(1);
-        for(const IInvokable* invokable : language->get_api() )
-        {
-            std::string name;
-            language->serialize_invokable_sig(name, invokable );
-            ImGui::Text("%s", name.c_str());
-        }
-
-        ImGui::TreePop();
-    }
 
     // Hierarchy
     ASTScope* scope = m_file->graph()->root_scope();

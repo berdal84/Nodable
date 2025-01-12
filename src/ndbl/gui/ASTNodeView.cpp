@@ -14,7 +14,6 @@
 #include "GraphView.h"
 #include "ASTNodeSlotView.h"
 #include "tools/gui/Config.h"
-#include "ndbl/core/Interpreter.h"
 #include "tools/core/math.h"
 
 #ifdef NDBL_DEBUG

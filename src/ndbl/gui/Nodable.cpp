@@ -9,7 +9,6 @@
 #include "ndbl/core/ASTFunctionCall.h"
 #include "ndbl/core/ASTLiteral.h"
 #include "ndbl/core/ASTNodeSlot.h"
-#include "ndbl/core/Interpreter.h"
 #include "ndbl/core/language/Nodlang.h"
 
 #include "commands/Cmd_ConnectEdge.h"
@@ -37,7 +36,6 @@ void Nodable::init()
     m_view = new NodableView();
     m_base_app.init_ex(m_view->get_base_view_handle(), m_config->tools_cfg ); // the pointers are owned by this class, base app just use them.
     m_language          = init_language();
-    m_interpreter       = init_interpreter();
     m_node_factory      = init_node_factory();
     m_view->init(this); // must be last
 
@@ -61,7 +59,7 @@ void Nodable::update()
     m_flagged_to_delete_file.clear();
 
     // 2. Update current file
-    if (m_current_file && !m_interpreter->is_program_running())
+    if (m_current_file)
     {
         m_current_file->set_isolation( m_config->isolation ); // might change
         m_current_file->update();
@@ -80,8 +78,6 @@ void Nodable::update()
         {
             case EventID_RESET_GRAPH:
             {
-                if ( !m_interpreter->is_program_stopped() )
-                    m_interpreter->stop_program();
                 m_current_file->set_graph_dirty();
                 break;
             }
@@ -413,7 +409,6 @@ void Nodable::shutdown()
     }
 
     // shutdown managers & co.
-    shutdown_interpreter(m_interpreter);
     shutdown_node_factory(m_node_factory);
     shutdown_language(m_language);
     m_view->shutdown();
@@ -500,73 +495,9 @@ void Nodable::close_file( File* _file)
     }
 }
 
-bool Nodable::compile_and_load_program() const
-{
-    if (!m_current_file)
-    {
-        return false;
-    }
-
-    Compiler compiler{};
-    auto asm_code = compiler.compile_syntax_tree( m_current_file->graph() );
-    if (!asm_code)
-    {
-        return false;
-    }
-
-    m_interpreter->release_program();
-    bool loaded = m_interpreter->load_program(asm_code);
-    return loaded;
-}
-
-void Nodable::run_program()
-{
-    if (compile_and_load_program() )
-    {
-        m_interpreter->run_program();
-    }
-}
-
-void Nodable::debug_program()
-{
-    if (compile_and_load_program() )
-    {
-        m_interpreter->debug_program();
-    }
-}
-
-void Nodable::step_over_program()
-{
-    m_interpreter->debug_step_over();
-    GraphView* graph_view = m_current_file->graph()->component<GraphView>();
-
-    if (!m_interpreter->is_there_a_next_instr() )
-    {
-        graph_view->selection().clear();
-        return;
-    }
-
-    const ASTNode* next_node = m_interpreter->get_next_node();
-    if ( !next_node )
-        return;
-
-    graph_view->selection().clear();
-    graph_view->selection().append(next_node->component<ASTNodeView>() );
-}
-
-void Nodable::stop_program()
-{
-    m_interpreter->stop_program();
-}
-
-void Nodable::reset_program()
+void Nodable::reset_current_graph()
 {
     if(!m_current_file) return;
-
-    if (m_interpreter->is_program_running() )
-    {
-        m_interpreter->stop_program();
-    }
 
     // n.b. nodable is still text oriented
     m_current_file->set_graph_dirty();

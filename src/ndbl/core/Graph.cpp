@@ -590,13 +590,9 @@ ASTNode* Graph::create_node(CreateNodeType _type, const FunctionDescriptor* _sig
         case CreateNodeType_FUNCTION:
         {
             VERIFY(_signature != nullptr, "_signature is expected when dealing with functions or operators");
-            Nodlang* language = get_language();
-            // Currently, we handle operators and functions the exact same way
-            const FunctionDescriptor* signature = language->find_function(_signature)->get_sig();
-            bool is_operator = language->find_operator_fct( signature ) != nullptr;
-            if ( is_operator )
-                return create_operator( *signature, scope );
-            return create_function( *signature, scope );
+            if ( get_language()->is_operator( _signature ) )
+                return create_operator( *_signature, scope );
+            return create_function( *_signature, scope );
         }
         default:
             VERIFY(false, "Unhandled CreateNodeType.");
