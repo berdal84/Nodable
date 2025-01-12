@@ -25,3 +25,6 @@
 [submodule "libs/glm"]
 	path = libs/glm
 	url = https://github.com/g-truc/glm.git
+[submodule "libs/cpptrace"]
+	path = libs/cpptrace
+	url = https://github.com/jeremy-rifkin/cpptrace.git
