@@ -21,7 +21,6 @@
 #include "History.h"
 #include "Nodable.h"
 #include "ASTNodeView.h"
-#include "build_info.h"
 
 using namespace ndbl;
 using namespace tools;
@@ -121,9 +120,6 @@ void NodableView::_on_draw_splashscreen_content()
     const char *credit = "by Berdal84";
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(credit).x);
     ImGui::TextWrapped("%s", credit);
-
-    // build version
-    ImGui::TextWrapped("%s", BuildInfo::version);
 
     // close on left/rightmouse btn click
     if (ImGui::IsMouseClicked(0) || ImGui::IsMouseClicked(1))
@@ -570,8 +566,6 @@ void NodableView::draw_startup_window(ImGuiID dockspace_id)
             ImGui::PopFont();
 
             ImGui::NewLine();
-            ImGui::Separator();
-            ImGui::TextColored(ImVec4(0, 0, 0, 0.30f), "%s", BuildInfo::version);
             ImGui::Unindent();
         }
         ImGui::EndChild();

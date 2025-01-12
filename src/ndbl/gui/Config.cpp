@@ -1,5 +1,4 @@
 #include "Config.h"
-#include "build_info.h"
 #include "tools/gui/Color.h"
 #include "tools/gui/Config.h"
 
@@ -183,8 +182,7 @@ ndbl::Config::Config(tools::Config* _tools_cfg)
     tools_cfg->font_manager.defaults[FontSlot_ToolBtn]   = k_tool;
     tools_cfg->font_manager.subsamples                   = 1.0f;
     tools_cfg->font_manager.icon                         = {"Icons", "fonts/fa-solid-900.ttf" };
-    tools_cfg->app_default_title = BuildInfo::version_extended;
-
+    tools_cfg->app_default_title = NDBL_APP_NAME " " NDBL_BUILD_REF " - Built " __DATE__ " at " __TIME__;
 }
 
 void ndbl::Config::reset()

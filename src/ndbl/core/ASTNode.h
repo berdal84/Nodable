@@ -37,7 +37,6 @@ namespace ndbl
 	{
     public:
         DECLARE_REFLECT_virtual
-        POOL_REGISTRABLE(ASTNode)
         friend class ASTScope;
         friend class Graph;
         friend class ASTNodeFactory;
