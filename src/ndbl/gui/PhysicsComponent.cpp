@@ -201,11 +201,14 @@ void ViewConstraint::rule_distribute_sub_scope_views(float dt)
     //       connects a node to a branch, or they must be attached to a separate node.
     //
     std::vector<ASTScopeView*> sub_scope_view;
-    for(ASTNode* _child_node : leader[0]->node()->internal_scope()->child() )
-        if ( ASTScope* _child_scope = _child_node->internal_scope() )
-            if ( !_child_scope->view()->pinned() )
-                if ( _child_scope->view()->must_be_draw() )
-                    sub_scope_view.push_back(_child_scope->view() );
+    for( ASTNodeView* _follower : follower )
+    {
+        ASTScopeView* _follower_scopeview = _follower->internal_scopeview();
+        ASSERT(_follower_scopeview);
+        if ( !_follower_scopeview->pinned() )
+            if ( _follower_scopeview->must_be_draw() )
+                sub_scope_view.push_back( _follower_scopeview );
+    }
 
     // get all content rects
     std::vector<Rect> new_content_rect;

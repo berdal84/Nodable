@@ -165,8 +165,8 @@ void GraphView::_handle_change_scope(ASTNode* node, ASTScope* old_scope, ASTScop
     VERIFY(nodeview, "a nodeview must be present since we are in a GraphView");
 
     // Un-parent from old scope's spatial node
-    if( ASTScopeView* _scopeview = old_scope->view() )
-        _scopeview->spatial_node()->remove_child( nodeview->spatial_node() );
+    if( auto _parent = nodeview->spatial_node()->parent() )
+        _parent->remove_child( nodeview->spatial_node() );
 
     // Parent to new scope or default to graph's spatial node
     if( ASTScopeView* _scopeview = new_scope->view() )
@@ -534,11 +534,19 @@ void GraphView::_create_constraints(ASTScope* scope )
     // distribute child scopes
     if ( ASTUtils::is_conditional(scope->node()) )
     {
+        auto* switch_behavior = dynamic_cast<ASTSwitchBehavior*>( scope->node() ); // OMG, dynamic cast! we need to erase this class at some point...
+
         ViewConstraint constraint;
         constraint.name          = "Align ScopeView partitions";
         constraint.rule          = &ViewConstraint::rule_distribute_sub_scope_views;
         constraint.leader        = {scope->entity()->component<ASTNodeView>()};
         constraint.leader_pivot  = BOTTOM;
+        for(Branch i = 0; i < switch_behavior->branch_count(); ++i )
+        {
+            auto branch = switch_behavior->branch_out(i);
+            ASTNodeView* nodeview = branch->node->component<ASTNodeView>();
+            constraint.follower.push_back( nodeview );
+        }
         constraint.gap_size      = Size_XL;
         constraint.gap_direction = BOTTOM;
         scope->entity()->component<PhysicsComponent>()->add_constraint(constraint);

@@ -643,7 +643,6 @@ ASTNode* Nodlang::parse_scoped_block(ASTScope* parent_scope, ASTNodeSlot* flow_o
         LOG_VERBOSE("Parser", KO "Expecting close root_scope token\n");
     }
 
-    ASSERT(node->internal_scope()->empty());
     _state.graph()->find_and_destroy(node);
     _state.rollback();
     LOG_VERBOSE("Parser", KO "Scoped block parsed\n");

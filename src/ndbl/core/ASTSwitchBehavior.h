@@ -5,7 +5,8 @@
 
 namespace ndbl
 {
-    enum Branch : size_t
+    typedef size_t Branch;
+    enum Branch_ : size_t
     {
         Branch_FALSE = 0,
         Branch_TRUE  = 1,
@@ -22,6 +23,7 @@ namespace ndbl
         void                 init(ASTNode* node, size_t branch_count);
         ASTNodeSlot*         branch_out(Branch branch)                       { ASSERT(branch < m_branch_count); return m_branch_slot[branch]; }
         const ASTNodeSlot*   branch_out(Branch branch) const                 { ASSERT(branch < m_branch_count); return m_branch_slot[branch]; }
+        size_t               branch_count() const                            { return m_branch_count; }
         const ASTNode*       condition(Branch branch = Branch_TRUE) const    { ASSERT(Branch_FALSE < branch && branch < m_branch_count); return m_condition_in[branch - 1]->first_adjacent_node(); }
         ASTNode*             condition(Branch branch = Branch_TRUE)          { ASSERT(Branch_FALSE < branch && branch < m_branch_count); return m_condition_in[branch - 1]->first_adjacent_node(); }
         const ASTNodeSlot*   condition_in(Branch branch = Branch_TRUE) const { ASSERT(Branch_FALSE < branch && branch < m_branch_count); return m_condition_in[branch - 1]; }
