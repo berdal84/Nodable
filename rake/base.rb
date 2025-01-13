@@ -11,16 +11,17 @@ def new_target_from_base(name, type)
         "src/tools",
         # external
         "libs",
-        "libs/freetype/include/",
         "libs/gl3w",
         "libs/gl3w/GL",
         "libs/glm",
         "libs/IconFontCppHeaders",
         "libs/imgui",
         "libs/imgui",
-        "libs/SDL/include",
         "libs/whereami/src",
-        "libs/cpptrace/include"
+        "libs/cpptrace/include",
+        "/usr/include",
+        "/usr/include/freetype2", # imgui related (include is not relative to a PATH)
+        "/usr/include/SDL2", # same
     ]
 
     target.asset_folder_path = "assets" # a single folder
@@ -55,7 +56,7 @@ def new_target_from_base(name, type)
     target.linker_flags |= [
         "-lcpptrace -ldwarf -lz -lzstd -ldl", # CPPTrace, see https://github.com/jeremy-rifkin/cpptrace?tab=readme-ov-file#use-without-cmake
         "`pkg-config --cflags --libs gtk+-3.0`", #NativeFileDialog  deps  
-        "`pkg-config --libs freetype2`",
+        "`pkg-config --libs freetype2`"
     ]
 
     if PLATFORM_DESKTOP
