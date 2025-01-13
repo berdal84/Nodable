@@ -38,10 +38,17 @@ $whereami.sources |= FileList[
 namespace :libs do
 
     if PLATFORM_DESKTOP
-        task :build => 'whereami:build'
+        task :build => [
+            'whereami:build',
+            'gl3w:build'
+        ]
     end
 
-    task :build => ['gl3w:build', 'text_editor:build', 'lodepng:build', 'imgui:build']
+    task :build => [
+        'text_editor:build',
+        'lodepng:build',
+        'imgui:build'
+    ]
 
     namespace :gl3w do
         tasks_for_target( $gl3w )

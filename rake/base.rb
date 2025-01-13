@@ -49,19 +49,18 @@ def new_target_from_base(name, type)
     end
 
     target.cxx_flags |= [
-        "--std=c++20",
+        "-std=c++20",
         "-fno-char8_t",
     ]
        
     target.linker_flags |= [
         "-lcpptrace -ldwarf -lz -lzstd -ldl", # CPPTrace, see https://github.com/jeremy-rifkin/cpptrace?tab=readme-ov-file#use-without-cmake
-        "`pkg-config --cflags --libs gtk+-3.0`", #NativeFileDialog  deps  
         "`pkg-config --libs freetype2`"
     ]
 
     if PLATFORM_DESKTOP
         target.linker_flags |= [
-            "-lnfd",
+            "-lnfd `pkg-config --cflags --libs gtk+-3.0`", #NativeFileDialog  deps
             "`pkg-config --libs --static sdl2`",
             "`pkg-config --libs gl`", #OpenGL
         ] # NativeFileDialog
