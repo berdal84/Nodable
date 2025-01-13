@@ -4,27 +4,29 @@ require 'json'
 VERBOSE            = false
 BUILD_OS           = RbConfig::CONFIG['build_os']
 HOST_OS            = RbConfig::CONFIG['host_os']
-TARGET             = (ENV["TARGET"] || "desktop").downcase
+PLATFORM           = (ENV["PLATFORM"] || "desktop").downcase
+PLATFORM_DESKTOP   = PLATFORM == "desktop"
+PLATFORM_WEB       = PLATFORM == "web"
 BUILD_TYPE         = (ENV["BUILD_TYPE"] || "release").downcase
 BUILD_TYPE_RELEASE = BUILD_TYPE == "release"
 BUILD_TYPE_DEBUG   = BUILD_TYPE != "release"
-BUILD_DIR          = ENV["BUILD_DIR"] || "build-#{TARGET}-#{BUILD_TYPE}"
+BUILD_DIR          = ENV["BUILD_DIR"] || "build-#{PLATFORM}-#{BUILD_TYPE}"
 OBJ_DIR            = "#{BUILD_DIR}/obj"
 DEP_DIR            = "#{BUILD_DIR}/dep"
 BIN_DIR            = "#{BUILD_DIR}/bin"
 BUILD_OS_LINUX     = BUILD_OS.include?("linux")
 GITHUB_ACTIONS     = ENV["GITHUB_ACTIONS"]
-C_COMPILER         = TARGET == "desktop" ? "clang-15" : "emcc"
-CXX_COMPILER       = TARGET == "desktop" ? "clang++-15" : "emcc"
+C_COMPILER         = PLATFORM_DESKTOP ? "clang-15" : "emcc"
+CXX_COMPILER       = PLATFORM_DESKTOP ? "clang++-15" : "emcc"
 
-if TARGET != "desktop" && TARGET != "web"
-    raise "Unexpected value for TARGET, use desktop|web";
+if !PLATFORM_DESKTOP && !PLATFORM_WEB
+    raise "Unexpected value for PLATFORM, use PLATFORM=desktop|web";
 end
 
 if VERBOSE
     system "echo Ruby version: && ruby -v"
     puts "BUILD_OS_LINUX:     #{BUILD_OS_LINUX}"
-    puts "TARGET:             #{TARGET}"
+    puts "PLATFORM:           #{PLATFORM}"
     puts "COMPILER_FOUND:     #{COMPILER_FOUND}"
     puts "BUILD_TYPE_RELEASE: #{BUILD_TYPE_RELEASE}"
     puts "BUILD_TYPE_DEBUG:   #{BUILD_TYPE_DEBUG}"

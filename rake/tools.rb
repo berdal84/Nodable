@@ -18,7 +18,7 @@ $tools_core.sources |= FileList[
     "src/tools/core/TaskManager.cpp"
 ]
 
-if TARGET == "desktop"
+if PLATFORM_DESKTOP
     $tools_core.link_library |= [$whereami]
 end
 
@@ -43,7 +43,7 @@ $tools_gui.sources |= FileList[
 ]
 $tools_gui.link_library |= [$lodepng, $imgui]
 
-if TARGET == "desktop"
+if PLATFORM_DESKTOP
     $tools_gui.link_library |= [$gl3w]
 end
 

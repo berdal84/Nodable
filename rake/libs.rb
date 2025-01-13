@@ -23,7 +23,7 @@ namespace :libs do
 
         sh "sudo apt-get update && sudo apt-get install libegl1-mesa-dev libdbus-1-dev libgtk-3-dev"
     
-        if TARGET == "web"
+        if PLATFORM_WEB
             # Download and install the latest SDK tools.
             sh "libs/emsdk/emsdk install latest"
 

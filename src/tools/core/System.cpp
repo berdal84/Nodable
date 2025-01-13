@@ -5,7 +5,7 @@
 
 using namespace tools;
 
-#if TARGET_DESKTOP
+#if PLATFORM_DESKTOP
 int run_command(const char* command)
 {
     int exit_code = ::system(command);
@@ -31,7 +31,7 @@ void System::clear_console() /* cf: https://stackoverflow.com/questions/6486289/
     }
 }
 
-#elif TARGET_WEB
+#elif PLATFORM_WEB
 #include <emscripten.h>
 
 EM_JS(void, call_clear_console, (), {

@@ -31,7 +31,7 @@ def new_target_from_base(name, type)
         "NDBL_APP_NAME=\\\"nodable\\\"",
         "NDBL_BUILD_REF=\\\"local\\\"",
         "CPPTRACE_STATIC_DEFINE", #  error LNK2019: unresolved external symbol "__declspec(dllimport) public: void __cdecl cpptrace::stacktrace::print_with_snippets...
-        "TARGET_#{TARGET.upcase}"
+        "PLATFORM_#{PLATFORM.upcase}"
     ]
 
     if BUILD_TYPE_RELEASE
@@ -60,10 +60,16 @@ def new_target_from_base(name, type)
         "`pkg-config --libs --static sdl2`",
     ]
 
-    if TARGET == "desktop"
+    if PLATFORM_DESKTOP
        target.linker_flags |= [
             "-lnfd"
        ] # NativeFileDialog
+    elsif PLATFORM_WEB
+        target.linker_flags |= [
+            "-s USE_SDL=2",
+            "-s MIN_WEBGL_VERSION=2",
+            "-s MAX_WEBGL_VERSION=2",
+       ]
     end
 
     if BUILD_TYPE_RELEASE
