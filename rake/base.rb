@@ -54,16 +54,16 @@ def new_target_from_base(name, type)
        
     target.linker_flags |= [
         "-lcpptrace -ldwarf -lz -lzstd -ldl", # CPPTrace, see https://github.com/jeremy-rifkin/cpptrace?tab=readme-ov-file#use-without-cmake
-        "`pkg-config --libs gl`", #OpenGL           
         "`pkg-config --cflags --libs gtk+-3.0`", #NativeFileDialog  deps  
         "`pkg-config --libs freetype2`",
-        "`pkg-config --libs --static sdl2`",
     ]
 
     if PLATFORM_DESKTOP
-       target.linker_flags |= [
-            "-lnfd"
-       ] # NativeFileDialog
+        target.linker_flags |= [
+            "-lnfd",
+            "`pkg-config --libs --static sdl2`",
+            "`pkg-config --libs gl`", #OpenGL
+        ] # NativeFileDialog
     elsif PLATFORM_WEB
         target.linker_flags |= [
             "-s USE_SDL=2",
