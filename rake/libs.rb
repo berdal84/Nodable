@@ -20,7 +20,21 @@ namespace :libs do
         if not BUILD_OS_LINUX
             raise "Your system (#{BUILD_OS}) is not supported by this script"
         end
+
         sh "sudo apt-get update && sudo apt-get install libegl1-mesa-dev libdbus-1-dev libgtk-3-dev"
+    
+        if BUILD_TARGET_WEB
+            # Download and install the latest SDK tools.
+            system "libs/emsdk/emsdk install latest", verbose: false
+
+            # Make the "latest" SDK "active" for the current user. (writes .emscripten file)
+            system "libs/emsdk/emsdk activate latest", verbose: false
+
+            # Activate PATH and other environment variables in the current terminal
+            system "source libs/emsdk/emsdk_env.sh", verbose: false
+
+            system "emcc --version", verbose: false or raise "EMCC not found, install failed."
+        end
     end
 
     namespace :gl3w do

@@ -7,6 +7,8 @@ CXX_COMPILER       = "clang++-15"
 BUILD_OS           = RbConfig::CONFIG['build_os']
 HOST_OS            = RbConfig::CONFIG['host_os']
 BUILD_TARGET       = (ENV["BUILD_TARGET"] || "desktop").downcase
+BUILD_TARGET_DESKTOP = BUILD_TARGET == "desktop"
+BUILD_TARGET_WEB   = BUILD_TARGET == "web"
 BUILD_TYPE         = (ENV["BUILD_TYPE"] || "release").downcase
 BUILD_TYPE_RELEASE = BUILD_TYPE == "release"
 BUILD_TYPE_DEBUG   = BUILD_TYPE != "release"
