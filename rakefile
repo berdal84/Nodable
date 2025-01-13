@@ -25,6 +25,7 @@ task :install => [
 ];
 task :build => ['libs:build', 'tools:build', 'ndbl:build'] do puts "Build DONE" end
 task :test  => ['tools:test', 'ndbl:test']
+task :run   => ['ndbl:app:run']
 
 task :update_system do
     if not BUILD_OS_LINUX
