@@ -12,10 +12,16 @@ on:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        build_target: [desktop]
+        build_type: [release]        
     runs-on: [ubuntu-22.04]
     env:
       # Those are read by rake script
-      BUILD_TYPE:  debug # release|debug
+      BUILD_TYPE: ${{ matrix.build_type }}  # release|debug
+      BUILD_TARGET: ${{ matrix.build_target }} # dektop|web
+      BUILD_DIR: ./out
       VERBOSE: true
     steps:
       - name: Git Checkout
@@ -29,7 +35,7 @@ jobs:
 
       - name: Install Dependencies
         shell: bash
-        run: sudo rake install --trace
+        run: rake install --trace
 
       - name: Build
         shell: bash
@@ -42,5 +48,5 @@ jobs:
       - name: Binary Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nodable-${{ runner.os }}
-          path: build-${{env.BUILD_TYPE}}/bin/
+          name: nodable-${{ matrix.build_target }}-${{ matrix.build_type }}
+          path: ./out/bin/

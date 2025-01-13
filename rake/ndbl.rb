@@ -92,7 +92,6 @@ namespace :ndbl do
     task :rebuild => ['clean', 'build']
     task :build => ['core:build', 'gui:build', 'app:build', 'test:build']
     task :test  => ['test:run']
-    task :pack  => ['app:pack']
 
     namespace :core do
         tasks_for_target( ndbl_core )
