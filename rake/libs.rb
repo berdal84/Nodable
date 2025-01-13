@@ -25,15 +25,10 @@ namespace :libs do
     
         if TARGET == "web"
             # Download and install the latest SDK tools.
-            system "libs/emsdk/emsdk install latest"
+            sh "libs/emsdk/emsdk install latest"
 
             # Make the "latest" SDK "active" for the current user. (writes .emscripten file)
-            system "libs/emsdk/emsdk activate latest"
-
-            # Activate PATH and other environment variables in the current terminal
-            system "source libs/emsdk/emsdk_env.sh"
-
-            system "emcc --version" or raise "EMCC not found, install failed."
+            sh "libs/emsdk/emsdk activate latest"
         end
     end
 

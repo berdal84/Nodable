@@ -35,7 +35,7 @@ jobs:
 
       - name: Install Dependencies
         shell: bash
-        run: rake install --trace
+        run: rake install --trace && source "libs/emsdk/emsdk_env.sh"
 
       - name: Build
         shell: bash
