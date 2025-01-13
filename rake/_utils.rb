@@ -2,8 +2,6 @@ require "rbconfig"
 require 'json'
 
 VERBOSE            = false
-C_COMPILER         = "clang-15"
-CXX_COMPILER       = "clang++-15"
 BUILD_OS           = RbConfig::CONFIG['build_os']
 HOST_OS            = RbConfig::CONFIG['host_os']
 TARGET             = (ENV["TARGET"] || "desktop").downcase
@@ -16,6 +14,8 @@ DEP_DIR            = "#{BUILD_DIR}/dep"
 BIN_DIR            = "#{BUILD_DIR}/bin"
 BUILD_OS_LINUX     = BUILD_OS.include?("linux")
 GITHUB_ACTIONS     = ENV["GITHUB_ACTIONS"]
+C_COMPILER         = TARGET == "desktop" ? "clang-15" : "emcc"
+CXX_COMPILER       = TARGET == "desktop" ? "clang++-15" : "emcc"
 
 if TARGET != "desktop" && TARGET != "web"
     raise "Unexpected value for TARGET, use desktop|web";
