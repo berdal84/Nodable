@@ -27,7 +27,7 @@ def new_target_from_base(name, type)
     target.defines |= [
         "IMGUI_USER_CONFIG=\\\"tools/gui/ImGuiExConfig.h\\\"",
         "NDBL_APP_ASSETS_DIR=\\\"#{target.asset_folder_path}\\\"",
-        "NDBL_APP_NAME=\\\"#{target.name}\\\"",
+        "NDBL_APP_NAME=\\\"nodable\\\"",
         "NDBL_BUILD_REF=\\\"local\\\"",
         "CPPTRACE_STATIC_DEFINE", #  error LNK2019: unresolved external symbol "__declspec(dllimport) public: void __cdecl cpptrace::stacktrace::print_with_snippets...
     ]
