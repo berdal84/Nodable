@@ -40,7 +40,7 @@ void System::clear_console() /* cf: https://stackoverflow.com/questions/6486289/
 #if defined _WIN32
     const char* command = "cls";
 #elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__) || defined (__APPLE__)
-    const char* command = "clear";
+    const char* command = "reset";
 #endif
-    if(std::system(command)) LOG_ERROR("tools::system::console", "Unable to clear console");
+    if(std::system(command)) LOG_ERROR("tools::system::console", "Unable to reset console");
 }

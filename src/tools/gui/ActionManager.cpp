@@ -21,7 +21,7 @@ ActionManager* tools::init_action_manager()
 
 ActionManager* tools::get_action_manager()
 {
-    VERIFY(g_action_manager != nullptr, "event manager can't be found. Did you call reset_name ?");
+    VERIFY(g_action_manager != nullptr, "event manager can't be found. Did you call set_name ?");
     return g_action_manager;
 }
 

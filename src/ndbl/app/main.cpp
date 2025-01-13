@@ -1,5 +1,4 @@
 #include "ndbl/gui/Nodable.h"
-#include "tools/core/memory/memory.h"
 #include "tools/core/TryCatch.h"
 
 using namespace tools;

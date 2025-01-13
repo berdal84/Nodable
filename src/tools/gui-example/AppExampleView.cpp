@@ -4,9 +4,9 @@
 using namespace tools;
 
 // Define window names once here
-#define CENTER_WINDOW "Center View"
-#define RIGHT_WINDOW  "Right View"
-#define TOP_WINDOW    "Top View"
+constexpr const char* CENTER_WINDOW = "Center View";
+constexpr const char* RIGHT_WINDOW  = "Right View";
+constexpr const char* TOP_WINDOW    = "Top View";
 
 void AppExampleView::init(AppExample *_app)
 {
@@ -17,8 +17,8 @@ void AppExampleView::init(AppExample *_app)
     m_base_view.set_title("AppExample default title - (you can change this title from " __FILE__ ")");
 
     // Change behavior by connecting signals with our custom methods
-    CONNECT(m_base_view.on_draw_splashscreen_content, &AppExampleView::_draw_splashscreen_content);
-    CONNECT(m_base_view.on_reset_layout,              &AppExampleView::_reset_layout);
+    m_base_view.signal_draw_splashscreen_content.connect<&AppExampleView::_draw_splashscreen_content>(this);
+    m_base_view.signal_reset_layout.connect<&AppExampleView::_reset_layout>(this);
 }
 
 void AppExampleView::_draw_splashscreen_content()
@@ -40,8 +40,8 @@ void AppExampleView::_reset_layout()
 
 void AppExampleView::shutdown()
 {
-    DISCONNECT(m_base_view.on_draw_splashscreen_content);
-    DISCONNECT(m_base_view.on_reset_layout);
+    assert(m_base_view.signal_draw_splashscreen_content.disconnect<&AppExampleView::_draw_splashscreen_content>(this));
+    assert(m_base_view.signal_reset_layout.disconnect<&AppExampleView::_reset_layout>(this));
 
     // Here we undo what we did in init()
     m_base_view.shutdown(); // base view will release its resources

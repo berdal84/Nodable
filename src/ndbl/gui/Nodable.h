@@ -13,9 +13,7 @@ namespace ndbl
 {
     // forward declarations
     class Nodlang;
-    class Interpreter;
-    class NodeFactory;
-    class ComponentFactory;
+    class ASTNodeFactory;
     class NodableView;
     class File;
 
@@ -47,15 +45,7 @@ namespace ndbl
         const std::vector<File*>&
                         get_files() const { return m_loaded_files; }
         bool            has_files() const { return !m_loaded_files.empty(); }
-
-        // Virtual Machine
-
-        void            run_program();
-        void            debug_program();
-        void            step_over_program();
-        void            stop_program();
-        void            reset_program();
-        bool            compile_and_load_program() const;
+        void            reset_current_graph();
 
     private:
         tools::App         m_base_app;
@@ -63,9 +53,7 @@ namespace ndbl
         Config*            m_config            = nullptr;
         File*              m_current_file      = nullptr;
         Nodlang*           m_language          = nullptr;
-        Interpreter*       m_interpreter       = nullptr;
-        NodeFactory*       m_node_factory      = nullptr;
-        ComponentFactory*  m_component_factory = nullptr;
+        ASTNodeFactory*    m_node_factory      = nullptr;
         u8_t               m_untitled_file_count = 0;
         std::vector<File*> m_loaded_files;
         std::vector<File*> m_flagged_to_delete_file;

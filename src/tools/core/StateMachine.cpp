@@ -19,7 +19,7 @@ void StateMachine::set_default_state(const char* name)
 
 void StateMachine::tick()
 {
-    if ( !m_started )
+    if ( !started() )
         return;
 
 #if TOOLS_DEBUG_STATE_MACHINE
@@ -39,22 +39,23 @@ void StateMachine::tick()
 
     // Switch to next_state
     m_current_state->delegate[OnLeave].call();
+    m_next_state->delegate[OnEnter].call();
     m_current_state = m_next_state;
-    m_current_state->delegate[OnEnter].call();
-    m_next_state = nullptr;
+    m_next_state    = nullptr;
 }
 
 void StateMachine::start()
 {
-    VERIFY(m_started == false, "StateMachine is already started");
-    m_started = true;
+    VERIFY( !started(), "StateMachine is already started");
     m_current_state = m_default_state;
+    m_current_state->delegate[OnEnter].call();
 }
 
 void StateMachine::stop()
 {
-    VERIFY(m_started == true, "StateMachine is not started");
-    m_started = false;
+    VERIFY( started(), "StateMachine is not started");
+    m_current_state->delegate[OnLeave].call();
+    m_current_state = nullptr;
 }
 
 State* StateMachine::add_state(const char* _name)
@@ -72,7 +73,7 @@ void StateMachine::add_state(State* state)
     VERIFY(success, "State name already exists");
 }
 
-void StateMachine::change_state(State* state)
+void StateMachine::set_next_state(State* state)
 {
     VERIFY(m_next_state == nullptr, "Can't change twice within a single tick");
     m_next_state = state;
@@ -81,7 +82,7 @@ void StateMachine::change_state(State* state)
 void StateMachine::exit_state()
 {
     VERIFY(m_current_state != m_default_state, "Default state can't be exited!");
-    change_state(m_default_state);
+    set_next_state(m_default_state);
 }
 
 State *StateMachine::get_state(const char *name)
@@ -96,5 +97,5 @@ void StateMachine::change_state(const char *name)
 {
     State* state = get_state(name);
     VERIFY(state != nullptr, "Unable to find state");
-    change_state(state);
+    set_next_state(state);
 }

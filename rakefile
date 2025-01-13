@@ -1,0 +1,22 @@
+require 'fileutils'
+require 'rake/clean'
+
+require_relative 'rake/_utils'
+require_relative 'rake/libs'
+require_relative 'rake/base'
+require_relative 'rake/tools'
+require_relative 'rake/ndbl'
+
+CLEAN.include [OBJ_DIR, DEP_DIR] # intermediate files
+CLOBBER.include [BUILD_DIR] # final files
+
+task :default => :help
+
+desc "says hello"
+task :help do
+    print("Welcome to Nodable's rakefile.\nFor more info, run: rake --tasks\n")
+end
+
+task :install => ['libs:install'] do puts "Install Libs DONE" end
+task :build => ['tools:build', 'ndbl:build'] do puts "Build DONE" end
+task :test  => ['tools:test', 'ndbl:test']

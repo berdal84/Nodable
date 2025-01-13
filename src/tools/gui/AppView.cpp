@@ -9,7 +9,6 @@
 #include "tools/core/log.h"
 #include "tools/core/System.h"
 #include "tools/core/EventManager.h"
-#include "tools/core/memory/memory.h"
 #include "tools/gui/TextureManager.h"
 #include "tools/gui/FontManager.h"
 
@@ -167,18 +166,15 @@ void AppView::init(App* _app)
     // Setup Platform/Renderer bindings
     if( !ImGui_ImplSDL2_InitForOpenGL(m_sdl_window, m_sdl_gl_context) )
     {
-        LOG_ERROR("tools::App", "Unable to init_ex NFD\n");
-        VERIFY(false, "Unable to flag_initialized NFD");
+        LOG_ERROR("tools::App", "Unable to ImGui_ImplSDL2_InitForOpenGL\n");
     }
     if( !ImGui_ImplOpenGL3_Init(/* default glsl_version*/) )
     {
-        LOG_ERROR("tools::App", "Unable to init_ex NFD\n");
-        VERIFY(false, "Unable to flag_initialized NFD");
+        LOG_ERROR("tools::App", "Unable to ImGui_ImplOpenGL3_Init\n");
     }
     if (NFD_Init() != NFD_OKAY)
     {
-        LOG_ERROR("tools::App", "Unable to init_ex NFD\n");
-        VERIFY(false, "Unable to flag_initialized NFD");
+        LOG_ERROR("tools::App", "Unable to NFD_Init\n");
     }
 
     show_splashscreen = cfg->show_splashscreen_default;
@@ -346,7 +342,7 @@ void AppView::begin_draw()
             dock_window( k_status_window_name, Dockspace_BOTTOM );
 
             // Possibly execute some user-defined code
-            on_reset_layout.emit();
+            signal_reset_layout.emit();
 
             // Finish the build
             ImGui::DockBuilderFinish( m_dockspaces[Dockspace_ROOT] );
@@ -547,7 +543,7 @@ void AppView::draw_splashscreen()
     auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize;
     if ( ImGui::BeginPopupModal( cfg->splashscreen_window_label, &show_splashscreen, flags) )
     {
-        on_draw_splashscreen_content.emit();
+        signal_draw_splashscreen_content.emit();
         ImGui::EndPopup();
     }
 }

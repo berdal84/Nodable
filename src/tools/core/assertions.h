@@ -41,6 +41,13 @@ if(!(expression)) { LOG_FLUSH(); throw tools::runtime_error(message_if_fails); }
 
 #endif // !TOOLS_NOEXCEPT
 
+// DEBUG SPECIFIC
+#ifdef TOOLS_DEBUG
+#define ASSERT_DEBUG_ONLY(expression) ASSERT(expression)
+#else
+#define ASSERT_DEBUG_ONLY(expression)
+#endif
+
 #else // TOOLS_ASSERTIONS_ENABLE
 
 // TOOLS_ASSERTIONS_ENABLE OFF

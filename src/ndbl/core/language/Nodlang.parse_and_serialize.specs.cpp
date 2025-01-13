@@ -225,9 +225,9 @@ TEST_F(Language_parse_and_serialize, partial_if2)
     std::string program = "if();else;";
     EXPECT_EQ(parse_and_serialize(program), program);
     std::string program2 = "if()else;";
-    EXPECT_ANY_THROW(parse_and_serialize(program2));
+    EXPECT_EQ(parse_and_serialize(program2), "");
     std::string program3 = "if()else";
-    EXPECT_ANY_THROW(parse_and_serialize(program3));
+    EXPECT_EQ(parse_and_serialize(program3), "");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -252,12 +252,14 @@ TEST_F(Language_parse_and_serialize , example_for_loop)
     EXPECT_EQ(parse_and_serialize(program), program);
 }
 
+// TODO: handle missing spaces around in var refs
 TEST_F(DISABLED_Language_parse_and_serialize , example_if_else)
 {
     std::string program = load_example("if-else.cpp");
     EXPECT_EQ(parse_and_serialize(program), program);
 }
 
+// TODO: handle missing spaces around in var refs
 TEST_F(DISABLED_Language_parse_and_serialize , exemple_multi_instructions)
 {
     std::string program = load_example("multi-instructions.cpp");
