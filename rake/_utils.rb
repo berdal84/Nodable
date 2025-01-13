@@ -6,27 +6,25 @@ C_COMPILER         = "clang-15"
 CXX_COMPILER       = "clang++-15"
 BUILD_OS           = RbConfig::CONFIG['build_os']
 HOST_OS            = RbConfig::CONFIG['host_os']
-BUILD_TARGET       = (ENV["BUILD_TARGET"] || "desktop").downcase
-BUILD_TARGET_DESKTOP = BUILD_TARGET == "desktop"
-BUILD_TARGET_WEB   = BUILD_TARGET == "web"
+TARGET             = (ENV["TARGET"] || "desktop").downcase
 BUILD_TYPE         = (ENV["BUILD_TYPE"] || "release").downcase
 BUILD_TYPE_RELEASE = BUILD_TYPE == "release"
 BUILD_TYPE_DEBUG   = BUILD_TYPE != "release"
-BUILD_DIR          = ENV["BUILD_DIR"] || "build-#{BUILD_TARGET}-#{BUILD_TYPE}"
+BUILD_DIR          = ENV["BUILD_DIR"] || "build-#{TARGET}-#{BUILD_TYPE}"
 OBJ_DIR            = "#{BUILD_DIR}/obj"
 DEP_DIR            = "#{BUILD_DIR}/dep"
 BIN_DIR            = "#{BUILD_DIR}/bin"
 BUILD_OS_LINUX     = BUILD_OS.include?("linux")
 GITHUB_ACTIONS     = ENV["GITHUB_ACTIONS"]
 
-if BUILD_TARGET != "desktop" && BUILD_TARGET != "web"
+if TARGET != "desktop" && TARGET != "web"
     raise "Unexpected value for TARGET, use desktop|web";
 end
 
 if VERBOSE
     system "echo Ruby version: && ruby -v"
     puts "BUILD_OS_LINUX:     #{BUILD_OS_LINUX}"
-    puts "BUILD_TARGET:       #{BUILD_TARGET}"
+    puts "TARGET:             #{TARGET}"
     puts "COMPILER_FOUND:     #{COMPILER_FOUND}"
     puts "BUILD_TYPE_RELEASE: #{BUILD_TYPE_RELEASE}"
     puts "BUILD_TYPE_DEBUG:   #{BUILD_TYPE_DEBUG}"

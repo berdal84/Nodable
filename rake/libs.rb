@@ -23,17 +23,17 @@ namespace :libs do
 
         sh "sudo apt-get update && sudo apt-get install libegl1-mesa-dev libdbus-1-dev libgtk-3-dev"
     
-        if BUILD_TARGET_WEB
+        if TARGET == "web"
             # Download and install the latest SDK tools.
-            system "libs/emsdk/emsdk install latest", verbose: false
+            system "libs/emsdk/emsdk install latest"
 
             # Make the "latest" SDK "active" for the current user. (writes .emscripten file)
-            system "libs/emsdk/emsdk activate latest", verbose: false
+            system "libs/emsdk/emsdk activate latest"
 
             # Activate PATH and other environment variables in the current terminal
-            system "source libs/emsdk/emsdk_env.sh", verbose: false
+            system "source libs/emsdk/emsdk_env.sh"
 
-            system "emcc --version", verbose: false or raise "EMCC not found, install failed."
+            system "emcc --version" or raise "EMCC not found, install failed."
         end
     end
 
