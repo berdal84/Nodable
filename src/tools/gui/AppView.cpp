@@ -3,8 +3,12 @@
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/backends/imgui_impl_sdl.h>
 #include <lodepng/lodepng.h> // to save screenshot as PNG
-#include <nfd.h>
-#include <gl3w.h>
+#if TARGET_DESKTOP
+    #include <nfd.h>
+    #include <gl3w.h>
+#elif TARGET_WEB
+    #include <emscripten.h>
+#endif
 
 #include "tools/core/log.h"
 #include "tools/core/System.h"
@@ -63,8 +67,10 @@ void AppView::init(App* _app)
     m_sdl_gl_context = SDL_GL_CreateContext(m_sdl_window);
     SDL_GL_SetSwapInterval((int)cfg->vsync);
 
+#if TARGET_DESKTOP
     LOG_VERBOSE("tools::App", "gl3w init_ex ...\n");
     gl3wInit();
+#endif
 
     // Setup Dear ImGui binding
     LOG_VERBOSE("tools::App", "ImGui init_ex ...\n");
@@ -172,11 +178,12 @@ void AppView::init(App* _app)
     {
         LOG_ERROR("tools::App", "Unable to ImGui_ImplOpenGL3_Init\n");
     }
+#if TARGET_DESKTOP
     if (NFD_Init() != NFD_OKAY)
     {
         LOG_ERROR("tools::App", "Unable to NFD_Init\n");
     }
-
+#endif
     show_splashscreen = cfg->show_splashscreen_default;
 }
 
@@ -198,8 +205,10 @@ void AppView::shutdown()
     SDL_GL_DeleteContext     (m_sdl_gl_context);
     SDL_DestroyWindow        (m_sdl_window);
     SDL_Quit                 ();
+#if TARGET_DESKTOP
     LOG_MESSAGE("tools::AppView", "Quitting NFD (Native File Dialog) ...\n");
     NFD_Quit();
+#endif
     LOG_MESSAGE("tools::AppView", "Shutdown OK\n");
 }
 
@@ -444,10 +453,14 @@ void AppView::end_draw()
 
     SDL_GL_MakeCurrent(m_sdl_window, m_sdl_gl_context);
     ImGuiIO& io = ImGui::GetIO();
+
+#if TARGET_DESKTOP
     glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
     Vec4& color = cfg->background_color.value;
     glClearColor( color.x, color.y, color.z, color.w);
     glClear(GL_COLOR_BUFFER_BIT);
+#endif
+
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Update and Render additional Platform Windows
@@ -489,6 +502,7 @@ void AppView::end_draw()
     SDL_SetWindowTitle(m_sdl_window, title);
 }
 
+#if TARGET_DESKTOP
 bool AppView::pick_file_path(Path& _out_path, DialogType _dialog_type) const
 {
     nfdchar_t *picked_path;
@@ -519,6 +533,20 @@ bool AppView::pick_file_path(Path& _out_path, DialogType _dialog_type) const
     }
 }
 
+#elif TARGET_WEB
+
+EM_JS(void, call_pick_file_path, (bool), {
+  alert('pick_file_path_impl not implemented yet');
+  throw 'all done';
+});
+bool AppView::pick_file_path(Path& _out_path, DialogType _dialog_type) const
+{
+    bool result;
+    call_pick_file_path(result);
+    return result;
+}
+#endif
+
 ImGuiID AppView::get_dockspace(Dockspace dockspace)const
 {
     return m_dockspaces[dockspace];
@@ -548,8 +576,13 @@ void AppView::draw_splashscreen()
     }
 }
 
+
 std::vector<unsigned char> AppView::take_screenshot() const
 {
+#if TARGET_WEB
+    LOG_MESSAGE("tools::AppView", "Taking screenshot not implemented yet\n");
+    return {};
+#elif TARGET_DESKTOP
     LOG_MESSAGE("tools::AppView", "Taking screenshot ...\n");
     int width, height;
     SDL_GetWindowSize(m_sdl_window, &width, &height);
@@ -572,6 +605,7 @@ std::vector<unsigned char> AppView::take_screenshot() const
     lodepng::encode(out, flipped.data(), width, height, LCT_RGBA);
     LOG_MESSAGE("tools::AppView", "Taking screenshot OK\n");
     return out;
+#endif
 }
 
 bool AppView::is_fullscreen() const

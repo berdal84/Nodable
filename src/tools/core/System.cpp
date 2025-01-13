@@ -1,46 +1,57 @@
 #include "System.h"
 #include <cstdlib>    // for ::system
 #include <thread>     // for std::thread
-
 #include "log.h"
 
 using namespace tools;
 
-void System::open_url_async(std::string _URL)
+#if TARGET_DESKTOP
+int run_command(const char* command)
 {
-    auto open_url = [](std::string _URL)
+    int exit_code = ::system(command);
+    if ( exit_code != 0 )
     {
-#ifdef WIN32
-        std::string command("start");
-#elif __APPLE__
-        std::string command("open");
-#elif __linux__
-        std::string command("x-www-browser"); // TODO: does not work on all distros
-#else
-#       error "Unknown operating system."
-#endif
+        LOG_ERROR("tools::system", "Command failed: %s", command);
+    }
+    return exit_code;
+};
 
-        std::string op = command + " " + _URL;
-        auto result = ::system(op.c_str());
-
-        if (result != 0)
-        {
-            LOG_ERROR( "tools::system", "Unable to open %s. Because the command %s is not available on your system.",
-                       _URL.c_str(), command.c_str());
-        }
-
-        return result;
-    };
-
-    std::thread(open_url, _URL).detach();
+void System::open_url_async(std::string url)
+{
+    std::string command = "x-www-browser " + url; // TODO: does not work on all distros
+    std::thread thread( run_command, command.c_str() );
+    thread.detach();
 }
 
 void System::clear_console() /* cf: https://stackoverflow.com/questions/6486289/how-can-i-clear-console */
 {
-#if defined _WIN32
-    const char* command = "cls";
-#elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__) || defined (__APPLE__)
-    const char* command = "reset";
-#endif
-    if(std::system(command)) LOG_ERROR("tools::system::console", "Unable to reset console");
+    if( std::system("clear") )
+    {
+        LOG_ERROR("System", "Unable to reset console");
+    }
 }
+
+#elif TARGET_WEB
+#include <emscripten.h>
+
+EM_JS(void, call_clear_console, (), {
+  alert('call_clear_console not implemented yet');
+  throw 'all done';
+});
+
+EM_JS(void, call_open_url, (), {
+  alert('call_open_url not implemented yet');
+  throw 'all done';
+});
+
+void System::open_url_async(std::string url)
+{
+    call_open_url();
+}
+
+void System::clear_console() /* cf: https://stackoverflow.com/questions/6486289/how-can-i-clear-console */
+{
+    call_clear_console();
+}
+
+#endif

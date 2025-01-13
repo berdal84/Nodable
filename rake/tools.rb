@@ -17,7 +17,10 @@ $tools_core.sources |= FileList[
     "src/tools/core/System.cpp",
     "src/tools/core/TaskManager.cpp"
 ]
-$tools_core.link_library |= [$whereami]
+
+if TARGET == "desktop"
+    $tools_core.link_library |= [$whereami]
+end
 
 #---------------------------------------------------------------------------
 $tools_gui = new_target_from_base("tools_gui", TargetType::OBJECTS)
@@ -38,7 +41,11 @@ $tools_gui.sources |= FileList[
     "src/tools/gui/ViewState.cpp",
     "src/tools/gui/TextureManager.cpp",
 ]
-$tools_gui.link_library |= [$gl3w, $lodepng, $imgui]
+$tools_gui.link_library |= [$lodepng, $imgui]
+
+if TARGET == "desktop"
+    $tools_gui.link_library |= [$gl3w]
+end
 
 #---------------------------------------------------------------------------
 
