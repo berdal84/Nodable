@@ -19,9 +19,7 @@ end
 
 task :install => [
     'update_system',
-    # compile system libraries (we should replace this by binaries or ubuntu packages)
-    'nfd:install',
-    'cpptrace:install'
+    'nfd:install', # TODO: replace by GTK for DESKTOP, and JS for WEB
 ];
 task :build => ['libs:build', 'tools:build', 'ndbl:build'] do puts "Build DONE" end
 task :test  => ['tools:test', 'ndbl:test']
@@ -58,9 +56,3 @@ namespace :nfd do
     nfd = CMakeTarget.new(name: "nfd", path: "libs/nativefiledialog-extended" )
     tasks_for_cmake_target( nfd )
 end
-
-namespace :cpptrace do
-   cpptrace = CMakeTarget.new(name: "cpptrace", path: "libs/cpptrace" )
-   tasks_for_cmake_target( cpptrace )
-end
-

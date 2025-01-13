@@ -18,10 +18,9 @@ def new_target_from_base(name, type)
         "libs/imgui",
         "libs/imgui",
         "libs/whereami/src",
-        "libs/cpptrace/include",
-        "/usr/include",
-        "/usr/include/freetype2", # imgui related (include is not relative to a PATH)
-        "/usr/include/SDL2", # same
+        # ImGui includes SDL and freetype2 from their respective folder, we need to manually include them
+        "/usr/include/freetype2",
+        "/usr/include/SDL2",
     ]
 
     target.asset_folder_path = "assets" # a single folder
@@ -35,6 +34,12 @@ def new_target_from_base(name, type)
         "PLATFORM_#{PLATFORM.upcase}"
     ]
 
+    target.cxx_flags |= [
+        "-std=c++20",
+        "-fno-char8_t",
+    ]
+
+    # ---- BUILD_TYPE_XXX specific --------
     if BUILD_TYPE_RELEASE
         target.compiler_flags |= [
             "-O2"
@@ -48,36 +53,21 @@ def new_target_from_base(name, type)
         ]
     end
 
-    target.cxx_flags |= [
-        "-std=c++20",
-        "-fno-char8_t",
-    ]
-       
-    target.linker_flags |= [
-        "-lcpptrace -ldwarf -lz -lzstd -ldl", # CPPTrace, see https://github.com/jeremy-rifkin/cpptrace?tab=readme-ov-file#use-without-cmake
-        "`pkg-config --libs freetype2`"
-    ]
-
-    if PLATFORM_DESKTOP
+    # ---- PLATFORM_XXX specific --------
+    if PLATFORM_WEB
+        target.linker_flags |= [
+           "–use-port=sdl2",
+           "–use-port=freetype",
+            "-sMIN_WEBGL_VERSION=2",
+            "-sMAX_WEBGL_VERSION=2",
+        ]
+    elsif PLATFORM_DESKTOP
         target.linker_flags |= [
             "-lnfd `pkg-config --cflags --libs gtk+-3.0`", #NativeFileDialog  deps
+            "`pkg-config --libs freetype2`",
             "`pkg-config --libs --static sdl2`",
             "`pkg-config --libs gl`", #OpenGL
         ] # NativeFileDialog
-    elsif PLATFORM_WEB
-        target.linker_flags |= [
-            "-s USE_SDL=2",
-            "-s MIN_WEBGL_VERSION=2",
-            "-s MAX_WEBGL_VERSION=2",
-       ]
-    end
-
-    if BUILD_TYPE_RELEASE
-       target.linker_flags |= [
-            "-v",
-#             "-Wall",
-#             "-Werror",
-       ] # NativeFileDialog
     end
 
     target
