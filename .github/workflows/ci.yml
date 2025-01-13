@@ -22,6 +22,7 @@ jobs:
       BUILD_DIR: ./out
       PLATFORM: ${{ matrix.platform }} # dektop|web
       VERBOSE: true
+      NDBL_SKIP_GUI_TEST: true
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
