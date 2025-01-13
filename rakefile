@@ -1,11 +1,11 @@
 require 'fileutils'
 require 'rake/clean'
 
-require_relative 'rake/_utils'
 require_relative 'rake/libs'
 require_relative 'rake/base'
 require_relative 'rake/tools'
 require_relative 'rake/ndbl'
+require_relative 'rake/_cmake'
 
 CLEAN.include [OBJ_DIR, DEP_DIR] # intermediate files
 CLOBBER.include [BUILD_DIR] # final files
@@ -17,6 +17,56 @@ task :help do
     print("Welcome to Nodable's rakefile.\nFor more info, run: rake --tasks\n")
 end
 
-task :install => ['libs:install'] do puts "Install Libs DONE" end
-task :build => ['tools:build', 'ndbl:build'] do puts "Build DONE" end
+task :install => [
+    'update_system',
+    # compile system libraries (we should replace this by binaries or ubuntu packages)
+    'freetype:install',
+    'googletest:install',
+    'nfd:install',
+    'sdl:install',
+    'cpptrace:install'
+];
+task :build => ['libs:build', 'tools:build', 'ndbl:build'] do puts "Build DONE" end
 task :test  => ['tools:test', 'ndbl:test']
+
+task :update_system do
+    if not BUILD_OS_LINUX
+        raise "Your system (#{BUILD_OS}) is not supported by this script"
+    end
+
+    sh "sudo apt-get update && sudo apt-get install libegl1-mesa-dev libdbus-1-dev libgtk-3-dev"
+
+    if PLATFORM_WEB
+        # Download and install the latest SDK tools.
+        sh "libs/emsdk/emsdk install latest"
+
+        # Make the "latest" SDK "active" for the current user. (writes .emscripten file)
+        sh "libs/emsdk/emsdk activate latest"
+    end
+end
+
+namespace :nfd do
+    nfd = CMakeTarget.new(name: "nfd", path: "libs/nativefiledialog-extended" )
+    tasks_for_cmake_target( nfd )
+end
+
+namespace :googletest do
+   googletest = CMakeTarget.new(name: "googletest", path: "libs/googletest" )
+   tasks_for_cmake_target( googletest )
+end
+
+namespace :freetype do
+   freetype = CMakeTarget.new(name: "freetype", path: "libs/freetype" )
+   tasks_for_cmake_target( freetype )
+end
+
+namespace :sdl do
+   sdl = CMakeTarget.new(name: "sdl", path: "libs/SDL" )
+   tasks_for_cmake_target( sdl )
+end
+
+namespace :cpptrace do
+   cpptrace = CMakeTarget.new(name: "cpptrace", path: "libs/cpptrace" )
+   tasks_for_cmake_target( cpptrace )
+end
+

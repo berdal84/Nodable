@@ -74,7 +74,6 @@ tools_test.linker_flags |= [
 tools_test.link_library |= [$tools_core, $tools_gui]
 
 #---------------------------------------------------------------------------
-
 desc "Build tools"
 namespace :tools do
 
@@ -83,7 +82,13 @@ namespace :tools do
     desc "Rebuild tools"
     task :rebuild => ['clean', 'build']
     desc "Build tools"
-    task :build => ['core:build', 'gui:build', 'app:build', 'test:build']
+
+    task :build => [
+        'core:build',
+        'gui:build',
+        'app:build',
+        'test:build'
+    ]
     task :test  => ['test:run']
 
     namespace :core do

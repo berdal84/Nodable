@@ -49,7 +49,7 @@ def new_target_from_base(name, type)
 
     target.cxx_flags |= [
         "--std=c++20",
-        "-fno-char8_t"
+        "-fno-char8_t",
     ]
        
     target.linker_flags |= [
@@ -74,7 +74,9 @@ def new_target_from_base(name, type)
 
     if BUILD_TYPE_RELEASE
        target.linker_flags |= [
-            "-v"
+            "-v",
+#             "-Wall",
+#             "-Werror",
        ] # NativeFileDialog
     end
 

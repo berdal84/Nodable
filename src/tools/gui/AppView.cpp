@@ -375,15 +375,20 @@ void AppView::begin_draw()
                 ImGui::BeginGroup();
                 ImGui::Text("Filter:"); ImGui::SameLine();
                 if ( ImGui::RadioButton("All", verbosity_filter == -1 ) )
-                    verbosity_filter = -1; ImGui::SameLine();
+                    verbosity_filter = -1;
+                ImGui::SameLine();
                 if ( ImGui::RadioButton("Debug", verbosity_filter == log::Verbosity_Verbose ) )
-                    verbosity_filter = log::Verbosity_Verbose; ImGui::SameLine();
+                    verbosity_filter = log::Verbosity_Verbose;
+                ImGui::SameLine();
                 if ( ImGui::RadioButton("Messages", verbosity_filter == log::Verbosity_Message ) )
-                    verbosity_filter = log::Verbosity_Message; ImGui::SameLine();
+                    verbosity_filter = log::Verbosity_Message;
+                ImGui::SameLine();
                 if ( ImGui::RadioButton("Warnings", verbosity_filter == log::Verbosity_Warning ) )
-                    verbosity_filter = log::Verbosity_Warning; ImGui::SameLine();
+                    verbosity_filter = log::Verbosity_Warning;
+                ImGui::SameLine();
                 if ( ImGui::RadioButton("Errors", verbosity_filter == log::Verbosity_Error ) )
-                    verbosity_filter = log::Verbosity_Error; ImGui::SameLine();
+                    verbosity_filter = log::Verbosity_Error;
+                ImGui::SameLine();
                 ImGui::EndGroup();
             }
             ImGui::EndChild();
