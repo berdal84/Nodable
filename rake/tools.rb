@@ -78,7 +78,7 @@ desc "Build tools"
 namespace :tools do
 
     desc "Clean tools"
-    task :clean => ['core:clean', 'gui:clean', 'app:clean', 'test:clean']
+    task :clean => ['core:clean', 'gui:clean', 'app:clean']
     desc "Rebuild tools"
     task :rebuild => ['clean', 'build']
     desc "Build tools"
@@ -87,9 +87,13 @@ namespace :tools do
         'core:build',
         'gui:build',
         'app:build',
-        'test:build'
     ]
-    task :test  => ['test:run']
+
+    if !PLATFORM_WEB
+        task :clean => ['test:clean']
+        task :build => ['test:build']
+        task :test  => ['test:run']
+    end
 
     namespace :core do
         tasks_for_target( $tools_core )

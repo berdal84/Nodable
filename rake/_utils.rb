@@ -134,7 +134,7 @@ end
 def get_binary( target )
     path = "#{BIN_DIR}/#{target.name}"
     if PLATFORM_WEB
-        path = path.ext("js")
+        path = path.ext("html")
     end
     path
 end
@@ -194,7 +194,12 @@ def tasks_for_target(target)
     if target.type == TargetType::EXECUTABLE
         desc "Run the #{target.name}"
         task :run => [ :build ] do
-            sh "./#{get_binary(target)}"
+
+            if PLATFORM_DESKTOP
+                sh "./#{get_binary(target)}"
+            elsif PLATFORM_WEB
+                sh "cd #{BIN_DIR} && python -m http.server"
+            end
         end
     end
 

@@ -88,10 +88,16 @@ end
 #---------------------------------------------------------------------------
 task :ndbl => 'ndbl:build'
 namespace :ndbl do
-    task :clean => ['core:clean', 'gui:clean', 'app:clean', 'test:clean']
+
+    task :clean => ['core:clean', 'gui:clean', 'app:clean']
     task :rebuild => ['clean', 'build']
-    task :build => ['core:build', 'gui:build', 'app:build', 'test:build']
-    task :test  => ['test:run']
+    task :build => ['core:build', 'gui:build', 'app:build']
+
+    if !PLATFORM_WEB
+        task :clean => ['test:clean']
+        task :build => ['test:build']
+        task :test  => ['test:run']
+    end
 
     namespace :core do
         tasks_for_target( ndbl_core )
