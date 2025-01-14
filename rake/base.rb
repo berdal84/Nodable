@@ -39,18 +39,18 @@ def new_target_from_base(name, type)
     # ---- PLATFORM_XXX specific --------
     if PLATFORM_WEB
         target.linker_flags |= [
-            "-sUSE_WEBGL2=1", # required for OpenGL ES 3.0 functionality.
-            "-sMIN_WEBGL_VERSION=2",
-            "-sMAX_WEBGL_VERSION=2",
-            "-fPIC", # Position Independent Code
+            "-s WASM=1", 
+            "-s FULL_ES2=1",
+            "-s MIN_WEBGL_VERSION=2",
+            "-s MAX_WEBGL_VERSION=2",
 			"-gsource-map",
         ]
 
         files_to_preload = FileList["assets/**/*"]
         target.linker_flags |= files_to_preload.collect{ |file| "--preload-file #{file}" }
         target.compiler_flags |= [
-            "-sUSE_FREETYPE=1",
-            "-sUSE_SDL=2",
+            "-s USE_FREETYPE=1",
+            "-s USE_SDL=2",
         ]
 
     elsif PLATFORM_DESKTOP

@@ -22,11 +22,12 @@ namespace tools
 	public:
         void           init(); // default init, an AppView and a Config will be created internally
         void           init_ex(AppView* , Config*); // extended init, allows to provide an existing AppView and/or Config.
+        void           run();
         void           shutdown();
         void           update();
         void           draw(); // Consider overriding AppView::draw instead of App::draw
-        bool    should_stop() const { return m_flags & Flag_SHOULD_STOP; }
-        void    request_stop() { m_flags |= Flag_SHOULD_STOP; }
+        bool           should_stop() const { return m_flags & Flag_SHOULD_STOP; }
+        void           request_stop() { m_flags |= Flag_SHOULD_STOP; }
 
         static double  get_time() ;  // Get the elapsed time in seconds
         static Path&   make_absolute(Path &_path); // return an absolute asset path given a relative asset path

@@ -68,7 +68,6 @@ void AppView::init(App* _app)
     SDL_GL_SetSwapInterval((int)cfg->vsync);
 
 #if PLATFORM_DESKTOP
-    LOG_VERBOSE("tools::App", "gl3w init_ex ...\n");
     gl3wInit();
 #endif
 

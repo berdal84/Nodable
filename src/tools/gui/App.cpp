@@ -41,6 +41,15 @@ void App::init_ex(AppView* _view, Config* _config)
     m_task_manager    = init_task_manager();
 }
 
+void App::run()
+{    
+    while( !should_stop() )
+    {
+        update();
+        draw();
+    }
+}
+
 void App::shutdown()
 {
     LOG_MESSAGE("tools::BaseApp", "Shutting down ...\n");

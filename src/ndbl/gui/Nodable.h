@@ -23,6 +23,7 @@ namespace ndbl
         // Common
 
         void            init();
+        void            run();
         void            update();
         void            draw();
         void            shutdown();

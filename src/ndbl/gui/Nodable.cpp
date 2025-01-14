@@ -45,6 +45,15 @@ void Nodable::init()
     LOG_VERBOSE("ndbl::Nodable", "init_ex OK\n");
 }
 
+void Nodable::run()
+{
+    while( !should_stop() )
+    {
+        update();
+        draw();
+    }
+}
+
 void Nodable::update()
 {
     m_base_app.update();
