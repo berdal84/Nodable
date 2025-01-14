@@ -35,15 +35,22 @@ jobs:
 
       - name: Install Dependencies
         shell: bash
-        run: rake install --trace
+        run: rake install
 
       - name: Build
+        if: env.PLATFORM == 'web'
         shell: bash
-        run: rake build --trace
+        run: source libs/emsdk/emsdk_env.sh && rake build
+
+      - name: Build
+        if: env.PLATFORM == 'desktop'
+        shell: bash
+        run: rake build
 
       - name: Test
+        if: env.PLATFORM == 'desktop'
         shell: bash
-        run: rake test --trace
+        run: rake test
 
       - name: Binary Artifact
         uses: actions/upload-artifact@v4
