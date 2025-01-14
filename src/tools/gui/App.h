@@ -30,7 +30,7 @@ namespace tools
 
         static double  get_time() ;  // Get the elapsed time in seconds
         static Path&   make_absolute(Path &_path); // return an absolute asset path given a relative asset path
-        static Path    get_absolute_asset_path(const char* _relative_path); // return an absolute asset path given a relative asset path
+        static Path    get_asset_path(const char* _relative_path); // return a valid path (absolute or relative depending platform)
     protected:
         typedef int Flags;
         enum Flag_

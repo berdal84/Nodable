@@ -46,6 +46,8 @@ def new_target_from_base(name, type)
 			"-gsource-map",
         ]
 
+        files_to_preload = FileList["assets/**/*"]
+        target.linker_flags |= files_to_preload.collect{ |file| "--preload-file #{file}" }
         target.compiler_flags |= [
             "-sUSE_FREETYPE=1",
             "-sUSE_SDL=2",

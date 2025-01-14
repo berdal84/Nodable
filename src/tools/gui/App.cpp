@@ -89,11 +89,12 @@ Path& App::make_absolute(Path& _path)
 {
     if ( _path.is_absolute() )
         return _path;
+    // note: in PLATFORM_WEB, parent_path is "."
     _path = Path::get_executable_path().parent_path() / "assets" / _path;
     return _path;
 }
 
-Path App::get_absolute_asset_path(const char* _str)
+Path App::get_asset_path(const char* _str)
 {
     Path asset_path{_str};
     App::make_absolute(asset_path);

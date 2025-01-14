@@ -53,7 +53,7 @@ void NodableView::init(Nodable * _app)
 
     // Load splashscreen image
     Config* cfg = get_config();
-    tools::Path path = App::get_absolute_asset_path(cfg->ui_splashscreen_imagePath );
+    tools::Path path = App::get_asset_path(cfg->ui_splashscreen_imagePath );
     m_logo = get_texture_manager()->load(path);
 
     // Add a bunch of new actions
