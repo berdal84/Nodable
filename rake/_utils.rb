@@ -16,6 +16,9 @@ DEP_DIR            = "#{BUILD_DIR}/dep"
 BIN_DIR            = "#{BUILD_DIR}/bin"
 BUILD_OS_LINUX     = BUILD_OS.include?("linux")
 GITHUB_ACTIONS     = ENV["GITHUB_ACTIONS"]
+HTTP_SERVER_HOST   = "0.0.0.0"
+HTTP_SERVER_PORT   = "8000"
+HTTP_SERVER_URL    = "http://#{HTTP_SERVER_HOST}:#{HTTP_SERVER_PORT}/"
 
 if VERBOSE
     system "echo Ruby version: && ruby -v"
@@ -23,6 +26,7 @@ if VERBOSE
     puts "PLATFORM:           #{PLATFORM}"
     puts "BUILD_TYPE_RELEASE: #{BUILD_TYPE_RELEASE}"
     puts "BUILD_TYPE_DEBUG:   #{BUILD_TYPE_DEBUG}"
+    puts "HTTP_SERVER_URL:    #{HTTP_SERVER_URL}"
 end
 
 if PLATFORM_DESKTOP
@@ -198,7 +202,7 @@ def tasks_for_target(target)
             if PLATFORM_DESKTOP
                 sh "./#{get_binary(target)}"
             elsif PLATFORM_WEB
-                sh "cd #{BIN_DIR} && python -m http.server"
+                sh "python -m http.server --directory . #{HTTP_SERVER_PORT}"
             end
         end
     end

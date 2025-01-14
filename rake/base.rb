@@ -44,7 +44,6 @@ def new_target_from_base(name, type)
             "-sMAX_WEBGL_VERSION=2",
             "-fPIC", # Position Independent Code
 			"-gsource-map",
-			"--source-map-base=http://localhost:6931/bin/Web_Debug", # allow the web browser debugger to have c++ functions information
         ]
 
         target.compiler_flags |= [
