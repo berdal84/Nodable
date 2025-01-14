@@ -1,6 +1,9 @@
 #include "FileSystem.h"
 #include "tools/core/log.h"
+
+#ifdef PLATFORM_DESKTOP
 #include <whereami.h> // to locate executable directory
+#endif
 
 using namespace tools;
 
@@ -46,6 +49,7 @@ bool Path::create_directories(const Path& path)
 
 Path Path::get_executable_path()
 {
+#if PLATFORM_DESKTOP
     char* path = nullptr;
     int length, dirname_length;
     length = wai_getExecutablePath(nullptr, 0, &dirname_length);
@@ -73,4 +77,7 @@ Path Path::get_executable_path()
         LOG_WARNING("tools::system", "Unable to get executable path!\n");
     }
     return result;
+#else
+    return "./fake-executable";
+#endif
 }

@@ -11,7 +11,6 @@
 #include "ndbl/core/ASTWhileLoop.h"
 #include "tools/core/reflection/reflection"
 #include "tools/core/types.h"
-#include "tools/core/Optional.h"
 
 namespace ndbl
 {

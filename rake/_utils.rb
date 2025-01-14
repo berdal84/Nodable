@@ -131,18 +131,12 @@ def get_library_name( target )
     "#{BUILD_DIR}/lib/lib#{target.name.ext(".a")}"
 end
 
-def build_static_library( target )
-
-    objects        = get_objects_to_link( target ).join(" ")
-    binary         = get_library_name( target )
-    linker_flags   = target.linker_flags.join(" ")
-
-    FileUtils.mkdir_p File.dirname(binary)
-    sh "llvm-ar r #{binary} #{objects}", verbose: VERBOSE
-end
-
 def get_binary( target )
-    "#{BIN_DIR}/#{target.name}"
+    path = "#{BIN_DIR}/#{target.name}"
+    if PLATFORM_WEB
+        path = path.ext("js")
+    end
+    path
 end
 
 def build_executable_binary( target )

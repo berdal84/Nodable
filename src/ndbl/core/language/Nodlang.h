@@ -8,7 +8,6 @@
 #include "tools/core/reflection/reflection"
 #include "tools/core/System.h"
 #include "tools/core/Hash.h"
-#include "tools/core/Optional.h"
 
 #include "ndbl/core/ASTVariable.h"
 #include "ndbl/core/ASTToken.h"

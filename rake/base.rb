@@ -36,35 +36,20 @@ def new_target_from_base(name, type)
         "-fno-char8_t",
     ]
 
-    # ---- BUILD_TYPE_XXX specific --------
-    if BUILD_TYPE_RELEASE
-        target.compiler_flags |= [
-            "-O2"
-        ]
-    elsif BUILD_TYPE_DEBUG
-        target.compiler_flags |= [
-            "-g", # generates symbols
-            "-O0", # no optim
-            "-Wfatal-errors",
-            #"-pedantic"
-        ]
-    end
-
     # ---- PLATFORM_XXX specific --------
     if PLATFORM_WEB
-        target.includes |= [
-            # ImGui includes SDL and freetype2 from their respective folder, we need to manually include them
-            "/usr/include/freetype2",
-            "libs/emsdk/upstream/emscripten/system/include/SDL",
-        ]
         target.linker_flags |= [
-            "–sUSE_SDL=2",
-            "–sUSE_FREETYPE=1",
+            "-sUSE_WEBGL2=1", # required for OpenGL ES 3.0 functionality.
             "-sMIN_WEBGL_VERSION=2",
             "-sMAX_WEBGL_VERSION=2",
-        ]
-        target.compiler_flags |= [
             "-fPIC", # Position Independent Code
+			"-gsource-map",
+			"--source-map-base=http://localhost:6931/bin/Web_Debug", # allow the web browser debugger to have c++ functions information
+        ]
+
+        target.compiler_flags |= [
+            "-sUSE_FREETYPE=1",
+            "-sUSE_SDL=2",
         ]
 
     elsif PLATFORM_DESKTOP
@@ -78,6 +63,20 @@ def new_target_from_base(name, type)
             "`pkg-config --libs --static sdl2`",
             "`pkg-config --libs gtk+-3.0 freetype2 gl`",
         ] # NativeFileDialog
+    end
+
+    # ---- BUILD_TYPE_XXX specific --------
+    if BUILD_TYPE_RELEASE
+        target.compiler_flags |= [
+            "-O2"
+        ]
+    elsif BUILD_TYPE_DEBUG
+        target.compiler_flags |= [
+            "-g", # generates symbols
+            "-O0", # no optim
+            "-Wfatal-errors",
+            #"-pedantic"
+        ]
     end
 
     target

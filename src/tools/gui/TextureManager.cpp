@@ -1,11 +1,6 @@
 #include "TextureManager.h"
-
-#include <gl3w/GL/gl3w.h>
-#include <gl3w/GL/glcorearb.h>
+#include "tools/gui/GLhelper.h"
 #include <lodepng/lodepng.h>
-#include <map>
-#include <string>
-#include <vector>
 
 #include "Texture.h"
 #include "tools/core/log.h"

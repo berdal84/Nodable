@@ -6,7 +6,6 @@
 using namespace ndbl;
 
 typedef ::testing::Core Language_parse_function_call;
-using tools::Optional;
 
 TEST_F(Language_parse_function_call, dna_to_protein)
 {
@@ -24,10 +23,10 @@ TEST_F(Language_parse_function_call, dna_to_protein)
     EXPECT_EQ(ribbon.at(3).m_type, ASTToken_t::parenthesis_close);
 
     // parse
-    Optional<ASTNodeSlot*> function_out = language->parse_function_call( app.graph()->root_scope() );
+    ASTNodeSlot* function_out = language->parse_function_call( app.graph()->root_scope() );
 
     // check
-    EXPECT_TRUE(function_out.valid());
+    EXPECT_TRUE(function_out!= nullptr);
     EXPECT_TRUE(function_out->node->type() == ASTNodeType_FUNCTION);
 }
 
@@ -46,9 +45,9 @@ TEST_F(Language_parse_function_call, operator_add)
     EXPECT_EQ(ribbon.at(2).m_type, ASTToken_t::literal_int);
 
     // parse
-    Optional<ASTNodeSlot*> result = language->parse_expression( app.graph()->root_scope() );
+    ASTNodeSlot* result = language->parse_expression( app.graph()->root_scope() );
 
     // check
-    EXPECT_TRUE(result.valid());
+    EXPECT_TRUE(result != nullptr );
     EXPECT_TRUE(result->node->type() == ASTNodeType_OPERATOR);
 }
