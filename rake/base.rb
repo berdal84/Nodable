@@ -18,9 +18,6 @@ def new_target_from_base(name, type)
         "libs/imgui",
         "libs/imgui",
         "libs/whereami/src",
-        # ImGui includes SDL and freetype2 from their respective folder, we need to manually include them
-        "/usr/include/freetype2",
-        "/usr/include/SDL2",
     ]
 
     target.asset_folder_path = "assets" # a single folder
@@ -43,7 +40,7 @@ def new_target_from_base(name, type)
     if BUILD_TYPE_RELEASE
         target.compiler_flags |= [
             "-O2"
-        ] 
+        ]
     elsif BUILD_TYPE_DEBUG
         target.compiler_flags |= [
             "-g", # generates symbols
@@ -55,18 +52,31 @@ def new_target_from_base(name, type)
 
     # ---- PLATFORM_XXX specific --------
     if PLATFORM_WEB
+        target.includes |= [
+            # ImGui includes SDL and freetype2 from their respective folder, we need to manually include them
+            "/usr/include/freetype2",
+            "libs/emsdk/upstream/emscripten/system/include/SDL",
+        ]
         target.linker_flags |= [
-           "–use-port=sdl2",
-           "–use-port=freetype",
+            "–sUSE_SDL=2",
+            "–sUSE_FREETYPE=1",
             "-sMIN_WEBGL_VERSION=2",
             "-sMAX_WEBGL_VERSION=2",
         ]
+        target.compiler_flags |= [
+            "-fPIC", # Position Independent Code
+        ]
+
     elsif PLATFORM_DESKTOP
+        target.includes |= [
+            # ImGui includes SDL and freetype2 from their respective folder, we need to manually include them
+            "/usr/include/freetype2",
+            "/usr/include/SDL2",
+        ]
         target.linker_flags |= [
-            "-lnfd `pkg-config --cflags --libs gtk+-3.0`", #NativeFileDialog  deps
-            "`pkg-config --libs freetype2`",
+            "-lnfd", # native file dialog (uses gtk)
             "`pkg-config --libs --static sdl2`",
-            "`pkg-config --libs gl`", #OpenGL
+            "`pkg-config --libs gtk+-3.0 freetype2 gl`",
         ] # NativeFileDialog
     end
 

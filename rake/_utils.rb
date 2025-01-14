@@ -16,29 +16,26 @@ DEP_DIR            = "#{BUILD_DIR}/dep"
 BIN_DIR            = "#{BUILD_DIR}/bin"
 BUILD_OS_LINUX     = BUILD_OS.include?("linux")
 GITHUB_ACTIONS     = ENV["GITHUB_ACTIONS"]
-C_COMPILER         = PLATFORM_DESKTOP ? "clang-15" : "emcc"
-CXX_COMPILER       = PLATFORM_DESKTOP ? "clang++-15" : "emcc"
-
-if !PLATFORM_DESKTOP && !PLATFORM_WEB
-    raise "Unexpected value for PLATFORM, use PLATFORM=desktop|web";
-end
 
 if VERBOSE
     system "echo Ruby version: && ruby -v"
     puts "BUILD_OS_LINUX:     #{BUILD_OS_LINUX}"
     puts "PLATFORM:           #{PLATFORM}"
-    puts "COMPILER_FOUND:     #{COMPILER_FOUND}"
     puts "BUILD_TYPE_RELEASE: #{BUILD_TYPE_RELEASE}"
     puts "BUILD_TYPE_DEBUG:   #{BUILD_TYPE_DEBUG}"
 end
 
-COMPILER_FOUND = system "#{C_COMPILER} --version" || false
-if not COMPILER_FOUND
-    raise "Unable to find #{C_COMPILER} from path."
-elsif (not BUILD_OS_LINUX)
-    raise "Unable to determine the operating system"
+if PLATFORM_DESKTOP
+    $c_compiler   = "clang-15"
+    $cxx_compiler = "clang++-15"
+    $linker       = "clang++-15"
+elsif PLATFORM_WEB
+    $c_compiler   = "emcc"
+    $cxx_compiler = "emcc"
+    $linker       = "emcc"
+else
+    raise "Unexpected platform!"
 end
-
 
 #---------------------------------------------------------------------------
 
@@ -153,11 +150,12 @@ def build_executable_binary( target )
     objects        = get_objects_to_link(target).join(" ")
     binary         = get_binary( target )
     defines        = target.defines.map{|d| "-D\"#{d}\"" }.join(" ")
+    compiler_flags = target.compiler_flags.join(" ")
     linker_flags   = target.linker_flags.join(" ")
 
     FileUtils.mkdir_p File.dirname(binary)
 
-    sh "#{CXX_COMPILER} #{defines} -o #{binary} #{objects} #{linker_flags}", verbose: VERBOSE
+    sh "#{$linker} #{compiler_flags} #{defines} -o #{binary} #{objects} #{linker_flags}", verbose: VERBOSE
 end
 
 def compile_file(src, target)
@@ -168,15 +166,7 @@ def compile_file(src, target)
     cxx_flags    = target.cxx_flags.join(" ")
     c_flags      = target.c_flags.join(" ")
     defines      = target.defines.map{|d| "-D\"#{d}\"" }.join(" ")
-    linker_flags = target.linker_flags.join(" -l")
     compiler_flags = target.compiler_flags.join(" ")
-
-    if File.extname( src ) == ".cpp"
-        # TODO: add a regular flags for both, and remove this c_flags below
-       compiler = "#{CXX_COMPILER} #{cxx_flags} #{compiler_flags}"
-    else
-       compiler = "#{C_COMPILER} #{c_flags} #{compiler_flags}"
-    end
 
     obj = src_to_obj( src )
     dep = src_to_dep( src )
@@ -190,6 +180,12 @@ def compile_file(src, target)
 
     FileUtils.mkdir_p File.dirname(obj)
     FileUtils.mkdir_p File.dirname(dep)
+
+    if File.extname( src ) == ".cpp"
+       compiler = "#{$cxx_compiler} #{compiler_flags} #{cxx_flags}"
+    else
+       compiler = "#{$c_compiler} #{compiler_flags} #{c_flags}"
+    end
 
     sh "#{compiler} -c #{includes} #{defines} #{dep_flags} -o #{obj} #{src}", verbose: VERBOSE
 end
