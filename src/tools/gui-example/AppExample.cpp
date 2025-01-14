@@ -17,6 +17,11 @@ void AppExample::init()
     //
 }
 
+void AppExample::run()
+{
+    m_base_app.run();
+}
+
 void AppExample::update()
 {
     m_base_app.update();

@@ -1,5 +1,5 @@
 #include "TextureManager.h"
-#include "tools/gui/GLhelper.h"
+#include "tools/gui/GL/helpers.h"
 #include <lodepng/lodepng.h>
 
 #include "Texture.h"

@@ -2,6 +2,11 @@
 
 #include <algorithm>
 
+#if PLATFORM_WEB
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#endif
+
 #include "tools/core/assertions.h"
 #include "tools/core/System.h"
 #include "tools/core/EventManager.h"
@@ -28,6 +33,8 @@
 using namespace ndbl;
 using namespace tools;
 
+Nodable* Nodable::s_instance = nullptr;
+
 void Nodable::init()
 {
     LOG_VERBOSE("ndbl::Nodable", "init_ex ...\n");
@@ -39,19 +46,37 @@ void Nodable::init()
     m_node_factory      = init_node_factory();
     m_view->init(this); // must be last
 
+    s_instance = this;
+
     log::set_verbosity("Physics", log::Verbosity_Error );
     log::set_verbosity("FileView", log::Verbosity_Error );
 
     LOG_VERBOSE("ndbl::Nodable", "init_ex OK\n");
 }
 
+void Nodable::_do_frame()
+{
+    update();
+    draw();
+};
+
+#if PLATFORM_WEB
+void emscripten_do_frame()
+{
+    Nodable::instance()->_do_frame();
+}
+#endif
+
 void Nodable::run()
 {
+#if PLATFORM_WEB
+    emscripten_set_main_loop(&emscripten_do_frame, 0, true);
+#else
     while( !should_stop() )
     {
-        update();
-        draw();
+        _do_frame();
     }
+#endif
 }
 
 void Nodable::update()
@@ -425,6 +450,7 @@ void Nodable::shutdown()
     shutdown_config(m_config);
 
     delete m_view;
+    s_instance = nullptr;
 
     LOG_VERBOSE("ndbl::Nodable", "_handle_shutdown " OK "\n");
 }

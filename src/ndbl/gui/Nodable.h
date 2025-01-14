@@ -30,6 +30,7 @@ namespace ndbl
         bool            should_stop() const;
         NodableView*    get_view() const;
         tools::App*     get_base_app_handle() { return &m_base_app; }
+        void            _do_frame();
 
         // Files
 
@@ -47,8 +48,9 @@ namespace ndbl
                         get_files() const { return m_loaded_files; }
         bool            has_files() const { return !m_loaded_files.empty(); }
         void            reset_current_graph();
-
+        static Nodable* instance() { return s_instance; }
     private:
+        static Nodable*    s_instance;
         tools::App         m_base_app;
         NodableView*       m_view              = nullptr;
         Config*            m_config            = nullptr;

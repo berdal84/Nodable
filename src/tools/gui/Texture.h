@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tools/gui/GLhelper.h"
+#include "tools/gui/GL/helpers.h"
 #include "tools/gui/geometry/Vec2.h"
 #include "tools/core/types.h"
 

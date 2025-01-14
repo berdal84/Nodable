@@ -3,11 +3,9 @@
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/backends/imgui_impl_sdl.h>
 #include <lodepng/lodepng.h> // to save screenshot as PNG
+
 #if PLATFORM_DESKTOP
     #include <nfd.h>
-    #include <gl3w.h>
-#elif PLATFORM_WEB
-    #include <emscripten.h>
 #endif
 
 #include "tools/core/log.h"
@@ -15,6 +13,7 @@
 #include "tools/core/EventManager.h"
 #include "tools/gui/TextureManager.h"
 #include "tools/gui/FontManager.h"
+#include "tools/gui/GL/helpers.h"
 
 #include "App.h"
 #include "Config.h"
@@ -458,12 +457,10 @@ void AppView::end_draw()
     SDL_GL_MakeCurrent(m_sdl_window, m_sdl_gl_context);
     ImGuiIO& io = ImGui::GetIO();
 
-#if PLATFORM_DESKTOP
     glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
     Vec4& color = cfg->background_color.value;
     glClearColor( color.x, color.y, color.z, color.w);
     glClear(GL_COLOR_BUFFER_BIT);
-#endif
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -581,12 +578,13 @@ void AppView::draw_splashscreen()
 }
 
 
+
 std::vector<unsigned char> AppView::take_screenshot() const
 {
 #if PLATFORM_WEB
-    LOG_MESSAGE("tools::AppView", "Taking screenshot not implemented yet\n");
     return {};
-#elif PLATFORM_DESKTOP
+    // TODO: some glXXX are unavailable, but anyways it's not something we need in WEB, we can use browser for that.
+#else
     LOG_MESSAGE("tools::AppView", "Taking screenshot ...\n");
     int width, height;
     SDL_GetWindowSize(m_sdl_window, &width, &height);
@@ -611,6 +609,7 @@ std::vector<unsigned char> AppView::take_screenshot() const
     return out;
 #endif
 }
+
 
 bool AppView::is_fullscreen() const
 {

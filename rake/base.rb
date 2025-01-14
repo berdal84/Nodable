@@ -38,19 +38,15 @@ def new_target_from_base(name, type)
 
     # ---- PLATFORM_XXX specific --------
     if PLATFORM_WEB
-        target.linker_flags |= [
-            "-s WASM=1", 
-            "-s FULL_ES2=1",
-            "-s MIN_WEBGL_VERSION=2",
-            "-s MAX_WEBGL_VERSION=2",
-			"-gsource-map",
-        ]
-
-        files_to_preload = FileList["assets/**/*"]
-        target.linker_flags |= files_to_preload.collect{ |file| "--preload-file #{file}" }
         target.compiler_flags |= [
             "-s USE_FREETYPE=1",
             "-s USE_SDL=2",
+			"-gsource-map",
+        ]
+
+        target.linker_flags |= [
+            "--preload-file assets/",
+            "--emrun"
         ]
 
     elsif PLATFORM_DESKTOP
