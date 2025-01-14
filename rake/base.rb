@@ -41,10 +41,13 @@ def new_target_from_base(name, type)
         target.compiler_flags |= [
             "-s USE_FREETYPE=1",
             "-s USE_SDL=2",
+            "-sNO_DISABLE_EXCEPTION_CATCHING",
 			"-gsource-map",
         ]
 
         target.linker_flags |= [
+            "-s MIN_WEBGL_VERSION=2",
+            "-s MAX_WEBGL_VERSION=2",
             "--preload-file assets/",
             "--emrun"
         ]
@@ -73,6 +76,10 @@ def new_target_from_base(name, type)
             "-O0", # no optim
             "-Wfatal-errors",
             #"-pedantic"
+        ]
+        target.defines |= [
+            "TOOLS_DEBUG",
+            "NDBL_DEBUG"
         ]
     end
 

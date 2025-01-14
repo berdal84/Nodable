@@ -27,14 +27,14 @@
 // Exception ON
 //-------------
 
-#include "Exceptions.h"
+#include <exception>
 
 #ifdef VERIFY_
 static_assert(false, "VERIFY_ is reserved for tools, it should not be defined here.")
 #endif
 
 #define VERIFY_(expression, message_if_fails )\
-if(!(expression)) { LOG_FLUSH(); throw tools::runtime_error(message_if_fails); }
+if(!(expression)) { LOG_FLUSH(); throw std::runtime_error(message_if_fails); }
 
 #define ASSERT(expression) VERIFY_( (expression), "Assertion failed: " #expression" is false" )
 #define VERIFY(expression, message) VERIFY_( (expression), message )

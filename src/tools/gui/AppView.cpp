@@ -1,8 +1,7 @@
 #include "AppView.h"
-
+#include <lodepng/lodepng.h> // to save screenshot as PNG
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/backends/imgui_impl_sdl.h>
-#include <lodepng/lodepng.h> // to save screenshot as PNG
 
 #if PLATFORM_DESKTOP
     #include <nfd.h>
@@ -25,6 +24,7 @@ constexpr const char* k_status_window_name = "Status Bar";
 
 void AppView::init(App* _app)
 {
+    LOG_VERBOSE("tools::AppView", "init ...\n");
     ASSERT(_app != nullptr);
     m_app = _app;
     Config* cfg = get_config();
@@ -36,12 +36,12 @@ void AppView::init(App* _app)
     // Setup SDL
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0)
     {
-        LOG_ERROR( "tools::App", "SDL Error: %s\n", SDL_GetError());
-        VERIFY(false, "Unable to flag_initialized SDL");
+        LOG_ERROR( "tools::AppView", "SDL Error: %s\n", SDL_GetError());
+        VERIFY(false, "Unable to initialize SDL");
     }
 
     // Setup window
-    LOG_VERBOSE("tools::App", "setup SDL ...\n");
+    LOG_VERBOSE("tools::AppView", "setup SDL ...\n");
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -58,12 +58,15 @@ void AppView::init(App* _app)
                                      800,
                                      600,
                                      SDL_WINDOW_OPENGL |
-                                             SDL_WINDOW_RESIZABLE |
-                                             SDL_WINDOW_MAXIMIZED |
-                                             SDL_WINDOW_SHOWN
+                                     SDL_WINDOW_RESIZABLE |
+                                     SDL_WINDOW_MAXIMIZED |
+                                     SDL_WINDOW_SHOWN
     );
-
+    VERIFY(m_sdl_window, "SDL_CreateWindow failed" );
+    
     m_sdl_gl_context = SDL_GL_CreateContext(m_sdl_window);
+    VERIFY(m_sdl_gl_context, "SDL_GL_CreateContext failed" );
+
     SDL_GL_SetSwapInterval((int)cfg->vsync);
 
 #if PLATFORM_DESKTOP
@@ -71,7 +74,7 @@ void AppView::init(App* _app)
 #endif
 
     // Setup Dear ImGui binding
-    LOG_VERBOSE("tools::App", "ImGui init_ex ...\n");
+    LOG_VERBOSE("tools::AppView", "init ImGui ...\n");
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -86,7 +89,7 @@ void AppView::init(App* _app)
     // Override ImGui's default Style
     // TODO: consider declaring new members in Config rather than modifying values from there.
     //       see colors[ImGuiCol_Button]
-    LOG_VERBOSE("tools::App", "patch ImGui's style ...\n");
+    LOG_VERBOSE("tools::AppView", "patch ImGui's style ...\n");
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4 * colors = style.Colors;
     colors[ImGuiCol_Text]                   = Vec4(0.20f, 0.20f, 0.20f, 1.00f);
@@ -168,21 +171,50 @@ void AppView::init(App* _app)
     }
 
     // Setup Platform/Renderer bindings
+
+
+    // Decide GL+GLSL versions
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+    // GL ES 2.0 + GLSL 100
+    const char* glsl_version = "#version 100";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#elif defined(__APPLE__)
+    // GL 3.2 Core + GLSL 150
+    const char* glsl_version = "#version 150";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#else
+    // GL 3.0 + GLSL 130
+    const char* glsl_version = "#version 130";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#endif
+
+    LOG_VERBOSE("tools::AppView", "init backend for OpenGL ...\n");
     if( !ImGui_ImplSDL2_InitForOpenGL(m_sdl_window, m_sdl_gl_context) )
     {
-        LOG_ERROR("tools::App", "Unable to ImGui_ImplSDL2_InitForOpenGL\n");
+        LOG_ERROR("tools::AppView", "Unable to ImGui_ImplSDL2_InitForOpenGL\n");
     }
-    if( !ImGui_ImplOpenGL3_Init(/* default glsl_version*/) )
+    LOG_VERBOSE("tools::AppView", "init OpenGL (glsl_version: %s) ...\n", glsl_version);
+    if( !ImGui_ImplOpenGL3_Init(glsl_version) )
     {
-        LOG_ERROR("tools::App", "Unable to ImGui_ImplOpenGL3_Init\n");
+        LOG_ERROR("tools::AppView", "Unable to ImGui_ImplSDL2_InitForOpenGL\n");
     }
 #if PLATFORM_DESKTOP
     if (NFD_Init() != NFD_OKAY)
     {
-        LOG_ERROR("tools::App", "Unable to NFD_Init\n");
+        LOG_ERROR("tools::AppView", "Unable to NFD_Init\n");
     }
 #endif
     show_splashscreen = cfg->show_splashscreen_default;
+    LOG_VERBOSE("tools::AppView", "init DONE\n");
 }
 
 void AppView::shutdown()
