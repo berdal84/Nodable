@@ -17,10 +17,6 @@ ASTToken & ASTTokenRibbon::push(ASTToken &_token)
 
 std::string ASTTokenRibbon::to_string()const
 {
-    const char* TO_VISIT       = ".";
-    const char* IN_TRANSACTION = "v";
-    const char* CURRENT        = "c";
-
     tools::string out;
     out.append(RESET);
 
@@ -35,25 +31,43 @@ std::string ASTTokenRibbon::to_string()const
 
     for (const ASTToken& token : m_tokens)
     {
-        bool inside_transaction = !m_transaction.empty()
-                                   && token.m_index >= m_transaction.top()
-                                   && token.m_index <= m_cursor;
-
-        bool is_current = token.m_index == m_cursor;
-        const char* state = is_current ? CURRENT
-                                       : inside_transaction ? IN_TRANSACTION
-                                                            : TO_VISIT;
         tools::string512 line;
-        line.append_fmt("%s%5llu) %s \"%s\"" RESET "\n",
-                        inside_transaction ? BOLDBLACK : "",
-                        token.m_index,
-                        state,
-                        token.word_to_string().c_str());
-        out.append( line.c_str() );
-    }
+        
+        if ( token.m_index == 0 )
+        {
+            line.append("B"); // begin
+        }
+        else if ( token.m_index == m_tokens.back().m_index )
+        {
+            line.append("E"); // end
+        }
+        else
+        {
+            line.append("|"); // default
+        }
 
-    bool is_current = m_tokens.size() == m_cursor;
-    out.append_fmt("  END) %s " RESET "\n", is_current ? CURRENT : " ");
+        if ( !m_transaction.empty()
+              && token.m_index >= m_transaction.top()
+              && token.m_index <= m_cursor )
+        {
+            line.append("T"); // transaction
+        }
+        else
+        {
+            line.append("."); // no transaction
+        }
+
+        const std::string word = token.word_to_string();
+        line.append_fmt("%5zu) \"%s\"", token.m_index, word.c_str() );
+      
+        if ( token.m_index == m_cursor )
+        {
+            line.append(" [c]"); // current
+        }
+        
+        out.append(line.c_str());
+        out.append("\n");
+    }
 
     return out.c_str();
 }

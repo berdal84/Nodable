@@ -46,6 +46,7 @@ def new_target_from_base(name, type)
         ]
 
         target.linker_flags |= [
+            "-s EMBIND_STD_STRING_IS_UTF8=0",
             "-s ALLOW_MEMORY_GROWTH",
             "-s MIN_WEBGL_VERSION=2",
             "-s MAX_WEBGL_VERSION=2",
