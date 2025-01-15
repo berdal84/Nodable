@@ -17,7 +17,6 @@ namespace tools
         Config() = default;
 
         const char*           app_default_title        = "Default App Title";
-        bool                  vsync                    = false;
         bool                  runtime_debug            = false;
         bool                  fps_limit_on             = true;
         float                 fps_limit                = 60;

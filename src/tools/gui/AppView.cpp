@@ -82,9 +82,8 @@ void AppView::init(App* _app)
     m_sdl_gl_context = SDL_GL_CreateContext(m_sdl_window);
     VERIFY(m_sdl_gl_context, "SDL_GL_CreateContext failed" );
 
-    SDL_GL_SetSwapInterval((int)cfg->vsync);
-
 #if PLATFORM_DESKTOP
+    SDL_GL_SetSwapInterval(1); // https://wiki.libsdl.org/SDL2/SDL_GL_SetSwapInterval
     gl3wInit();
 #endif
 
