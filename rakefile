@@ -32,13 +32,13 @@ task :update_system do
 
     packages = [
         "build-essential",
-        "libstdc++-11-dev",
         "libegl1-mesa-dev",
         "libdbus-1-dev",
-        "libgtk-3-dev",
+        "libgtk-3-dev", # for NDF (native file dialog), can theoretically be removed see NFD_sdl.h
+        "libgtest-dev",
         "libfreetype-dev",
         "libsdl2-dev",
-        "libgtest-dev",
+        # "libstdc++-11-dev", comes with clang in principle
     ].join(" ")
 
     sh "sudo apt-get update && sudo apt-get install #{packages}"

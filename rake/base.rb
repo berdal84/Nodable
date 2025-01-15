@@ -61,9 +61,9 @@ def new_target_from_base(name, type)
             "/usr/include/SDL2",
         ]
         target.linker_flags |= [
-            "-lnfd", # native file dialog (uses gtk)
+            "-lnfd `pkg-config --libs gtk+-3.0`",
             "`pkg-config --libs --static sdl2`",
-            "`pkg-config --libs gtk+-3.0 freetype2 gl`",
+            "`pkg-config --libs freetype2 gl`",
         ] # NativeFileDialog
     end
 
