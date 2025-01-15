@@ -5,7 +5,6 @@ require_relative 'rake/libs'
 require_relative 'rake/base'
 require_relative 'rake/tools'
 require_relative 'rake/ndbl'
-require_relative 'rake/_cmake'
 
 CLEAN.include [OBJ_DIR, DEP_DIR] # intermediate files
 CLOBBER.include [BUILD_DIR] # final files
@@ -17,15 +16,12 @@ task :help do
     print("Welcome to Nodable's rakefile.\nFor more info, run: rake --tasks\n")
 end
 
-task :install => [
-    'update_system',
-    'nfd:install', # TODO: replace by GTK for DESKTOP, and JS for WEB
-];
 task :build => ['libs:build', 'tools:build', 'ndbl:build'] do puts "Build DONE" end
 task :test  => ['tools:test', 'ndbl:test']
 task :run   => ['ndbl:app:run']
 
-task :update_system do
+task :install do
+
     if not BUILD_OS_LINUX
         raise "Your system (#{BUILD_OS}) is not supported by this script"
     end
@@ -44,15 +40,35 @@ task :update_system do
     sh "sudo apt-get update && sudo apt-get install #{packages}"
 
     if PLATFORM_WEB
+
+        # Install EMSDK
+        #--------------
+
         # Download and install the latest SDK tools.
         sh "libs/emsdk/emsdk install latest"
 
         # Make the "latest" SDK "active" for the current user. (writes .emscripten file)
         sh "libs/emsdk/emsdk activate latest"
-    end
-end
 
-namespace :nfd do
-    nfd = CMakeTarget.new(name: "nfd", path: "libs/nativefiledialog-extended" )
-    tasks_for_cmake_target( nfd )
+    elsif PLATFORM_DESKTOP   
+
+        # Install NFD (native file dialog)
+        #---------------------------------
+
+        nfd_src_dir   = "./libs/nativefiledialog-extended"
+        nfd_build_dir = "./#{BUILD_DIR}/libs/nativefiledialog-extended"
+        nfd_config    = "Release"
+
+        # Make build directory
+        FileUtils.mkdir_p nfd_build_dir
+        
+        # Configure project
+        sh "cmake -S #{nfd_src_dir} -B #{nfd_build_dir}"
+
+        # Build project
+        sh "cmake --build #{nfd_build_dir} --config #{nfd_config}"
+
+        # Install (in /usr/local)
+        sh "sudo cmake --install #{nfd_build_dir} --config #{nfd_config}"
+    end
 end
