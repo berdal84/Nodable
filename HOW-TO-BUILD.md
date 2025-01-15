@@ -2,47 +2,58 @@
 
 # How to build?
 
+This document explains how to build nodable from sources, if you just want to try it you can skip these steps and browse [https://nodable.42borgata.com](https://nodable.42borgata.com).
+
 ## Architecture
 
 Nodable sources are split in two folders under [./src](./src/README.md):
 - [./src/ndbl](src/ndbl/README.md) project.
-- [./src/tool](src/tools/README.md) project.
+- [./src/tools](src/tools/README.md) project.
 
 They both rely on external [libraries](./libs/README.md).
 
 ## Prerequisites:
 
 ### System
-- Windows 2022+
-- Linux (only Ubuntu 22.04+ is tested)
-- macOS 13+
+- Ubuntu 22.04+
 
 ### Software
-- CMake 3.14+
-- a C++20 compiler (gcc, clang, and msvc are tested)
+- clang (version must support C++20)
+- Ruby 3+
+- CMake 3.14+ (required to build some libs)
 
-### Libraries (for Linux ONLY)
+## Build
 
-From a terminal, run:
-```
-sudo apt-get install libegl1-mesa pkg-config libgtk-3-dev libasound2-dev
-```
+### Clone the source code
 
-## Build commands
-
-Run the following commands:
+Run the following command:
 ```console
-git clone --branch v0.9.11 https://github.com/berdal84/nodable.git --recurse-submodules
-cd nodable
-cmake . -B cmake-build-there
-cmake --build cmake-build-there --config Release --target install
+git clone --branch v1.0 https://github.com/berdal84/nodable.git --recurse-submodules
 ```
-Once all commands are succeeded you must see a new folder `out` containing a folder `app`, inside there is all you need to run *Nodable*.
-On Windows execute: `nodable.exe`, on Linux and macOS run `./nodable`.
 
 Few details about the commands above:
 
 - `--recurse-submodules` is important when cloning since *Nodable* needs other git repositories to be built.
 - `--branch v<major>.<minor>.<patch>` is to target a specific tag, it is recommended to get a stable version. You can try a more recent if you wish. Browse [tags list](https://github.com/berdal84/nodable/tags).
-- `--target install` is to create_new a clean `out/app` directory with only the necessary files to run the software.
 
+### Install and Build
+
+Run the following commands:
+
+```console
+cd nodable
+rake install
+rake build
+```
+
+_Note: The default platform is "desktop", but you can build for the "web" by exporting `PLATFORM=web` to your environment or adding it as command line argument._
+
+Build output should be available in `build-desktop-release/bin`, simply run `./nodable` from this folder
+
+## Run
+
+Once built is done, the simplest way to run nodable is:
+
+```console
+rake run
+```
