@@ -39,6 +39,7 @@ def new_target_from_base(name, type)
     # ---- PLATFORM_XXX specific --------
     if PLATFORM_WEB
         target.compiler_flags |= [
+            "-s USE_PTHREADS=1",
             "-s USE_FREETYPE=1",
             "-s USE_SDL=2",
             "-sNO_DISABLE_EXCEPTION_CATCHING",
@@ -46,6 +47,7 @@ def new_target_from_base(name, type)
         ]
 
         target.linker_flags |= [
+            "-s PTHREAD_POOL_SIZE='navigator.hardwareConcurrency'",
             "-s EMBIND_STD_STRING_IS_UTF8=0",
             "-s ALLOW_MEMORY_GROWTH",
             "-s MIN_WEBGL_VERSION=2",
