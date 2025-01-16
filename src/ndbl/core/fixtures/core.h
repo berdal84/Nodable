@@ -46,15 +46,16 @@ public:
         return result;
     }
 
-    std::string load_example(const char* filename)
+    // load a file relative to executable directory
+    std::string load_file(const char* path)
     {
-        tools::Path path = tools::Path::get_executable_path().parent_path() / "assets" / "examples" / filename;
-        std::ifstream file_stream( path.c_str() );
+        tools::Path _path = tools::Path::get_executable_path().parent_path() / path;
+        std::ifstream file_stream( _path.c_str() );
         VERIFY(file_stream.is_open(), "Unable to open file!" );
         std::string program((std::istreambuf_iterator<char>(file_stream)), std::istreambuf_iterator<char>());
         return program;
     }
-
+    
     void log_ribbon() const
     {
         LOG_MESSAGE("fixture::core", "%s\n\n", get_language()->_state.string().c_str());

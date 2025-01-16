@@ -543,23 +543,29 @@ void NodableView::draw_startup_window(ImGuiID dockspace_id)
             ImGui::NewLine();
 
             ImGui::Text("%s", "Open an example");
-            std::vector<std::pair<std::string, std::string>> examples;
-            examples.emplace_back("Single expressions    ", "examples/arithmetic.cpp");
-            examples.emplace_back("Multi instructions    ", "examples/multi-instructions.cpp");
-            examples.emplace_back("Conditional Structures", "examples/if-else.cpp");
-            examples.emplace_back("For Loop              ", "examples/for-loop.cpp");
 
-            int i = 0;
-            ImVec2 small_btn_size(btn_size.x, btn_size.y * 0.66f);
+            struct Example {
+                const char* label;
+                const char* path;
+            };
 
-            for (const auto& [text, path]: examples) {
-                std::string label;
-                label.append(ICON_FA_BOOK" ");
-                label.append(text);
-                if (i++ % 2) ImGui::SameLine();
-                if (ImGui::Button(label.c_str(), small_btn_size))
+            const std::array<Example, 4> examples = {
+                Example{ ICON_FA_BOOK" Single expressions    ", "assets/examples/arithmetic.cpp" },
+                Example{ ICON_FA_BOOK" Multi instructions    ", "assets/examples/multi-instructions.cpp" },
+                Example{ ICON_FA_BOOK" Conditional Structures", "assets/examples/if-else.cpp" },
+                Example{ ICON_FA_BOOK" For Loop              ", "assets/examples/for-loop.cpp" }
+            };
+
+            const ImVec2 example_btn_size(btn_size.x, btn_size.y * 0.66f);
+            const int columns = 2;
+
+            ImGui::NewLine();
+            for (size_t i = 0; i < examples.size(); ++i )
+            {
+                if (i % columns != 0) ImGui::SameLine();
+                if (ImGui::Button(examples[i].label, example_btn_size))
                 {
-                    m_app->open_asset_file(path.c_str());
+                    m_app->open_asset_file(examples[i].path);
                 }
             }
 

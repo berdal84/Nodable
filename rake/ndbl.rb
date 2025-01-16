@@ -60,6 +60,7 @@ ndbl_app.assets = FileList[
     # Images
     "assets/images/nodable-logo-xs.png",
 ]
+
 ndbl_app.link_library |= [
     $tools_gui,
     $tools_core,
@@ -88,6 +89,8 @@ ndbl_test.link_library |= [
 if ENV["NDBL_SKIP_GUI_TEST"]
     puts "NDBL_SKIP_GUI_TEST is ON, skip GUI specs."
 else
+    ndbl_test.assets |= ndbl_app.assets;
+
     ndbl_test.sources |= [
         "src/ndbl/gui/Nodable.specs.cpp"
     ]

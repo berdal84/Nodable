@@ -99,7 +99,7 @@ Path& App::make_absolute(Path& _path)
     if ( _path.is_absolute() )
         return _path;
     // note: in PLATFORM_WEB, parent_path is "."
-    _path = Path::get_executable_path().parent_path() / "assets" / _path;
+    _path = Path::get_executable_path().parent_path() / _path;
     return _path;
 }
 

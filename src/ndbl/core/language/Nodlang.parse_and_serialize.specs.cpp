@@ -242,26 +242,26 @@ TEST_F(Language_parse_and_serialize, partial_while1)
 
 TEST_F(Language_parse_and_serialize , exemple_arithmetic)
 {
-    std::string program = load_example("arithmetic.cpp");
+    std::string program = load_file("./assets/examples/arithmetic.cpp");
     EXPECT_EQ(parse_and_serialize(program), program);
 }
 
 TEST_F(Language_parse_and_serialize , example_for_loop)
 {
-    std::string program = load_example("for-loop.cpp");
+    std::string program = load_file("./assets/examples/for-loop.cpp");
     EXPECT_EQ(parse_and_serialize(program), program);
 }
 
 // TODO: handle missing spaces around in var refs
 TEST_F(DISABLED_Language_parse_and_serialize , example_if_else)
 {
-    std::string program = load_example("if-else.cpp");
+    std::string program = load_file("./assets/examples/if-else.cpp");
     EXPECT_EQ(parse_and_serialize(program), program);
 }
 
 // TODO: handle missing spaces around in var refs
 TEST_F(DISABLED_Language_parse_and_serialize , exemple_multi_instructions)
 {
-    std::string program = load_example("multi-instructions.cpp");
+    std::string program = load_file("./assets/examples/multi-instructions.cpp");
     EXPECT_EQ(parse_and_serialize(program), program);
 }

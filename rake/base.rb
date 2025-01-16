@@ -62,7 +62,7 @@ def new_target_from_base(name, type)
         target.linker_flags |= [
             "-lnfd `pkg-config --libs gtk+-3.0`",
             "`pkg-config --libs --static sdl2`",
-            "`pkg-config --libs freetype2 gl`",
+            "`pkg-config --libs --static freetype2 gl`",
         ] # NativeFileDialog
     end
 

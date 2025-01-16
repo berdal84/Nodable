@@ -49,7 +49,7 @@ namespace tools
         {
             {{
                     "default",                  // id
-                    "fonts/CenturyGothic.ttf",  // path
+                    "assets/fonts/CenturyGothic.ttf",  // path
                     18.0f,                      // size in px.
                     true,                       // include icons?
                     18.0f                       // icons size in px.
@@ -61,8 +61,8 @@ namespace tools
                     "default" // FontSlot_ToolBtn
             },
             {
-                "FA-solid-900",           // Icon font name
-                "fonts/fa-solid-900.ttf"  // Icon font path
+                "FA-solid-900",                  // Icon font name
+                "assets/fonts/fa-solid-900.ttf"  // Icon font path
             },
             1.0f  // subsampling
         };
