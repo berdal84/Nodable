@@ -40,7 +40,7 @@ jobs:
       - name: Build
         if: env.PLATFORM == 'web'
         shell: bash
-        run: source libs/emsdk/emsdk_env.sh && rake build
+        run: source libs/emsdk/emsdk_env.sh && rake ndbl:build
 
       - name: Build
         if: env.PLATFORM == 'desktop'
