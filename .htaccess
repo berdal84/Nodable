@@ -1,6 +1,9 @@
+#Alternate default index pages
+DirectoryIndex nodable.html index.html
+
 # https://emscripten.org/docs/compiling/WebAssembly.html#web-server-setup
 
-Header add Access-Control-Allow-Origin "*" 
+Header add Access-Control-Allow-Origin "nodable.42borgata.com" 
 Header add Cross-Origin-Opener-Policy "same-origin"
 Header add Cross-Origin-Embedder-Policy "require-corp"
 Header add Cross-Origin-Resource-Policy "cross-origin"
@@ -10,4 +13,3 @@ RemoveType .gz
 AddEncoding x-gzip .gz
 AddType application/octet-stream .data
 AddType application/wasm .wasm
-
