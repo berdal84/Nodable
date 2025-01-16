@@ -61,7 +61,7 @@ Target = Struct.new(
     :c_flags,
     :cxx_flags,
     :linker_flags,
-    :asset_folder_path,
+    :assets,
     keyword_init: true # If the optional keyword_init keyword argument is set to true, .new takes keyword arguments instead of normal arguments.
 )
 
@@ -75,7 +75,7 @@ def new_empty_target(name, type)
     target.c_flags  = []
     target.cxx_flags = []
     target.linker_flags = []
-    target.asset_folder_path = nil
+    target.assets = FileList[]
     target.defines = []
     target.compiler_flags = []
     target.link_library = []
@@ -117,19 +117,6 @@ def get_objects_to_link( target )
         objects |= get_objects_to_link( other_target )
     end
     objects
-end
-
-def copy_assets_to( dest_dir, target )
-    from = target.asset_folder_path
-    to   = "#{dest_dir}/#{target.asset_folder_path}"
-    if Dir.exist?(to)
-        puts "Skip assets copy (#{to} already exists)"
-    else
-        puts "#{target.name} Copying assets to #{to} ..."
-        FileUtils.mkdir_p to
-        FileUtils.copy_entry( from, to )
-        puts "#{target.name} Assets copy OK"
-    end    
 end
 
 def get_library_name( target )
@@ -213,8 +200,14 @@ def tasks_for_target(target)
 
     desc "Compile #{target.name}"
     task :build => get_binary(target) do
-        if target.asset_folder_path
-            copy_assets_to( BIN_DIR, target ) # easier to copy there to run the app immediately
+
+        # Copy assets
+        target.assets.each_with_index do |source, index|
+            destination = "#{BIN_DIR}/#{source}";
+            FileUtils.rm_f destination
+            FileUtils.mkdir_p File.dirname(destination)
+            FileUtils.copy_file( source, destination )
+            puts "#{target.name} | asset copied: #{destination}"
         end
     end
 

@@ -5,7 +5,6 @@ require_relative 'tools'
 ndbl_core = new_target_from_base("ndbl_core", TargetType::OBJECTS)
 ndbl_core.sources |= FileList[
     "src/ndbl/core/language/Nodlang.cpp",
-
     "src/ndbl/core/ASTForLoop.cpp",
     "src/ndbl/core/ASTFunctionCall.cpp",
     "src/ndbl/core/ASTIf.cpp",
@@ -47,6 +46,19 @@ ndbl_gui.sources |= FileList[
 ndbl_app = new_target_from_base("nodable", TargetType::EXECUTABLE)
 ndbl_app.sources |= FileList[
     "src/ndbl/app/main.cpp",
+]
+ndbl_app.assets = FileList[
+    # Examples
+    "assets/examples/arithmetic.cpp",
+    "assets/examples/for-loop.cpp",
+    "assets/examples/if-else.cpp",
+    "assets/examples/multi-instructions.cpp",
+    # Fonts
+    "assets/fonts/CenturyGothic.ttf",
+    "assets/fonts/fa-solid-900.ttf",
+    "assets/fonts/JetBrainsMono-*.ttf", # 4 variants
+    # Images
+    "assets/images/nodable-logo-xs.png",
 ]
 ndbl_app.link_library |= [
     $tools_gui,

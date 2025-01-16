@@ -55,6 +55,12 @@ app.sources |= FileList[
     "src/tools/gui-example/AppExampleView.cpp",
     "src/tools/gui-example/main.cpp"
 ]
+app.assets = FileList[
+    # Fonts
+    "assets/fonts/CenturyGothic.ttf",
+    "assets/fonts/fa-solid-900.ttf",
+    "assets/fonts/JetBrainsMono-*.ttf", # 4 variants
+]
 app.link_library |= [$tools_core, $tools_gui]
 
 #---------------------------------------------------------------------------
