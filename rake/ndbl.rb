@@ -61,6 +61,12 @@ ndbl_app.assets = FileList[
     "assets/images/nodable-logo-xs.png",
 ]
 
+if PLATFORM_WEB
+    ndbl_app.assets = FileList[
+        ".htaccess"
+    ]
+end
+
 ndbl_app.link_library |= [
     $tools_gui,
     $tools_core,
