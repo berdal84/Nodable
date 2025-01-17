@@ -47,6 +47,7 @@ def new_target_from_base(name, type)
             "-s PTHREAD_POOL_SIZE='navigator.hardwareConcurrency'",
             "-s EMBIND_STD_STRING_IS_UTF8=0",
             "-s ALLOW_MEMORY_GROWTH",
+            "-Wno-pthreads-mem-growth", # emcc: warning: -pthread + ALLOW_MEMORY_GROWTH may run non-wasm code slowly, see https://github.com/WebAssembly/design/issues/1271 [-Wpthreads-mem-growth]
             "-s MIN_WEBGL_VERSION=2",
             "-s MAX_WEBGL_VERSION=2",
             "--emrun"

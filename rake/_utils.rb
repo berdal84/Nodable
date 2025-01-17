@@ -224,14 +224,14 @@ def tasks_for_target(target)
     file get_binary(target) => :link do
         case target.type
         when TargetType::EXECUTABLE
-            puts "#{target.name} Linking ..."
+            puts "#{target.name} | Linking executable binary ..."
             build_executable_binary( target )
-            puts "#{target.name} Linking OK"
+            puts "#{target.name} | Linking OK"
 
         when TargetType::STATIC_LIBRARY
-            puts "#{target.name} Creating static library ..."
+            puts "#{target.name} | Linking static library ..."
             build_static_library( target )
-            puts "#{target.name} Static library OK"
+            puts "#{target.name} | Linking OK"
         when TargetType::OBJECTS
             # nothing to go
         else

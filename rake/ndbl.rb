@@ -49,22 +49,22 @@ ndbl_app.sources |= FileList[
 
 ndbl_assets = FileList[
     # Examples
-    "examples/arithmetic.cpp",
-    "examples/for-loop.cpp",
-    "examples/if-else.cpp",
-    "examples/multi-instructions.cpp",
+    "./examples/arithmetic.cpp",
+    "./examples/for-loop.cpp",
+    "./examples/if-else.cpp",
+    "./examples/multi-instructions.cpp",
     # Fonts
-    "fonts/CenturyGothic.ttf",
-    "fonts/fa-solid-900.ttf",
-    "fonts/JetBrainsMono-*.ttf", # 4 variants
+    "./fonts/CenturyGothic.ttf",
+    "./fonts/fa-solid-900.ttf",
+    "./fonts/JetBrainsMono-*.ttf", # 4 variants
     # Images
-    "images/nodable-logo-xs.png",
+    "./images/nodable-logo-xs.png",
 ]
 
 if PLATFORM_WEB
 
     # Preload assets (they will be compiled in a binary .data)
-    compiler_flags |= ndbl_assets.map{|pattern| "--preload-file #{pattern.split(":")[0]}" }
+    ndbl_app.linker_flags |= ndbl_assets.map{|path| "--preload-file #{path}" }
 
     # Provide headers for deployment (note: requires https when deployed).
     ndbl_app.assets = [
