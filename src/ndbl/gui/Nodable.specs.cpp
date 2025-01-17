@@ -59,7 +59,7 @@ TEST_F(Gui_App, open_file)
     app.get_view()->show_splashscreen(false);
     loop_for_x_sec( app, 1.0 );
     save_screenshot(app, "TEST_Gui_App__open_file__0.png");
-    EXPECT_TRUE(app.open_asset_file("./assets/examples/arithmetic.cpp"));
+    EXPECT_TRUE(app.open_asset_file("examples/arithmetic.cpp"));
     loop_for_x_sec( app, 1.0 );
     save_screenshot(app, "TEST_Gui_App__open_file__1.png");
     app.shutdown();
@@ -70,7 +70,7 @@ TEST_F(Gui_App, close_file)
     Nodable app;
     app.init();
     app.get_view()->show_splashscreen(false);
-    File* file = app.open_asset_file("./assets/examples/arithmetic.cpp");
+    File* file = app.open_asset_file("examples/arithmetic.cpp");
     loop_for_x_sec( app, 1.0 );
     save_screenshot(app, "TEST_Gui_App__close_file__0.png");
     app.close_file( file );
@@ -86,16 +86,16 @@ TEST_F(Gui_App, open_examples)
     app.get_view()->show_splashscreen(false);
     app.update();
     save_screenshot(app, "TEST_Gui_App__open_examples__0.png");
-    EXPECT_TRUE(app.open_asset_file("./assets/examples/arithmetic.cpp"));
+    EXPECT_TRUE(app.open_asset_file("examples/arithmetic.cpp"));
     loop_for_x_sec( app, 1.0 );
     save_screenshot(app, "TEST_Gui_App__open_examples__1.png");
-    EXPECT_TRUE(app.open_asset_file("./assets/examples/for-loop.cpp"));
+    EXPECT_TRUE(app.open_asset_file("examples/for-loop.cpp"));
     loop_for_x_sec( app, 1.0 );
     save_screenshot(app, "TEST_Gui_App__open_examples__2.png");
-    EXPECT_TRUE(app.open_asset_file("./assets/examples/if-else.cpp"));
+    EXPECT_TRUE(app.open_asset_file("examples/if-else.cpp"));
     loop_for_x_sec( app, 1.0 );
     save_screenshot(app, "TEST_Gui_App__open_examples__3.png");
-    EXPECT_TRUE(app.open_asset_file("./assets/examples/multi-instructions.cpp"));
+    EXPECT_TRUE(app.open_asset_file("examples/multi-instructions.cpp"));
     loop_for_x_sec( app, 1.0 );
     save_screenshot(app, "TEST_Gui_App__open_examples__4.png");
     app.shutdown();

@@ -19,7 +19,11 @@ void AppExample::init()
 
 void AppExample::run()
 {
-    m_base_app.run();
+    while( !should_stop() )
+    {
+        update();
+        draw();
+    }
 }
 
 void AppExample::update()

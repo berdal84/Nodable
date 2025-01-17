@@ -61,7 +61,8 @@ Target = Struct.new(
     :c_flags,
     :cxx_flags,
     :linker_flags,
-    :assets,
+    :assets, # List of patterns like: "<source>" or "<source>:<destination>"
+    :assets_nopreload, # same but won't be included in the binary
     keyword_init: true # If the optional keyword_init keyword argument is set to true, .new takes keyword arguments instead of normal arguments.
 )
 
@@ -76,6 +77,7 @@ def new_empty_target(name, type)
     target.cxx_flags = []
     target.linker_flags = []
     target.assets = FileList[]
+    target.assets_nopreload = FileList[]
     target.defines = []
     target.compiler_flags = []
     target.link_library = []
@@ -176,6 +178,22 @@ def compile_file(src, target)
     sh "#{compiler} -c #{includes} #{defines} #{dep_flags} -o #{obj} #{src}", verbose: VERBOSE
 end
 
+def copy_asset(pattern) # pattern: "<source>:<destination>" (destination is optional)
+
+    arr = pattern.split(':')
+
+    # Source is required
+    source = arr[0] or raise ("Wrong pattern: #{pattern}")
+
+    # Destination is optional, by default we copy relative to repository root
+    destination = "#{BIN_DIR}/#{arr[1] || source}";
+    
+    FileUtils.rm_f destination
+    FileUtils.mkdir_p File.dirname(destination)
+    FileUtils.copy_file( source, destination )
+    puts "  Copy asset: #{source} => #{destination}"
+end
+
 def tasks_for_target(target)
 
     desc "Clean #{target.name}'s intermediate files"
@@ -201,13 +219,16 @@ def tasks_for_target(target)
     desc "Compile #{target.name}"
     task :build => get_binary(target) do
 
-        # Copy assets
-        target.assets.each_with_index do |source, index|
-            destination = "#{BIN_DIR}/#{source}";
-            FileUtils.rm_f destination
-            FileUtils.mkdir_p File.dirname(destination)
-            FileUtils.copy_file( source, destination )
-            puts "#{target.name} | asset copied: #{destination}"
+        # Copy assets (in PLATFORM_WEB we skip this because we incorporate files as *.data)
+        if PLATFORM_DESKTOP
+            target.assets.each do |pattern|
+                copy_asset(pattern)
+            end
+        end
+
+        # Copy assets that must never be preloaded
+        target.assets_nopreload.each do |pattern|
+            copy_asset(pattern)
         end
     end
 

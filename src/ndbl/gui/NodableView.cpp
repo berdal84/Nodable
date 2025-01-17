@@ -550,10 +550,10 @@ void NodableView::draw_startup_window(ImGuiID dockspace_id)
             };
 
             const std::array<Example, 4> examples = {
-                Example{ ICON_FA_BOOK" Single expressions    ", "assets/examples/arithmetic.cpp" },
-                Example{ ICON_FA_BOOK" Multi instructions    ", "assets/examples/multi-instructions.cpp" },
-                Example{ ICON_FA_BOOK" Conditional Structures", "assets/examples/if-else.cpp" },
-                Example{ ICON_FA_BOOK" For Loop              ", "assets/examples/for-loop.cpp" }
+                Example{ ICON_FA_BOOK" Single expressions    ", "examples/arithmetic.cpp" },
+                Example{ ICON_FA_BOOK" Multi instructions    ", "examples/multi-instructions.cpp" },
+                Example{ ICON_FA_BOOK" Conditional Structures", "examples/if-else.cpp" },
+                Example{ ICON_FA_BOOK" For Loop              ", "examples/for-loop.cpp" }
             };
 
             const ImVec2 example_btn_size(btn_size.x, btn_size.y * 0.66f);

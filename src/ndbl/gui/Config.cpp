@@ -39,7 +39,7 @@ ndbl::Config::Config(tools::Config* _tools_cfg)
 {
     VERIFY(_tools_cfg != nullptr, "tools config not initialised");
     tools_cfg = _tools_cfg;
-    ui_splashscreen_imagePath       = "assets/images/nodable-logo-xs.png";
+    ui_splashscreen_imagePath       = "images/nodable-logo-xs.png";
     ui_text_textEditorPalette       = {
             0xffffffff, // None
             0xffd69c56, // Keyword
@@ -169,11 +169,11 @@ ndbl::Config::Config(tools::Config* _tools_cfg)
     const char *k_tool      = "Tool Button";
 
     tools_cfg->font_manager.text = {
-        // id          , font_path                                  , size , icons? , icons size
-        { k_paragraph  , "assets/fonts/JetBrainsMono-Regular.ttf"   , 16.0f, true   , 16.0f      },
-        { k_heading    , "assets/fonts/JetBrainsMono-Bold.ttf"      , 20.0f, true   , 20.0f      },
-        { k_code       , "assets/fonts/JetBrainsMono-Regular.ttf"   , 16.0f, true   , 16.0f      },
-        { k_tool       , "assets/fonts/JetBrainsMono-Medium.ttf"    , 16.0f, true   , 16.0f      }
+        // id          , font_path                           , size , icons? , icons size
+        { k_paragraph  , "fonts/JetBrainsMono-Regular.ttf"   , 16.0f, true   , 16.0f      },
+        { k_heading    , "fonts/JetBrainsMono-Bold.ttf"      , 20.0f, true   , 20.0f      },
+        { k_code       , "fonts/JetBrainsMono-Regular.ttf"   , 16.0f, true   , 16.0f      },
+        { k_tool       , "fonts/JetBrainsMono-Medium.ttf"    , 16.0f, true   , 16.0f      }
     };
 
     tools_cfg->font_manager.defaults[FontSlot_Paragraph] = k_paragraph;
@@ -181,7 +181,7 @@ ndbl::Config::Config(tools::Config* _tools_cfg)
     tools_cfg->font_manager.defaults[FontSlot_Code]      = k_code;
     tools_cfg->font_manager.defaults[FontSlot_ToolBtn]   = k_tool;
     tools_cfg->font_manager.subsamples                   = 1.0f;
-    tools_cfg->font_manager.icon                         = {"Icons", "assets/fonts/fa-solid-900.ttf" };
+    tools_cfg->font_manager.icon                         = {"Icons", "fonts/fa-solid-900.ttf" };
     tools_cfg->app_default_title = NDBL_APP_NAME " " NDBL_BUILD_REF " - Built " __DATE__ " at " __TIME__;
 }
 

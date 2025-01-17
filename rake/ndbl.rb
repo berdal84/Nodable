@@ -47,24 +47,33 @@ ndbl_app = new_target_from_base("nodable", TargetType::EXECUTABLE)
 ndbl_app.sources |= FileList[
     "src/ndbl/app/main.cpp",
 ]
-ndbl_app.assets = FileList[
+
+ndbl_assets = FileList[
     # Examples
-    "assets/examples/arithmetic.cpp",
-    "assets/examples/for-loop.cpp",
-    "assets/examples/if-else.cpp",
-    "assets/examples/multi-instructions.cpp",
+    "examples/arithmetic.cpp",
+    "examples/for-loop.cpp",
+    "examples/if-else.cpp",
+    "examples/multi-instructions.cpp",
     # Fonts
-    "assets/fonts/CenturyGothic.ttf",
-    "assets/fonts/fa-solid-900.ttf",
-    "assets/fonts/JetBrainsMono-*.ttf", # 4 variants
+    "fonts/CenturyGothic.ttf",
+    "fonts/fa-solid-900.ttf",
+    "fonts/JetBrainsMono-*.ttf", # 4 variants
     # Images
-    "assets/images/nodable-logo-xs.png",
+    "images/nodable-logo-xs.png",
 ]
 
 if PLATFORM_WEB
-    ndbl_app.assets = FileList[
-        ".htaccess"
+
+    # Preload assets (they will be compiled in a binary .data)
+    compiler_flags |= ndbl_assets.map{|pattern| "--preload-file #{pattern.split(":")[0]}" }
+
+    # Provide headers for deployment (note: requires https when deployed).
+    ndbl_app.assets = [
+        "http/.htaccess:.htaccess"
     ]
+
+elsif  PLATFORM_DESKTOP
+    ndbl_app.assets = ndbl_assets
 end
 
 ndbl_app.link_library |= [
