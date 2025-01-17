@@ -19,7 +19,6 @@ namespace ndbl
 {
     // forward declarations
     class Graph;
-    class ASTNodeFactory;
     class ASTScope;
 
     typedef int ASTNodeFlags;
@@ -39,7 +38,6 @@ namespace ndbl
         DECLARE_REFLECT_virtual
         friend class ASTScope;
         friend class Graph;
-        friend class ASTNodeFactory;
 //===== CONSTRUCTORS/DESTRUCTORS =======================================================================================
     public:
         ASTNode(): m_component_collection(this), m_adjacent_nodes_cache(this) {};

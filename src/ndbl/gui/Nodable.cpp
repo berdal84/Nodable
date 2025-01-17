@@ -43,7 +43,6 @@ void Nodable::init()
     m_view = new NodableView();
     m_base_app.init_ex(m_view->get_base_view_handle(), m_config->tools_cfg ); // the pointers are owned by this class, base app just use them.
     m_language          = init_language();
-    m_node_factory      = init_node_factory();
     m_view->init(this); // must be last
 
     s_instance = this;
@@ -443,7 +442,6 @@ void Nodable::shutdown()
     }
 
     // shutdown managers & co.
-    shutdown_node_factory(m_node_factory);
     shutdown_language(m_language);
     m_view->shutdown();
     m_base_app.shutdown();

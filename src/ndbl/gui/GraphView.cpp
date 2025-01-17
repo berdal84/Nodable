@@ -11,8 +11,11 @@
 
 #include "ndbl/core/Graph.h"
 #include "ndbl/core/ASTLiteral.h"
+#include "ndbl/core/ASTVariable.h"
 #include "ndbl/core/ASTUtils.h"
 #include "ndbl/core/ASTNodeSlot.h"
+#include "ndbl/core/ASTFunctionCall.h"
+#include "ndbl/core/ASTSwitchBehavior.h"
 
 #include "Config.h"
 #include "Event.h"

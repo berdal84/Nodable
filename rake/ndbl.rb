@@ -10,7 +10,6 @@ ndbl_core.sources |= FileList[
     "src/ndbl/core/ASTIf.cpp",
     "src/ndbl/core/ASTLiteral.cpp",
     "src/ndbl/core/ASTNode.cpp",
-    "src/ndbl/core/ASTNodeFactory.cpp",
     "src/ndbl/core/ASTNodeProperty.cpp",
     "src/ndbl/core/ASTNodeSlot.cpp",
     "src/ndbl/core/ASTScope.cpp",

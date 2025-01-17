@@ -5,6 +5,7 @@
 #include "ASTScope.h"
 #include "Graph.h"
 #include "ASTUtils.h"
+#include "ASTFunctionCall.h"
 
 using namespace ndbl;
 using namespace tools;

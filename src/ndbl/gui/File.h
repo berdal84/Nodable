@@ -9,7 +9,6 @@
 #include "tools/core/log.h"
 
 #include "Isolation.h"
-#include "ndbl/core/ASTNodeFactory.h"
 #include "ndbl/gui/FileView.h"
 #include "ndbl/gui/History.h"
 #include "ndbl/gui/Nodable.h"

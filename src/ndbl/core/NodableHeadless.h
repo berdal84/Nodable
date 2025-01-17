@@ -12,7 +12,6 @@ namespace ndbl
 {
     // forward declarations
     class Graph;
-    class ASTNodeFactory;
     class Nodlang;
 
     class NodableHeadless
@@ -32,7 +31,6 @@ namespace ndbl
     protected:
         tools::TaskManager* m_task_manager{};
         Nodlang*            m_language{};
-        ASTNodeFactory*     m_node_factory{};
         bool                m_should_stop{false};
         Graph*              m_graph{};
         std::string         m_source_code;

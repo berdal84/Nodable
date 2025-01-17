@@ -25,7 +25,7 @@ File::File()
     LOG_VERBOSE( "File", "Constructor being called ...\n");
 
     // Graph
-    _graph           = new Graph(get_node_factory());
+    _graph = new Graph();
     auto* graph_view = _graph->components()->create<GraphView>();
 
     _graph->signal_change.connect<&File::set_text_dirty>(this);

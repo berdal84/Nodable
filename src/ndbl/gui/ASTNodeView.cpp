@@ -4,17 +4,30 @@
 #include <glm/trigonometric.hpp> // for sinus
 #include <vector>
 
+#include "tools/core/math.h"
+#include "tools/gui/Config.h"
+
 #include "ndbl/core/ASTUtils.h"
 #include "ndbl/core/ASTFunctionCall.h"
 #include "ndbl/core/ASTLiteral.h"
+#include "ndbl/core/ASTForLoop.h"
+#include "ndbl/core/ASTFunctionCall.h"
+#include "ndbl/core/ASTIf.h"
+#include "ndbl/core/ASTLiteral.h"
+#include "ndbl/core/ASTNode.h"
+#include "ndbl/core/ASTScope.h"
+#include "ndbl/core/ASTSlotLink.h"
+#include "ndbl/core/ASTUtils.h"
+#include "ndbl/core/ASTVariable.h"
+#include "ndbl/core/ASTVariableRef.h"
+#include "ndbl/core/ASTWhileLoop.h"
 
 #include "Config.h"
-#include "PhysicsComponent.h"
 #include "ASTNodePropertyView.h"
-#include "GraphView.h"
 #include "ASTNodeSlotView.h"
-#include "tools/gui/Config.h"
-#include "tools/core/math.h"
+#include "GraphView.h"
+#include "PhysicsComponent.h"
+
 
 #ifdef NDBL_DEBUG
 #define DEBUG_DRAW 0
@@ -888,7 +901,11 @@ ASTNodeView* ASTNodeView::substitute_with_parent_if_not_visible(ASTNodeView* _vi
 
 std::vector<ASTNodeView*> ASTNodeView::get_adjacent(SlotFlags flags) const
 {
-    return ASTUtils::adjacent_components<ASTNodeView>(node(), flags);
+    std::vector<ASTNodeView*> result;
+        for(auto _adjacent_node : ASTUtils::get_adjacent_nodes( node(), flags ) )
+            if( auto* component = _adjacent_node->component<ASTNodeView>() )
+                result.push_back( component );
+    return result;
 }
 
 void ASTNodeView::set_color(const Vec4* _color, ColorType _type )

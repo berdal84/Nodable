@@ -1,25 +1,25 @@
 #include "Graph.h"
 
 #include <algorithm>    // std::find_if
-
-#include "ASTSlotLink.h"
+#include "language/Nodlang.h"
+#include "imgui_internal.h"
+#include "ASTForLoop.h"
+#include "ASTFunctionCall.h"
 #include "ASTIf.h"
 #include "ASTLiteral.h"
 #include "ASTNode.h"
-#include "ASTUtils.h"
-#include "ASTNodeFactory.h"
 #include "ASTScope.h"
+#include "ASTSlotLink.h"
+#include "ASTUtils.h"
 #include "ASTVariable.h"
-#include "language/Nodlang.h"
 #include "ASTVariableRef.h"
-#include "imgui_internal.h"
+#include "ASTWhileLoop.h"
 
 using namespace ndbl;
 using namespace tools;
 
-Graph::Graph(ASTNodeFactory* factory)
-: m_factory(factory)
-, m_components(this)
+Graph::Graph()
+: m_components(this)
 {
     _init();
 }
@@ -38,7 +38,7 @@ void Graph::_init()
     ASSERT( m_node_registry.empty() ); // Root must be first, registry should be empty
 
     // create and _insert root
-    ASTNode* root  = m_factory->create_root_scope();
+    ASTNode* root  = ASTUtils::create_root_scope();
     this->_insert(root, nullptr);
 
     LOG_VERBOSE("Graph", "-- add root node %p (name: %s, class: %s)\n", root, root->name().c_str(), root->get_class()->name());
@@ -200,28 +200,28 @@ void Graph::_clean_node(ASTNode* node)
 
 ASTNode* Graph::create_scope(ASTScope* scope)
 {
-    auto* node = m_factory->create_scope();
+    auto* node = ASTUtils::create_scope();
     _insert(node, scope);
     return node;
 }
 
 ASTVariable* Graph::create_variable(const TypeDescriptor *_type, const std::string& _name, ASTScope* scope)
 {
-    ASTVariable* node = m_factory->create_variable(_type, _name);
+    ASTVariable* node = ASTUtils::create_variable(_type, _name);
     _insert(node, scope);
 	return node;
 }
 
 ASTFunctionCall* Graph::create_function(const FunctionDescriptor& _type, ASTScope* scope)
 {
-    ASTFunctionCall* node = m_factory->create_function(_type, ASTNodeType_FUNCTION);
+    ASTFunctionCall* node = ASTUtils::create_function(_type, ASTNodeType_FUNCTION);
     _insert(node, scope);
     return node;
 }
 
 ASTFunctionCall* Graph::create_operator(const FunctionDescriptor& _type, ASTScope* scope)
 {
-    ASTFunctionCall* node = m_factory->create_function(_type, ASTNodeType_OPERATOR);
+    ASTFunctionCall* node = ASTUtils::create_function(_type, ASTNodeType_OPERATOR);
     _insert(node, scope);
     return node;
 }
@@ -530,35 +530,35 @@ EdgeRegistry::iterator Graph::_disconnect(EdgeRegistry::iterator it, GraphFlags 
 
 ASTIf* Graph::create_cond_struct(ASTScope* scope)
 {
-    ASTIf* node = m_factory->create_cond_struct();
+    ASTIf* node = ASTUtils::create_cond_struct();
     _insert(node, scope);
     return node;
 }
 
 ASTForLoop* Graph::create_for_loop(ASTScope* scope)
 {
-    ASTForLoop* node = m_factory->create_for_loop();
+    ASTForLoop* node = ASTUtils::create_for_loop();
     _insert(node, scope);
     return node;
 }
 
 ASTWhileLoop* Graph::create_while_loop(ASTScope* scope)
 {
-    ASTWhileLoop* ast_node = m_factory->create_while_loop();
+    ASTWhileLoop* ast_node = ASTUtils::create_while_loop();
     _insert(ast_node, scope);
     return ast_node;
 }
 
 ASTNode* Graph::create_node(ASTScope* scope)
 {
-    ASTNode* node = m_factory->create_node();
+    ASTNode* node = ASTUtils::create_node();
     _insert(node, scope);
     return node;
 }
 
 ASTLiteral* Graph::create_literal(const TypeDescriptor* _type, ASTScope* scope)
 {
-    ASTLiteral* node = m_factory->create_literal(_type);
+    ASTLiteral* node = ASTUtils::create_literal(_type);
     _insert(node, scope);
     return node;
 }
@@ -602,7 +602,7 @@ ASTNode* Graph::create_node(CreateNodeType _type, const FunctionDescriptor* _sig
 
 ASTVariableRef* Graph::create_variable_ref(ASTScope* scope)
 {
-    ASTVariableRef* node = m_factory->create_variable_ref();
+    ASTVariableRef* node = ASTUtils::create_variable_ref();
     _insert(node, scope);
     return node;
 }
@@ -622,7 +622,7 @@ ASTVariable* Graph::create_variable_decl(const TypeDescriptor* type, const char*
 
 ASTNode *Graph::create_empty_instruction(ASTScope* scope)
 {
-    ASTNode* node = m_factory->create_empty_instruction();
+    ASTNode* node = ASTUtils::create_empty_instruction();
     _insert(node, scope);
     return node;
 }

@@ -4,21 +4,20 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <set>
 
-#include "tools/core/Component.h"
-#include "ndbl/core/ASTNode.h"
-#include "ndbl/core/ASTNodeFactory.h"
-#include "ndbl/core/ASTWhileLoop.h"
+#include "ASTUtils.h"
+#include "ASTSlotLink.h"
+#include "ASTScope.h"
+#include "tools/core/Component.h" // for ComponentBag<T>
+
 #include "tools/core/reflection/reflection"
 #include "tools/core/types.h"
 
 namespace ndbl
 {
-    // forward declarations
-    class Nodlang;
-    class ASTNodeFactory;
-    class GraphView;
-    class ASTVariableRef;
+    // forward decl
+    class ASTScope;
 
     typedef int GraphFlags;
     enum GraphFlag_
@@ -54,7 +53,7 @@ namespace ndbl
 	class Graph
 	{
 	public:
- 		Graph(ASTNodeFactory*);
+ 		Graph();
 		~Graph();
 //====== Data =======================================================================================================
     public:
@@ -66,7 +65,6 @@ namespace ndbl
         tools::Signal<ScopeChanged>   signal_change_scope;
         tools::SimpleSignal           signal_is_complete; // user defined, usually when parser or user is done
     private:
-        const ASTNodeFactory*         m_factory{};
         NodeRegistry                  m_node_registry;
         EdgeRegistry                  m_edge_registry;
         tools::ComponentBag<Graph>    m_components;

@@ -13,7 +13,6 @@ namespace ndbl
 {
     // forward declarations
     class Nodlang;
-    class ASTNodeFactory;
     class NodableView;
     class File;
 
@@ -56,7 +55,6 @@ namespace ndbl
         Config*            m_config            = nullptr;
         File*              m_current_file      = nullptr;
         Nodlang*           m_language          = nullptr;
-        ASTNodeFactory*    m_node_factory      = nullptr;
         u8_t               m_untitled_file_count = 0;
         std::vector<File*> m_loaded_files;
         std::vector<File*> m_flagged_to_delete_file;
