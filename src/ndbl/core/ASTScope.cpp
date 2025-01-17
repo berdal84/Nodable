@@ -87,17 +87,17 @@ void ASTScope::append(ASTNode *node)
         auto variable_node = reinterpret_cast<ASTVariable*>( node );
         if (find_variable(variable_node->get_identifier()) != nullptr )
         {
-            LOG_ERROR("Scope", "Unable to append variable '%s', already exists in the same internal_scopeview.\n", variable_node->get_identifier().c_str());
+            TOOLS_LOG(TOOLS_ERROR, "Scope", "Unable to append variable '%s', already exists in the same internal_scopeview.\n", variable_node->get_identifier().c_str());
             // we do not return, graph is abstract, it just won't compile ...
         }
         else if (variable_node->scope() )
         {
-            LOG_ERROR("Scope", "Unable to append variable '%s', already declared in another internal_scopeview. Remove it first.\n", variable_node->get_identifier().c_str());
+            TOOLS_LOG(TOOLS_ERROR, "Scope", "Unable to append variable '%s', already declared in another internal_scopeview. Remove it first.\n", variable_node->get_identifier().c_str());
             // we do not return, graph is abstract, it just won't compile ...
         }
         else
         {
-            LOG_VERBOSE("Scope", "Add '%s' variable to the internal_scopeview\n", variable_node->get_identifier().c_str() );
+            TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "Scope", "Add '%s' variable to the internal_scopeview\n", variable_node->get_identifier().c_str() );
             m_variable.insert(variable_node);
         }
     }

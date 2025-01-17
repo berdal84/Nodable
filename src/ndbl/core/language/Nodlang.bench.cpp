@@ -47,7 +47,7 @@ public:
     {
         language = init_language();;
         graph    = new Graph(factory);
-        log::set_verbosity(log::Verbosity_Error);
+        log_set_verbosity(Verbosity_Error);
     }
 
     void TearDown(const ::benchmark::State& state)

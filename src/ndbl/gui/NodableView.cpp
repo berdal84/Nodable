@@ -41,7 +41,7 @@ void NodableView::update()
 
 void NodableView::init(Nodable * _app)
 {
-    LOG_VERBOSE("ndbl::NodableView", "set_name ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::NodableView", "init ...\n");
     m_app = _app;
     // Initialize wrapped view and inject some code ...
     tools::App* base_app = _app->get_base_app_handle();
@@ -97,7 +97,7 @@ void NodableView::init(Nodable * _app)
     // TODO: add a list of preset to create operators/functions
     // action_manager->new_action<Event_CreateNode>(label.c_str(), Shortcut{}, EventPayload_CreateNode{CreateNodeType_FUNCTION, invokable->get_sig() } );
 
-    LOG_VERBOSE("ndbl::NodableView", "init_ex " OK "\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::NodableView", "init_ex " TOOLS_OK "\n");
 }
 
 void NodableView::_on_draw_splashscreen_content()
@@ -300,18 +300,18 @@ void NodableView::draw()
 
             if (ImGui::BeginMenu("Verbosity"))
             {
-                auto menu_item_verbosity = [](log::Verbosity _verbosity, const char *_label) {
-                    if (ImGui::MenuItem(_label, "", log::get_verbosity() == _verbosity)) {
-                        log::set_verbosity(_verbosity);
+                auto menu_item_verbosity = [](Verbosity verbosity, const char* label)
+                {
+                    if (ImGui::MenuItem(label, "", get_log_verbosity() == verbosity))
+                    {
+                        set_log_verbosity(verbosity);
                     }
                 };
 
-#ifndef LOG_DISABLE_VERBOSE
-                menu_item_verbosity(log::Verbosity_Verbose, "Verbose");
-#endif
-                menu_item_verbosity(log::Verbosity_Message, "Message");
-                menu_item_verbosity(log::Verbosity_Warning, "Warning");
-                menu_item_verbosity(log::Verbosity_Error, "Error");
+                menu_item_verbosity(Verbosity_Verbose, "Verbose");
+                menu_item_verbosity(Verbosity_Message, "Message");
+                menu_item_verbosity(Verbosity_Warning, "Warning");
+                menu_item_verbosity(Verbosity_Error,   "Error");
                 ImGui::EndMenu();
             }
 

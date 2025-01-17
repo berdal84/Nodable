@@ -38,7 +38,7 @@ namespace tools
             1.25f,
             2.0f, // LG
         };
-        std::array<Vec4, log::Verbosity_COUNT> log_color
+        std::array<Vec4, Verbosity_COUNT> log_color
         {
             Vec4(0.5f, 0.0f, 0.0f, 1.0f), // red
             Vec4(0.5f, 0.0f, 0.5f, 1.0f), // violet

@@ -37,7 +37,7 @@ Nodable* Nodable::s_instance = nullptr;
 
 void Nodable::init()
 {
-    LOG_VERBOSE("ndbl::Nodable", "init_ex ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::Nodable", "init_ex ...\n");
 
     m_config = init_config();
     m_view = new NodableView();
@@ -47,10 +47,7 @@ void Nodable::init()
 
     s_instance = this;
 
-    log::set_verbosity("Physics", log::Verbosity_Error );
-    log::set_verbosity("FileView", log::Verbosity_Error );
-
-    LOG_VERBOSE("ndbl::Nodable", "init_ex OK\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::Nodable", "init_ex " TOOLS_OK "\n");
 }
 
 void Nodable::_do_frame()
@@ -86,7 +83,7 @@ void Nodable::update()
     // 1. delete flagged files
     for( File* file : m_flagged_to_delete_file )
     {
-        LOG_VERBOSE("Nodable", "Delete files flagged to delete: %s\n", file->filename().c_str());
+        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "Nodable", "Delete files flagged to delete: %s\n", file->filename().c_str());
         delete file;
     }
     m_flagged_to_delete_file.clear();
@@ -156,7 +153,7 @@ void Nodable::update()
                     open_file(path);
                     break;
                 }
-                LOG_MESSAGE("App", "Browse file aborted by user.\n");
+                TOOLS_LOG(TOOLS_MESSAGE, "App", "Browse file aborted by user.\n");
                 break;
 
             }
@@ -299,10 +296,10 @@ void Nodable::update()
                 {
                     if ( head->order() == SlotFlag_ORDER_2ND )
                     {
-                        LOG_ERROR("Nodable", "Unable to connect incompatible edges\n");
+                        TOOLS_LOG(TOOLS_ERROR, "Nodable", "Unable to connect incompatible edges\n");
                         break; // but if it still the case, that's because edges are incompatible
                     }
-                    LOG_VERBOSE("Nodable", "Swapping edges to try to connect them\n");
+                    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "Nodable", "Swapping edges to try to connect them\n");
                     std::swap(tail, head);
                 }
                 ASTSlotLink edge(tail, head);
@@ -345,7 +342,7 @@ void Nodable::update()
                 // 1) create the node
                 if ( !graph->root_node() )
                 {
-                    LOG_ERROR("Nodable", "Unable to create_new primary_child, no root found on this graph.\n");
+                    TOOLS_LOG(TOOLS_ERROR, "Nodable", "Unable to create_new primary_child, no root found on this graph.\n");
                     continue;
                 }
 
@@ -387,7 +384,7 @@ void Nodable::update()
                     if ( !complementary_slot )
                     {
                         // TODO: this case should not happens, instead we should check ahead of time whether or not this not can be attached
-                        LOG_ERROR( "GraphView", "unable to connect this primary_child" );
+                        TOOLS_LOG(TOOLS_ERROR,  "GraphView", "unable to connect this primary_child" );
                     }
                     else
                     {
@@ -422,7 +419,7 @@ void Nodable::update()
 
             default:
             {
-                LOG_VERBOSE("App", "Ignoring and event, this case is not handled\n");
+                TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "App", "Ignoring and event, this case is not handled\n");
             }
         }
 
@@ -433,11 +430,11 @@ void Nodable::update()
 
 void Nodable::shutdown()
 {
-    LOG_VERBOSE("ndbl::Nodable", "_handle_shutdown ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::Nodable", "_handle_shutdown ...\n");
 
     for( File* each_file : m_loaded_files )
     {
-        LOG_VERBOSE("ndbl::App", "Delete file %s ...\n", each_file->path.c_str());
+        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::App", "Delete file %s ...\n", each_file->path.c_str());
         delete each_file;
     }
 
@@ -450,7 +447,7 @@ void Nodable::shutdown()
     delete m_view;
     s_instance = nullptr;
 
-    LOG_VERBOSE("ndbl::Nodable", "_handle_shutdown " OK "\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::Nodable", "_handle_shutdown " TOOLS_OK "\n");
 }
 
 File* Nodable::open_asset_file(const tools::Path& _path)
@@ -473,7 +470,7 @@ File* Nodable::open_file(const tools::Path& _path)
     }
 
     delete file;
-    LOG_ERROR("File", "Unable to open file %s (%s)\n", _path.filename().c_str(), _path.c_str());
+    TOOLS_LOG(TOOLS_ERROR, "File", "Unable to open file %s (%s)\n", _path.filename().c_str(), _path.c_str());
     return nullptr;
 }
 
@@ -492,20 +489,20 @@ void Nodable::save_file( File* _file) const
 
 	if ( !File::write(*_file, _file->path) )
     {
-        LOG_ERROR("ndbl::App", "Unable to save %s (%s)\n", _file->filename().c_str(), _file->path.c_str());
+        TOOLS_LOG(TOOLS_ERROR, "ndbl::App", "Unable to save %s (%s)\n", _file->filename().c_str(), _file->path.c_str());
         return;
     }
-    LOG_MESSAGE("ndbl::App", "File saved: %s\n", _file->path.c_str());
+    TOOLS_LOG(TOOLS_MESSAGE, "ndbl::App", "File saved: %s\n", _file->path.c_str());
 }
 
 void Nodable::save_file_as(File* _file, const tools::Path& _path) const
 {
     if ( !File::write(*_file, _path) )
     {
-        LOG_ERROR("ndbl::App", "Unable to save %s (%s)\n", _path.filename().c_str(), _path.c_str());
+        TOOLS_LOG(TOOLS_ERROR, "ndbl::App", "Unable to save %s (%s)\n", _path.filename().c_str(), _path.c_str());
         return;
     }
-    LOG_MESSAGE("ndbl::App", "File saved: %s\n", _path.c_str());
+    TOOLS_LOG(TOOLS_MESSAGE, "ndbl::App", "File saved: %s\n", _path.c_str());
 }
 
 void Nodable::close_file( File* _file)

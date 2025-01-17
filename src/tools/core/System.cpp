@@ -11,7 +11,7 @@ int run_command(const char* command)
     int exit_code = ::system(command);
     if ( exit_code != 0 )
     {
-        LOG_ERROR("tools::system", "Command failed: %s", command);
+        TOOLS_LOG(TOOLS_ERROR, "tools::system", "Command failed: %s", command);
     }
     return exit_code;
 };
@@ -27,7 +27,7 @@ void System::clear_console() /* cf: https://stackoverflow.com/questions/6486289/
 {
     if( std::system("clear") )
     {
-        LOG_ERROR("System", "Unable to reset console");
+        TOOLS_LOG(TOOLS_ERROR, "System", "Unable to reset console");
     }
 }
 

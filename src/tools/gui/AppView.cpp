@@ -24,7 +24,7 @@ constexpr const char* k_status_window_name = "Status Bar";
 
 void AppView::init(App* _app)
 {
-    LOG_VERBOSE("tools::AppView", "init ...\n");
+    TOOLS_LOG(TOOLS_MESSAGE, "tools::AppView", "init ...\n");
     ASSERT(_app != nullptr);
     m_app = _app;
     Config* cfg = get_config();
@@ -36,12 +36,12 @@ void AppView::init(App* _app)
     // Setup SDL
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0)
     {
-        LOG_ERROR( "tools::AppView", "SDL Error: %s\n", SDL_GetError());
+        TOOLS_LOG(TOOLS_ERROR,  "tools::AppView", "SDL Error: %s\n", SDL_GetError());
         VERIFY(false, "Unable to initialize SDL");
     }
 
     // Setup window
-    LOG_VERBOSE("tools::AppView", "setup SDL ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "tools::AppView", "setup SDL ...\n");
 
     // Decide GL+GLSL versions
 #if PLATFORM_DESKTOP
@@ -88,7 +88,7 @@ void AppView::init(App* _app)
 #endif
 
     // Setup Dear ImGui binding
-    LOG_VERBOSE("tools::AppView", "init ImGui ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "tools::AppView", "init ImGui ...\n");
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -103,7 +103,7 @@ void AppView::init(App* _app)
     // Override ImGui's default Style
     // TODO: consider declaring new members in Config rather than modifying values from there.
     //       see colors[ImGuiCol_Button]
-    LOG_VERBOSE("tools::AppView", "patch ImGui's style ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "tools::AppView", "patch ImGui's style ...\n");
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4 * colors = style.Colors;
     colors[ImGuiCol_Text]                   = Vec4(0.20f, 0.20f, 0.20f, 1.00f);
@@ -185,49 +185,49 @@ void AppView::init(App* _app)
     }
 
     // Setup Platform/Renderer bindings
-    LOG_VERBOSE("tools::AppView", "init backend for OpenGL ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "tools::AppView", "init backend for OpenGL ...\n");
     if( !ImGui_ImplSDL2_InitForOpenGL(m_sdl_window, m_sdl_gl_context) )
     {
-        LOG_ERROR("tools::AppView", "Unable to ImGui_ImplSDL2_InitForOpenGL\n");
+        TOOLS_LOG(TOOLS_ERROR, "tools::AppView", "Unable to ImGui_ImplSDL2_InitForOpenGL\n");
     }
-    LOG_VERBOSE("tools::AppView", "init OpenGL (glsl_version: %s) ...\n", glsl_version);
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "tools::AppView", "init OpenGL (glsl_version: %s) ...\n", glsl_version);
     if( !ImGui_ImplOpenGL3_Init(glsl_version) )
     {
-        LOG_ERROR("tools::AppView", "Unable to ImGui_ImplSDL2_InitForOpenGL\n");
+        TOOLS_LOG(TOOLS_ERROR, "tools::AppView", "Unable to ImGui_ImplSDL2_InitForOpenGL\n");
     }
 #if PLATFORM_DESKTOP
     if (NFD_Init() != NFD_OKAY)
     {
-        LOG_ERROR("tools::AppView", "Unable to NFD_Init\n");
+        TOOLS_LOG(TOOLS_ERROR, "tools::AppView", "Unable to NFD_Init\n");
     }
 #endif
     show_splashscreen = cfg->show_splashscreen_default;
-    LOG_VERBOSE("tools::AppView", "init DONE\n");
+    TOOLS_LOG(TOOLS_MESSAGE, "tools::AppView", "init DONE\n");
 }
 
 void AppView::shutdown()
 {
-    LOG_MESSAGE("tools::AppView", "Shutting down ...\n");
-    LOG_MESSAGE("tools::AppView", "Shutting down managers ...\n");
+    TOOLS_LOG(TOOLS_MESSAGE, "tools::AppView", "Shutting down ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "tools::AppView", "Shutting down managers ...\n");
     shutdown_action_manager(m_action_manager);
     shutdown_event_manager(m_event_manager);
     shutdown_font_manager(m_font_manager);
     shutdown_texture_manager(m_texture_manager);
-    LOG_MESSAGE("tools::AppView", "Shutting down OpenGL3 ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "tools::AppView", "Shutting down OpenGL3 ...\n");
     ImGui_ImplOpenGL3_Shutdown();
-    LOG_MESSAGE("tools::AppView", "Shutting down SDL2 ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "tools::AppView", "Shutting down SDL2 ...\n");
     ImGui_ImplSDL2_Shutdown();
-    LOG_MESSAGE("tools::AppView", "Destroying ImGui context ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "tools::AppView", "Destroying ImGui context ...\n");
     ImGui::DestroyContext    ();
-    LOG_MESSAGE("tools::AppView", "Shutdown SDL ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "tools::AppView", "Shutdown SDL ...\n");
     SDL_GL_DeleteContext     (m_sdl_gl_context);
     SDL_DestroyWindow        (m_sdl_window);
     SDL_Quit                 ();
 #if PLATFORM_DESKTOP
-    LOG_MESSAGE("tools::AppView", "Quitting NFD (Native File Dialog) ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "tools::AppView", "Quitting NFD (Native File Dialog) ...\n");
     NFD_Quit();
 #endif
-    LOG_MESSAGE("tools::AppView", "Shutdown OK\n");
+    TOOLS_LOG(TOOLS_MESSAGE, "tools::AppView", "Shutdown OK\n");
 }
 
 void AppView::update()
@@ -381,8 +381,7 @@ void AppView::begin_draw()
         ImGui::DockSpace( get_dockspace( Dockspace_ROOT ) );
 
         // Status Window
-        log::MessageDeque& messages = log::get_messages();
-        if ( ImGui::Begin( k_status_window_name ) && !messages.empty())
+        if ( ImGui::Begin( k_status_window_name ) && !get_log_state().messages.empty())
         {
             const float line_height = ImGui::GetTextLineHeightWithSpacing();
             static int verbosity_filter = -1; // all
@@ -395,17 +394,17 @@ void AppView::begin_draw()
                 if ( ImGui::RadioButton("All", verbosity_filter == -1 ) )
                     verbosity_filter = -1;
                 ImGui::SameLine();
-                if ( ImGui::RadioButton("Debug", verbosity_filter == log::Verbosity_Verbose ) )
-                    verbosity_filter = log::Verbosity_Verbose;
+                if ( ImGui::RadioButton("Debug", verbosity_filter == Verbosity_Verbose ) )
+                    verbosity_filter = Verbosity_Verbose;
                 ImGui::SameLine();
-                if ( ImGui::RadioButton("Messages", verbosity_filter == log::Verbosity_Message ) )
-                    verbosity_filter = log::Verbosity_Message;
+                if ( ImGui::RadioButton("Messages", verbosity_filter == Verbosity_Message ) )
+                    verbosity_filter = Verbosity_Message;
                 ImGui::SameLine();
-                if ( ImGui::RadioButton("Warnings", verbosity_filter == log::Verbosity_Warning ) )
-                    verbosity_filter = log::Verbosity_Warning;
+                if ( ImGui::RadioButton("Warnings", verbosity_filter == Verbosity_Warning ) )
+                    verbosity_filter = Verbosity_Warning;
                 ImGui::SameLine();
-                if ( ImGui::RadioButton("Errors", verbosity_filter == log::Verbosity_Error ) )
-                    verbosity_filter = log::Verbosity_Error;
+                if ( ImGui::RadioButton("Errors", verbosity_filter == Verbosity_Error ) )
+                    verbosity_filter = Verbosity_Error;
                 ImGui::SameLine();
                 ImGui::EndGroup();
             }
@@ -413,12 +412,12 @@ void AppView::begin_draw()
 
             if ( ImGui::BeginChild("messages") )
             {
-                u32_t message_to_display_count = std::min( messages.size(), cfg->log_message_display_max_count );
-                auto it = messages.rbegin();
+                u32_t message_to_display_count = std::min( get_log_state().messages.size(), cfg->log_message_display_max_count );
                 size_t message_processed_count = 0;
                 size_t message_displayed_count = 0;
 
-                while ( message_displayed_count < message_to_display_count && it != messages.rend() )
+                auto it = get_log_state().messages.rbegin();
+                while ( message_displayed_count < message_to_display_count && it != get_log_state().messages.rend() )
                 {
                     if ( it->verbosity <= verbosity_filter || verbosity_filter == -1 )
                     {
@@ -546,10 +545,10 @@ bool AppView::pick_file_path(Path& _out_path, DialogType _dialog_type) const
             NFD_FreePath(picked_path);
             return true;
         case NFD_CANCEL:
-            LOG_MESSAGE("tools::AppView", "User pressed cancel.");
+            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "tools::AppView", "pick_file_path cancelled by user");
             return false;
         default:
-            LOG_ERROR("tools::AppView", "%s\n", NFD_GetError());
+            TOOLS_LOG(TOOLS_ERROR, "tools::AppView", "%s\n", NFD_GetError());
             return false;
     }
 }
@@ -605,7 +604,7 @@ std::vector<unsigned char> AppView::take_screenshot() const
     return {};
     // TODO: some glXXX are unavailable, but anyways it's not something we need in WEB, we can use browser for that.
 #else
-    LOG_MESSAGE("tools::AppView", "Taking screenshot ...\n");
+    TOOLS_LOG(TOOLS_MESSAGE, "tools::AppView", "Taking screenshot ...\n");
     int width, height;
     SDL_GetWindowSize(m_sdl_window, &width, &height);
     GLsizei stride = 4 * width;
@@ -625,7 +624,7 @@ std::vector<unsigned char> AppView::take_screenshot() const
 
     std::vector<unsigned char> out;
     lodepng::encode(out, flipped.data(), width, height, LCT_RGBA);
-    LOG_MESSAGE("tools::AppView", "Taking screenshot OK\n");
+    TOOLS_LOG(TOOLS_MESSAGE, "tools::AppView", "Taking screenshot " TOOLS_OK "\n");
     return out;
 #endif
 }
@@ -649,9 +648,9 @@ int AppView::fps()
 void AppView::save_screenshot( tools::Path path) const
 {
     std::vector<unsigned char> out = take_screenshot();
-    LOG_MESSAGE("tools::App", "Save screenshot ...\n");
+    TOOLS_LOG(TOOLS_MESSAGE, "tools::App", "Save screenshot ...\n");
     lodepng::save_file(out, path.string());
-    LOG_MESSAGE("tools::App", "Save screenshot OK (%s)\n", path.c_str());
+    TOOLS_LOG(TOOLS_MESSAGE, "tools::App", "Save screenshot " TOOLS_OK " (%s)\n", path.c_str());
 }
 
 void AppView::set_title( const char* title )

@@ -223,7 +223,7 @@ void FileView::draw(float dt)
         //-------------
 
         ImGui::SameLine();
-        LOG_VERBOSE("FileView", "graph_node_view->update_world_matrix()\n");
+        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "FileView", "graph_node_view->update_world_matrix()\n");
         ImGuiWindowFlags flags = (ImGuiWindowFlags_)(ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
         Vec2 graph_editor_top_left_corner = ImGui::GetCursorPos();
@@ -305,8 +305,8 @@ void FileView::set_text(const std::string& text, Isolation mode)
         {
             m_text_editor.SetSelection(selectionStart, selectionEnd);
         }
-        LOG_MESSAGE("FileView", "Selected text updated from graph.\n");
-        LOG_VERBOSE("FileView", "%s \n", text.c_str());
+        TOOLS_LOG(TOOLS_MESSAGE, "FileView", "Selected text updated from graph.\n");
+        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "FileView", "%s \n", text.c_str());
     }
     else
     {
@@ -314,8 +314,8 @@ void FileView::set_text(const std::string& text, Isolation mode)
         // auto cmd = std::make_shared<Cmd_ReplaceText>(current_content, text, &m_text_editor);
         // m_file->get_history()->push_command(cmd);
 
-        LOG_MESSAGE("FileView", "Whole text updated from graph.\n");
-        LOG_VERBOSE("FileView", "%s \n", text.c_str());
+        TOOLS_LOG(TOOLS_MESSAGE, "FileView", "Whole text updated from graph.\n");
+        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "FileView", "%s \n", text.c_str());
     }
 }
 

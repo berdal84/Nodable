@@ -47,7 +47,7 @@ void FontManager::init(const FontManagerConfig* config)
         }
         else
         {
-            LOG_WARNING("NodableView", "No default text_font declared for slot #%i, using ImGui's default text_font as fallback\n", each_slot);
+            TOOLS_LOG(TOOLS_WARNING, "NodableView", "No default text_font declared for slot #%i, using ImGui's default text_font as fallback\n", each_slot);
             m_fonts[each_slot] = ImGui::GetDefaultFont();
         }
     }
@@ -68,7 +68,7 @@ ImFont* FontManager::load_font(const FontConfig& font_config)
         imfont_cfg.OversampleH = 2;
         imfont_cfg.OversampleV = 3;
         tools::Path absolute_path = App::get_asset_path(font_config.path);
-        LOG_VERBOSE("NodableView", "Adding text_font from file ... %s\n", absolute_path.c_str());
+        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "NodableView", "Adding text_font from file ... %s\n", absolute_path.c_str());
         font = io.Fonts->AddFontFromFileTTF(absolute_path.string().c_str(), font_config.size * m_config->subsamples, &imfont_cfg);
     }
 
@@ -77,7 +77,7 @@ ImFont* FontManager::load_font(const FontConfig& font_config)
     {
         if(strlen( m_config->icon.path) == 0)
         {
-            LOG_WARNING("NodableView", "config().font_manager.icon.path is empty, icons will be \"?\"\n");
+            TOOLS_LOG(TOOLS_WARNING, "NodableView", "config().font_manager.icon.path is empty, icons will be \"?\"\n");
             return font;
         }
 
@@ -93,13 +93,13 @@ ImFont* FontManager::load_font(const FontConfig& font_config)
         imfont_cfg.GlyphMinAdvanceX = font_config.icons_size * m_config->subsamples; // monospace to fix text alignment in drop down menus.
         tools::Path absolute_path = App::get_asset_path(m_config->icon.path);
         font = io.Fonts->AddFontFromFileTTF(absolute_path.string().c_str(), font_config.icons_size * m_config->subsamples, &imfont_cfg, icons_ranges);
-        LOG_VERBOSE("NodableView", "Merging icons font ...\n");
+        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "NodableView", "Merging icons font ...\n");
     }
 
     font->Scale = 1.0f / m_config->subsamples;
 
     m_loaded_fonts.insert_or_assign(font_config.id, font);
-    LOG_MESSAGE("NodableView", "Font %s added: \"%s\"\n", font_config.id, font_config.path );
+    TOOLS_LOG(TOOLS_MESSAGE, "NodableView", "Font %s added: \"%s\"\n", font_config.id, font_config.path );
     return font;
 }
 

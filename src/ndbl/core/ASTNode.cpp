@@ -99,7 +99,6 @@ ASTNodeSlot* ASTNode::find_slot_by_property_type(SlotFlags flags, const TypeDesc
 
 void ASTNode::_handle_slot_change(ASTNodeSlot::Event event, ASTNodeSlot* slot)
 {
-    // LOG_MESSAGE("Node", "Slot event: %i, %p\n", event, slot);
     this->m_adjacent_nodes_cache.set_dirty();
 }
 

@@ -62,19 +62,19 @@ Path Path::get_executable_path()
         {
             path[length] = '\0';
             result = path;
-            LOG_MESSAGE("tools::system", "executable path: %s\n", result.c_str() );
-            LOG_MESSAGE("tools::system", "  dirname: %s\n", result.parent_path().c_str() );
-            LOG_MESSAGE("tools::system", "  basename: %s\n", result.filename().c_str() );
+            TOOLS_LOG(TOOLS_MESSAGE, "tools::system", "executable path: %s\n", result.c_str() );
+            TOOLS_LOG(TOOLS_MESSAGE, "tools::system", "  dirname: %s\n", result.parent_path().c_str() );
+            TOOLS_LOG(TOOLS_MESSAGE, "tools::system", "  basename: %s\n", result.filename().c_str() );
         }
         else
         {
-            LOG_ERROR("tools::system", "Unable to get executable path\n");
+            TOOLS_LOG(TOOLS_ERROR, "tools::system", "Unable to get executable path\n");
         }
         delete[] path;
     }
     else
     {
-        LOG_WARNING("tools::system", "Unable to get executable path!\n");
+        TOOLS_LOG(TOOLS_WARNING, "tools::system", "Unable to get executable path!\n");
     }
     return result;
 #else

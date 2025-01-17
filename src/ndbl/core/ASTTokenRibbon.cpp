@@ -18,7 +18,7 @@ ASTToken & ASTTokenRibbon::push(ASTToken &_token)
 std::string ASTTokenRibbon::to_string()const
 {
     tools::string out;
-    out.append(RESET);
+    out.append(TOOLS_COLOR_DEFAULT);
 
     size_t buffer_size = 0;
 
@@ -83,26 +83,26 @@ ASTToken ASTTokenRibbon::eat_if(ASTToken_t expectedType)
 
 ASTToken ASTTokenRibbon::eat()
 {
-    LOG_VERBOSE("TokenRibbon", "Eat token (idx %i) %s \n", m_cursor, peek().string().c_str() );
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "TokenRibbon", "Eat token (idx %i) %s \n", m_cursor, peek().string().c_str() );
     return m_tokens.at(m_cursor++);
 }
 
 void ASTTokenRibbon::start_transaction()
 {
     m_transaction.push(m_cursor);
-    LOG_VERBOSE("TokenRibbon", "Start Transaction (idx %i)\n", m_cursor);
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "TokenRibbon", "Start Transaction (idx %i)\n", m_cursor);
 }
 
 void ASTTokenRibbon::rollback()
 {
     m_cursor = m_transaction.top();
-    LOG_VERBOSE("TokenRibbon", "Rollback (idx %i)\n", m_cursor);
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "TokenRibbon", "Rollback (idx %i)\n", m_cursor);
     m_transaction.pop();
 }
 
 void ASTTokenRibbon::commit()
 {
-    LOG_VERBOSE("TokenRibbon", "Commit (idx %i)\n", m_cursor);
+    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "TokenRibbon", "Commit (idx %i)\n", m_cursor);
     m_transaction.pop();
 }
 
