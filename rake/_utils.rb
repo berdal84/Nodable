@@ -62,7 +62,6 @@ Target = Struct.new(
     :cxx_flags,
     :linker_flags,
     :assets, # List of patterns like: "<source>" or "<source>:<destination>"
-    :assets_nopreload, # same but won't be included in the binary
     keyword_init: true # If the optional keyword_init keyword argument is set to true, .new takes keyword arguments instead of normal arguments.
 )
 
@@ -77,7 +76,6 @@ def new_empty_target(name, type)
     target.cxx_flags = []
     target.linker_flags = []
     target.assets = FileList[]
-    target.assets_nopreload = FileList[]
     target.defines = []
     target.compiler_flags = []
     target.link_library = []
@@ -218,16 +216,7 @@ def tasks_for_target(target)
 
     desc "Compile #{target.name}"
     task :build => get_binary(target) do
-
-        # Copy assets (in PLATFORM_WEB we skip this because we incorporate files as *.data)
-        if PLATFORM_DESKTOP
-            target.assets.each do |pattern|
-                copy_asset(pattern)
-            end
-        end
-
-        # Copy assets that must never be preloaded
-        target.assets_nopreload.each do |pattern|
+        target.assets.each do |pattern|
             copy_asset(pattern)
         end
     end
