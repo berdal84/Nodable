@@ -55,10 +55,10 @@ namespace tools
     typedef int Verbosity;
     enum Verbosity_: int
     {
-        Verbosity_Error,   // lowest level (always logged)
-        Verbosity_Warning,
-        Verbosity_Message,
-        Verbosity_Verbose, // highest level (rarely logged)
+        Verbosity_Error   = 0, // lowest level (always logged)
+        Verbosity_Warning = 1,
+        Verbosity_Message = 2,
+        Verbosity_Verbose = 3, // highest level (rarely logged)
         Verbosity_COUNT
     };
 

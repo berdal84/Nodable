@@ -305,7 +305,7 @@ void FileView::set_text(const std::string& text, Isolation mode)
             m_text_editor.SetSelection(selectionStart, selectionEnd);
         }
         TOOLS_LOG(TOOLS_MESSAGE, "FileView", "Selected text updated from graph.\n");
-        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "FileView", "%s \n", text.c_str());
+        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "FileView", "%s \n", text.c_str());
     }
     else
     {
@@ -314,7 +314,7 @@ void FileView::set_text(const std::string& text, Isolation mode)
         // m_file->get_history()->push_command(cmd);
 
         TOOLS_LOG(TOOLS_MESSAGE, "FileView", "Whole text updated from graph.\n");
-        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "FileView", "%s \n", text.c_str());
+        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "FileView", "%s \n", text.c_str());
     }
 }
 

@@ -590,7 +590,7 @@ ASTScope* Nodlang::parse_program()
         _state.graph()->reset();
         _state.graph()->signal_is_complete.emit();
         TOOLS_LOG(TOOLS_WARNING, "Parser", "Some token remains after getting an empty code block\n");
-        TOOLS_LOG(TOOLS_MESSAGE, "Parser", TOOLS_KO " Parse program.\n");
+        TOOLS_LOG(TOOLS_MESSAGE, "Parser", "Parse program [OK]\n");
         return scope;
     }
     else if ( block_last_node == nullptr )
@@ -601,7 +601,7 @@ ASTScope* Nodlang::parse_program()
     _state.commit();
     _state.graph()->signal_is_complete.emit();
 
-    TOOLS_LOG(TOOLS_MESSAGE, "Parser", TOOLS_OK " Parse program.\n");
+    TOOLS_LOG(TOOLS_MESSAGE, "Parser", "Parse program [OK]\n");
 
     return scope;
 }
@@ -795,7 +795,7 @@ bool Nodlang::tokenize(const std::string& _string)
 
 bool Nodlang::tokenize()
 {
-    TOOLS_LOG(TOOLS_MESSAGE, "Parser", "Tokenization ...\n");
+    TOOLS_LOG(TOOLS_VERBOSE, "Parser", "Tokenization ...\n");
 
     size_t global_cursor       = 0;
     size_t ignored_chars_count = 0;
@@ -853,7 +853,7 @@ bool Nodlang::tokenize()
         tok.suffix_begin_grow( ignored_chars_count );
     }
 
-    TOOLS_LOG(TOOLS_MESSAGE, "Parser", TOOLS_OK " Tokenization.\n%s\n", _state.tokens().to_string().c_str() );
+    TOOLS_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Tokenization.\n%s\n", _state.tokens().to_string().c_str() );
 
     return true;
 }

@@ -97,7 +97,7 @@ void ASTScope::append(ASTNode *node)
         }
         else
         {
-            TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "Scope", "Add '%s' variable to the internal_scopeview\n", variable_node->get_identifier().c_str() );
+            TOOLS_LOG(TOOLS_VERBOSE, "Scope", "Add '%s' variable to the internal_scopeview\n", variable_node->get_identifier().c_str() );
             m_variable.insert(variable_node);
         }
     }

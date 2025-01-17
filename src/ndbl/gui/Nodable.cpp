@@ -37,7 +37,7 @@ Nodable* Nodable::s_instance = nullptr;
 
 void Nodable::init()
 {
-    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::Nodable", "init_ex ...\n");
+    TOOLS_LOG(TOOLS_VERBOSE, "ndbl::Nodable", "init ...\n");
 
     m_config = init_config();
     m_view = new NodableView();
@@ -47,7 +47,7 @@ void Nodable::init()
 
     s_instance = this;
 
-    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::Nodable", "init_ex " TOOLS_OK "\n");
+    TOOLS_LOG(TOOLS_VERBOSE, "ndbl::Nodable", "init " TOOLS_OK "\n");
 }
 
 void Nodable::_do_frame()
@@ -83,7 +83,7 @@ void Nodable::update()
     // 1. delete flagged files
     for( File* file : m_flagged_to_delete_file )
     {
-        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "Nodable", "Delete files flagged to delete: %s\n", file->filename().c_str());
+        TOOLS_LOG(TOOLS_VERBOSE, "Nodable", "Delete files flagged to delete: %s\n", file->filename().c_str());
         delete file;
     }
     m_flagged_to_delete_file.clear();
@@ -153,7 +153,7 @@ void Nodable::update()
                     open_file(path);
                     break;
                 }
-                TOOLS_LOG(TOOLS_MESSAGE, "App", "Browse file aborted by user.\n");
+                TOOLS_LOG(TOOLS_VERBOSE, "App", "Browse file aborted by user.\n");
                 break;
 
             }
@@ -299,7 +299,7 @@ void Nodable::update()
                         TOOLS_LOG(TOOLS_ERROR, "Nodable", "Unable to connect incompatible edges\n");
                         break; // but if it still the case, that's because edges are incompatible
                     }
-                    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "Nodable", "Swapping edges to try to connect them\n");
+                    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Nodable", "Swapping edges to try to connect them\n");
                     std::swap(tail, head);
                 }
                 ASTSlotLink edge(tail, head);
@@ -419,7 +419,7 @@ void Nodable::update()
 
             default:
             {
-                TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "App", "Ignoring and event, this case is not handled\n");
+                TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "App", "Ignoring and event, this case is not handled\n");
             }
         }
 
@@ -430,11 +430,11 @@ void Nodable::update()
 
 void Nodable::shutdown()
 {
-    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::Nodable", "_handle_shutdown ...\n");
+    TOOLS_LOG(TOOLS_VERBOSE, "ndbl::Nodable", "_handle_shutdown ...\n");
 
     for( File* each_file : m_loaded_files )
     {
-        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::App", "Delete file %s ...\n", each_file->path.c_str());
+        TOOLS_LOG(TOOLS_VERBOSE, "ndbl::App", "Delete file %s ...\n", each_file->path.c_str());
         delete each_file;
     }
 
@@ -447,7 +447,7 @@ void Nodable::shutdown()
     delete m_view;
     s_instance = nullptr;
 
-    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "ndbl::Nodable", "_handle_shutdown " TOOLS_OK "\n");
+    TOOLS_LOG(TOOLS_VERBOSE, "ndbl::Nodable", "_handle_shutdown " TOOLS_OK "\n");
 }
 
 File* Nodable::open_asset_file(const tools::Path& _path)

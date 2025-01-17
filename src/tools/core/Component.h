@@ -67,7 +67,8 @@ namespace tools
     private:
         void _init(EntityT* entity, const TypeDescriptor* type_desc )
         {
-            TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "Component", "_init \"%s\" (type: %s ) ...\n", _m_name.c_str(), type_desc->name() );
+            auto level = TOOLS_VERBOSE;
+            TOOLS_DEBUG_LOG(level, "Component", "_init \"%s\" (type: %s ) ...\n", _m_name.c_str(), type_desc->name() );
             _m_entity    = entity;
             _m_type_desc = type_desc;
             signal_init.emit();
@@ -75,7 +76,7 @@ namespace tools
 
         void _shutdown() // do the mirror of _init()
         {
-            TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "Component", "_shutdown \"%s\" ...\n", _m_name.c_str());
+            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Component", "_shutdown \"%s\" ...\n", _m_name.c_str());
             signal_shutdown.emit();
             _m_entity    = nullptr;
             _m_type_desc = nullptr;

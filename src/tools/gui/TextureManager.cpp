@@ -56,7 +56,7 @@ bool TextureManager::release_all()
             }
             else
             {
-                TOOLS_LOG(TOOLS_MESSAGE, "TextureManager", "Released %s\n", key.c_str());
+                TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "Released %s\n", key.c_str());
             }
         }
         delete texture;
@@ -87,27 +87,27 @@ Texture *TextureManager::load_png_to_gpu(const Path &path)
     }
 
     m_register.emplace(path.string(), texture);
-    TOOLS_LOG(TOOLS_MESSAGE, "TextureManager", "File loaded to GPU: %s\n", path.c_str());
+    TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "File loaded to GPU: %s\n", path.c_str());
 
     return texture;
 }
 
 int TextureManager::load_png(const Path& path, Texture* texture)
 {
-    TOOLS_LOG(TOOLS_MESSAGE, "TextureManager", "Loading PNG from disk %s ...\n", path.c_str());
+    TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "Loading PNG from disk %s ...\n", path.c_str());
     std::vector<unsigned char> buffer;
     unsigned error = lodepng::load_file(buffer, path.string() ); //load the image file with given filename
     if (error) {
-        TOOLS_LOG(TOOLS_MESSAGE, "TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
+        TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
         return 1;
     }
-    TOOLS_LOG(TOOLS_MESSAGE, "TextureManager", "Decoding PNG %s ...\n", path.c_str());
+    TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "Decoding PNG %s ...\n", path.c_str());
     error = lodepng::decode(texture->buffer, (unsigned&)texture->width, (unsigned&)texture->height, buffer); //decode the png
     if (error) {
-        TOOLS_LOG(TOOLS_MESSAGE, "TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
+        TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
         return 2;
     }
-    TOOLS_LOG(TOOLS_MESSAGE, "TextureManager", "PNG read (image: %i x %i px)\n", texture->width, texture->height );
+    TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "PNG read (image: %i x %i px)\n", texture->width, texture->height );
     return 0;
 }
 

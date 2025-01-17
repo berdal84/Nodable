@@ -22,7 +22,7 @@ File::File()
 , history()
 , _flags(Flags_NEEDS_TO_BE_SAVED | Flags_GRAPH_IS_DIRTY ) // we're text-based!
 {
-    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "File", "Constructor being called ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "File", "Constructor being called ...\n");
 
     // Graph
     _graph = new Graph();
@@ -41,13 +41,13 @@ File::File()
     view.signal_text_view_changed.connect<&File::set_graph_dirty>(this);
     view.signal_graph_view_changed.connect<&File::set_text_dirty>(this);
 
-    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "File", "View built, creating History ...\n");
+    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "File", "View built, creating History ...\n");
 
     // History
     TextEditor*       text_editor     = view.get_text_editor();
     TextEditorBuffer* text_editor_buf = history.configure_text_editor_undo_buffer(text_editor);
     view.set_undo_buffer(text_editor_buf);
-    TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "File", "Constructor being called.\n");
+    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "File", "Constructor being called.\n");
 }
 
 File::~File()
@@ -139,7 +139,7 @@ bool File::write( File& file, const tools::Path& path)
 
     if ( (file._flags & Flags_NEEDS_TO_BE_SAVED) == 0 )
     {
-        TOOLS_LOG(TOOLS_MESSAGE, "File", "Nothing to save\n");
+        TOOLS_LOG(TOOLS_VERBOSE, "File", "Nothing to save\n");
     }
 
     std::ofstream out_fstream(path.string());
@@ -156,7 +156,7 @@ bool File::write( File& file, const tools::Path& path)
 
 bool File::read( File& file, const tools::Path& path)
 {
-    TOOLS_LOG(TOOLS_MESSAGE, "File", "\"%s\" loading... (%s).\n", path.filename().c_str(), path.c_str());
+    TOOLS_LOG(TOOLS_VERBOSE, "File", "\"%s\" loading... (%s).\n", path.filename().c_str(), path.c_str());
     if(path.empty() )
     {
         TOOLS_LOG(TOOLS_ERROR, "File", "Path is empty \"%s\"\n", path.c_str());
@@ -175,7 +175,7 @@ bool File::read( File& file, const tools::Path& path)
     file._flags &= ~Flags_NEEDS_TO_BE_SAVED; // unset flag
     file.path = path;
 
-    TOOLS_LOG(TOOLS_MESSAGE, "File", "\"%s\" loaded (%s).\n", path.filename().c_str(), path.c_str());
+    TOOLS_LOG(TOOLS_MESSAGE, "File", "%s loaded\n", path.filename().c_str(), path.c_str());
 
     return true;
 }
