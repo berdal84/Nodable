@@ -394,10 +394,10 @@ void AppView::begin_draw()
                 if ( ImGui::RadioButton("All", verbosity_filter == -1 ) )
                     verbosity_filter = -1;
                 ImGui::SameLine();
-                if ( ImGui::RadioButton("Debug", verbosity_filter == Verbosity_Verbose ) )
+                if ( ImGui::RadioButton("Verb.", verbosity_filter == Verbosity_Verbose ) )
                     verbosity_filter = Verbosity_Verbose;
                 ImGui::SameLine();
-                if ( ImGui::RadioButton("Messages", verbosity_filter == Verbosity_Message ) )
+                if ( ImGui::RadioButton("Info", verbosity_filter == Verbosity_Message ) )
                     verbosity_filter = Verbosity_Message;
                 ImGui::SameLine();
                 if ( ImGui::RadioButton("Warnings", verbosity_filter == Verbosity_Warning ) )
@@ -419,7 +419,7 @@ void AppView::begin_draw()
                 auto it = get_log_state().messages.rbegin();
                 while ( message_displayed_count < message_to_display_count && it != get_log_state().messages.rend() )
                 {
-                    if ( it->verbosity <= verbosity_filter || verbosity_filter == -1 )
+                    if ( it->verbosity <= get_log_verbosity() && ( it->verbosity <= verbosity_filter || verbosity_filter == -1) )
                     {
                         ImRect line_rect{ ImGui::GetCursorScreenPos(), ImGui::GetCursorScreenPos() };
                         line_rect.Max.y += line_height;

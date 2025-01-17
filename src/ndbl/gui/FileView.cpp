@@ -223,7 +223,6 @@ void FileView::draw(float dt)
         //-------------
 
         ImGui::SameLine();
-        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "FileView", "graph_node_view->update_world_matrix()\n");
         ImGuiWindowFlags flags = (ImGuiWindowFlags_)(ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
         Vec2 graph_editor_top_left_corner = ImGui::GetCursorPos();
