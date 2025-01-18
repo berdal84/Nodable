@@ -67,7 +67,7 @@ namespace tools
     private:
         void _init(EntityT* entity, const TypeDescriptor* type_desc )
         {
-            auto level = TOOLS_VERBOSE;
+            auto level = tools::Verbosity_Diagnostic;
             TOOLS_DEBUG_LOG(level, "Component", "_init \"%s\" (type: %s ) ...\n", _m_name.c_str(), type_desc->name() );
             _m_entity    = entity;
             _m_type_desc = type_desc;
@@ -76,7 +76,7 @@ namespace tools
 
         void _shutdown() // do the mirror of _init()
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Component", "_shutdown \"%s\" ...\n", _m_name.c_str());
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Component", "_shutdown \"%s\" ...\n", _m_name.c_str());
             signal_shutdown.emit();
             _m_entity    = nullptr;
             _m_type_desc = nullptr;

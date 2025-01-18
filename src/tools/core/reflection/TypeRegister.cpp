@@ -47,7 +47,7 @@ TypeDescriptor* TypeRegister::insert(TypeDescriptor* _type)
 TypeDescriptor* TypeRegister::merge(TypeDescriptor* existing, const TypeDescriptor* other)
 {
     TOOLS_DEBUG_LOG(
-        TOOLS_VERBOSE,
+        tools::Verbosity_Diagnostic,
         __FILE__,
         "Merge existing: \"%s\" (%s), with: \"%s\" (%s)\n",
         existing->m_name.c_str(), existing->m_compiler_name,
@@ -72,15 +72,15 @@ TypeDescriptor* TypeRegister::merge(TypeDescriptor* existing, const TypeDescript
 
 void TypeRegister::log_statistics()
 {
-    TOOLS_LOG(TOOLS_VERBOSE, "reflection", "Logging reflected types ...\n");
-    TOOLS_LOG(TOOLS_VERBOSE, "reflection", " %-16s %-25s %-60s\n", "-- type hash --", "-- user name --", "-- compiler name --" );
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "reflection", "Logging reflected types ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "reflection", " %-16s %-25s %-60s\n", "-- type hash --", "-- user name --", "-- compiler name --" );
 
     for ( const auto& [type_hash, type] : by_index() )
     {
-        TOOLS_LOG(TOOLS_VERBOSE, "reflection", " %-16llu %-25s %-60s\n", type_hash, type->m_name.c_str(), type->m_compiler_name );
+        TOOLS_LOG(tools::Verbosity_Diagnostic, "reflection", " %-16llu %-25s %-60s\n", type_hash, type->m_name.c_str(), type->m_compiler_name );
     }
 
-    TOOLS_LOG(TOOLS_VERBOSE, "reflection", "Logging done.\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "reflection", "Logging done.\n");
 }
 
 TypeDescriptor* TypeRegister::insert_or_merge(TypeDescriptor* possibly_existing_type)

@@ -155,7 +155,7 @@ bool Nodlang::parse(Graph* graph_out, const std::string& code)
 {
     _state.reset(graph_out);
 
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing ...\n%s\n", code.c_str());
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing ...\n%s\n", code.c_str());
 
     if ( !tokenize(code) )
     {
@@ -177,16 +177,16 @@ bool Nodlang::parse(Graph* graph_out, const std::string& code)
     if (_state.tokens().can_eat() )
     {
         _state.graph()->reset();
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " End of token ribbon expected\n");
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "%s", format::title("TokenRibbon").c_str());
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " End of token ribbon expected\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "%s", format::title("TokenRibbon").c_str());
         for (const ASTToken& each_token : _state.tokens() )
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "token idx %i: %s\n", each_token.m_index, each_token.json().c_str());
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "token idx %i: %s\n", each_token.m_index, each_token.json().c_str());
         }
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "%s", format::title("TokenRibbon end").c_str());
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "%s", format::title("TokenRibbon end").c_str());
         auto curr_token = _state.tokens().peek();
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Failed to parse from token %llu/%llu and above.\n", curr_token.m_index, _state.tokens().size());
-        TOOLS_LOG(TOOLS_ERROR, "Parser", "Unable to parse all the tokens\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Failed to parse from token %llu/%llu and above.\n", curr_token.m_index, _state.tokens().size());
+        TOOLS_LOG(tools::Verbosity_Error, "Parser", "Unable to parse all the tokens\n");
         return false;
     }
     return true;
@@ -241,14 +241,14 @@ ASTNodeSlot* Nodlang::token_to_slot(ASTScope* parent_scope, const ASTToken& _tok
         if ( !m_strict_mode )
         {
             // Insert a VariableNodeRef with "any" type
-            TOOLS_LOG(TOOLS_WARNING,  "Parser", "%s is not declared (strict mode), abstract graph can be generated but compilation will fail.\n",
+            TOOLS_LOG(tools::Verbosity_Warning,  "Parser", "%s is not declared (strict mode), abstract graph can be generated but compilation will fail.\n",
                          _token.word_to_string().c_str() );
             ASTVariableRef* ref = _state.graph()->create_variable_ref( parent_scope );
             ref->value()->set_token(_token );
             return ref->value_out();
         }
 
-        TOOLS_LOG(TOOLS_ERROR,  "Parser", "%s is not declared (strict mode) \n", _token.word_to_string().c_str() );
+        TOOLS_LOG(tools::Verbosity_Error,  "Parser", "%s is not declared (strict mode) \n", _token.word_to_string().c_str() );
         return nullptr;
     }
 
@@ -266,25 +266,25 @@ ASTNodeSlot* Nodlang::token_to_slot(ASTScope* parent_scope, const ASTToken& _tok
 
     if ( literal )
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Token %s converted to a Literal %s\n",
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Token %s converted to a Literal %s\n",
                     _token.word_to_string().c_str(),
                     literal->value()->get_type()->name());
         literal->value()->set_token( _token );
         return literal->value_out();
     }
 
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Unable to run token_to_slot with token %s!\n", _token.word_to_string().c_str());
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Unable to run token_to_slot with token %s!\n", _token.word_to_string().c_str());
     return nullptr;
 }
 
 ASTNodeSlot* Nodlang::parse_binary_operator_expression(ASTScope* parent_scope, u8_t _precedence, ASTNodeSlot* _left)
 {
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing binary expression ...\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing binary expression ...\n");
     ASSERT(_left != nullptr);
 
     if (!_state.tokens().can_eat(2))
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Not enough tokens\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Not enough tokens\n");
         return nullptr;
     }
 
@@ -299,7 +299,7 @@ ASTNodeSlot* Nodlang::parse_binary_operator_expression(ASTScope* parent_scope, u
     if (!isValid)
     {
         _state.rollback();
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Unexpected tokens\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Unexpected tokens\n");
         return nullptr;
     }
 
@@ -307,7 +307,7 @@ ASTNodeSlot* Nodlang::parse_binary_operator_expression(ASTScope* parent_scope, u
     const Operator *ope = find_operator(word, Operator_t::Binary);
     if (ope == nullptr)
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Operator %s not found\n", word.c_str());
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Operator %s not found\n", word.c_str());
         _state.rollback();
         return nullptr;
     }
@@ -315,7 +315,7 @@ ASTNodeSlot* Nodlang::parse_binary_operator_expression(ASTScope* parent_scope, u
     // Precedence check
     if (ope->precedence <= _precedence && _precedence > 0)
     {// always update the first operation if they have the same precedence or less.
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Has lower precedence\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Has lower precedence\n");
         _state.rollback();
         return nullptr;
     }
@@ -338,22 +338,22 @@ ASTNodeSlot* Nodlang::parse_binary_operator_expression(ASTScope* parent_scope, u
         _state.graph()->connect_or_merge(right, binary_op->rvalue_in() );
 
         _state.commit();
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Binary expression parsed:\n%s\n", _state.tokens().to_string().c_str());
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Binary expression parsed:\n%s\n", _state.tokens().to_string().c_str());
         return binary_op->value_out();
     }
 
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Right expression is null\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Right expression is null\n");
     _state.rollback();
     return nullptr;
 }
 
 ASTNodeSlot* Nodlang::parse_unary_operator_expression(ASTScope* parent_scope, u8_t _precedence)
 {
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "parseUnaryOperationExpression...\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "parseUnaryOperationExpression...\n");
 
     if (!_state.tokens().can_eat(2))
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Not enough tokens\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Not enough tokens\n");
         return nullptr;
     }
 
@@ -364,7 +364,7 @@ ASTNodeSlot* Nodlang::parse_unary_operator_expression(ASTScope* parent_scope, u8
     if (operator_token.m_type != ASTToken_t::operator_)
     {
         _state.rollback();
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Expecting an operator token first\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Expecting an operator token first\n");
         return nullptr;
     }
 
@@ -378,7 +378,7 @@ ASTNodeSlot* Nodlang::parse_unary_operator_expression(ASTScope* parent_scope, u8
 
     if ( !out_atomic )
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Right expression is null\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Right expression is null\n");
         _state.rollback();
         return nullptr;
     }
@@ -394,7 +394,7 @@ ASTNodeSlot* Nodlang::parse_unary_operator_expression(ASTScope* parent_scope, u8
 
     _state.graph()->connect_or_merge(out_atomic, node->lvalue_in() );
 
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Unary expression parsed:\n%s\n", _state.tokens().to_string().c_str());
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Unary expression parsed:\n%s\n", _state.tokens().to_string().c_str());
     _state.commit();
 
     return node->value_out();
@@ -402,11 +402,11 @@ ASTNodeSlot* Nodlang::parse_unary_operator_expression(ASTScope* parent_scope, u8
 
 ASTNodeSlot* Nodlang::parse_atomic_expression(ASTScope* parent_scope)
 {
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing atomic expression ... \n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing atomic expression ... \n");
 
     if (!_state.tokens().can_eat())
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Not enough tokens\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Not enough tokens\n");
         return nullptr;
     }
 
@@ -415,7 +415,7 @@ ASTNodeSlot* Nodlang::parse_atomic_expression(ASTScope* parent_scope)
 
     if (token.m_type == ASTToken_t::operator_)
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Cannot start with an operator token\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Cannot start with an operator token\n");
         _state.rollback();
         return nullptr;
     }
@@ -423,23 +423,23 @@ ASTNodeSlot* Nodlang::parse_atomic_expression(ASTScope* parent_scope)
     if ( ASTNodeSlot* result = token_to_slot(parent_scope, token) )
     {
         _state.commit();
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Atomic expression parsed:\n%s\n", _state.tokens().to_string().c_str());
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Atomic expression parsed:\n%s\n", _state.tokens().to_string().c_str());
         return result;
     }
 
     _state.rollback();
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE,  "Parser", TOOLS_KO " Unable to parse token (%llu)\n", token.m_index );
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic,  "Parser", TOOLS_KO " Unable to parse token (%llu)\n", token.m_index );
 
     return nullptr;
 }
 
 ASTNodeSlot* Nodlang::parse_parenthesis_expression(ASTScope* parent_scope)
 {
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "parse parenthesis expr...\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "parse parenthesis expr...\n");
 
     if (!_state.tokens().can_eat())
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " No enough tokens.\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " No enough tokens.\n");
         return nullptr;
     }
 
@@ -447,7 +447,7 @@ ASTNodeSlot* Nodlang::parse_parenthesis_expression(ASTScope* parent_scope)
     ASTToken currentToken = _state.tokens().eat();
     if (currentToken.m_type != ASTToken_t::parenthesis_open)
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Open bracket not found.\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Open bracket not found.\n");
         _state.rollback();
         return nullptr;
     }
@@ -458,20 +458,20 @@ ASTNodeSlot* Nodlang::parse_parenthesis_expression(ASTScope* parent_scope)
         ASTToken token = _state.tokens().eat();
         if (token.m_type != ASTToken_t::parenthesis_close)
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "%s \n", _state.tokens().to_string().c_str());
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Parenthesis close expected\n",
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "%s \n", _state.tokens().to_string().c_str());
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Parenthesis close expected\n",
                         token.word_to_string().c_str());
             _state.rollback();
         }
         else
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Parenthesis expression parsed:\n%s\n", _state.tokens().to_string().c_str());
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Parenthesis expression parsed:\n%s\n", _state.tokens().to_string().c_str());
             _state.commit();
         }
     }
     else
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " No expression after open parenthesis.\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " No expression after open parenthesis.\n");
         _state.rollback();
     }
     return result;
@@ -511,10 +511,10 @@ ASTNode* Nodlang::parse_expression_block(ASTScope* parent_scope, ASTNodeSlot* fl
         {
             case ASTToken_t::end_of_instruction:
             case ASTToken_t::parenthesis_close:
-                TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "End of instruction or parenthesis close: found in next token\n");
+                TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "End of instruction or parenthesis close: found in next token\n");
                 break;
             default:
-                TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " End of instruction or parenthesis close expected.\n");
+                TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " End of instruction or parenthesis close expected.\n");
                 value_out = nullptr;
         }
     }
@@ -525,7 +525,7 @@ ASTNode* Nodlang::parse_expression_block(ASTScope* parent_scope, ASTNodeSlot* fl
     {
         if (_state.tokens().peek(ASTToken_t::end_of_instruction))
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Empty expression found\n");
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Empty expression found\n");
 
             ASTNode* empty_instr = _state.graph()->create_empty_instruction( parent_scope );
             value_out = empty_instr->value_out();
@@ -536,7 +536,7 @@ ASTNode* Nodlang::parse_expression_block(ASTScope* parent_scope, ASTNodeSlot* fl
     if ( !value_out )
     {
         _state.rollback();
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " parse instruction\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " parse instruction\n");
         return nullptr;
     }
 
@@ -560,7 +560,7 @@ ASTNode* Nodlang::parse_expression_block(ASTScope* parent_scope, ASTNodeSlot* fl
 
     // Validate transaction
     _state.commit();
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " parse instruction:\n%s\n", _state.tokens().to_string().c_str());
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " parse instruction:\n%s\n", _state.tokens().to_string().c_str());
 
     return value_out->node;
 }
@@ -589,19 +589,19 @@ ASTScope* Nodlang::parse_program()
         _state.rollback();
         _state.graph()->reset();
         _state.graph()->signal_is_complete.emit();
-        TOOLS_LOG(TOOLS_WARNING, "Parser", "Some token remains after getting an empty code block\n");
-        TOOLS_LOG(TOOLS_MESSAGE, "Parser", "Parse program [OK]\n");
+        TOOLS_LOG(tools::Verbosity_Warning, "Parser", "Some token remains after getting an empty code block\n");
+        TOOLS_LOG(tools::Verbosity_Message, "Parser", "Parse program [OK]\n");
         return scope;
     }
     else if ( block_last_node == nullptr )
     {
-        TOOLS_LOG(TOOLS_WARNING, "Parser", "Program main block is empty\n");
+        TOOLS_LOG(tools::Verbosity_Warning, "Parser", "Program main block is empty\n");
     }
 
     _state.commit();
     _state.graph()->signal_is_complete.emit();
 
-    TOOLS_LOG(TOOLS_MESSAGE, "Parser", "Parse program [OK]\n");
+    TOOLS_LOG(tools::Verbosity_Message, "Parser", "Parse program [OK]\n");
 
     return scope;
 }
@@ -609,12 +609,12 @@ ASTScope* Nodlang::parse_program()
 ASTNode* Nodlang::parse_scoped_block(ASTScope* parent_scope, ASTNodeSlot* flow_out)
 {
     ASSERT(parent_scope);
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing scoped block ...\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing scoped block ...\n");
 
     ASTToken token_begin = _state.tokens().eat_if(ASTToken_t::scope_begin);
     if ( !token_begin )
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Expecting root_scope begin token\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Expecting root_scope begin token\n");
         return nullptr;
     }
 
@@ -635,23 +635,23 @@ ASTNode* Nodlang::parse_scoped_block(ASTScope* parent_scope, ASTNodeSlot* flow_o
         node->internal_scope()->token_end = token_end;
 
         _state.commit();
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Scoped block parsed:\n%s\n", _state.tokens().to_string().c_str());
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Scoped block parsed:\n%s\n", _state.tokens().to_string().c_str());
         return node;
     }
     else
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Expecting close root_scope token\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Expecting close root_scope token\n");
     }
 
     _state.graph()->find_and_destroy(node);
     _state.rollback();
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Scoped block parsed\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Scoped block parsed\n");
     return nullptr;
 }
 
 ASTNode* Nodlang::parse_code_block(ASTScope* parent_scope, ASTNodeSlot* flow_out)
 {
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing code block...\n" );
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing code block...\n" );
 
     //
     // Parse n atomic code blocks
@@ -678,18 +678,18 @@ ASTNode* Nodlang::parse_code_block(ASTScope* parent_scope, ASTNodeSlot* flow_out
     if (last_node_flow_out != nullptr && last_node_flow_out != flow_out )
     {
         _state.commit();
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " parse code block:\n%s\n", _state.tokens().to_string().c_str());
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " parse code block:\n%s\n", _state.tokens().to_string().c_str());
         return last_node_flow_out->node;
     }
 
     _state.rollback();
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " parse code block. Block size is %llu\n", block_size );
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " parse code block. Block size is %llu\n", block_size );
     return nullptr;
 }
 
 ASTNodeSlot* Nodlang::parse_expression(ASTScope* parent_scope, u8_t _precedence, ASTNodeSlot* _left_override)
 {
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing expression ...\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing expression ...\n");
 
     /*
 		Get the left-handed operand
@@ -698,7 +698,7 @@ ASTNodeSlot* Nodlang::parse_expression(ASTScope* parent_scope, u8_t _precedence,
 
     if (!_state.tokens().can_eat())
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Last token reached\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Last token reached\n");
         return left;
     }
 
@@ -710,13 +710,13 @@ ASTNodeSlot* Nodlang::parse_expression(ASTScope* parent_scope, u8_t _precedence,
 
     if (!_state.tokens().can_eat())
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Last token reached\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Last token reached\n");
         return left;
     }
 
     if ( !left )
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Left side is null, we return it\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Left side is null, we return it\n");
         return left;
     }
 
@@ -728,14 +728,14 @@ ASTNodeSlot* Nodlang::parse_expression(ASTScope* parent_scope, u8_t _precedence,
     {
         if (!_state.tokens().can_eat())
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Right side parsed, and last token reached\n");
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Right side parsed, and last token reached\n");
             return expression_out;
         }
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Right side parsed, continue with a recursive call...\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Right side parsed, continue with a recursive call...\n");
         return parse_expression(parent_scope, _precedence, expression_out);
     }
 
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Returning left side only\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Returning left side only\n");
 
     return left;
 }
@@ -761,7 +761,7 @@ bool Nodlang::is_syntax_valid()
             {
                 if (opened <= 0)
                 {
-                    TOOLS_LOG(TOOLS_ERROR, "Parser",
+                    TOOLS_LOG(tools::Verbosity_Error, "Parser",
                               "Syntax Error: Unexpected close bracket after \"... %s\" (position %llu)\n",
                               _state.tokens().range_to_string(token->m_index, -10).c_str(),
                               token->offset()
@@ -780,7 +780,7 @@ bool Nodlang::is_syntax_valid()
 
     if (opened > 0)// same opened/closed parenthesis count required.
     {
-        TOOLS_LOG(TOOLS_ERROR, "Parser", "Syntax Error: Bracket count mismatch, %i still opened.\n", opened);
+        TOOLS_LOG(tools::Verbosity_Error, "Parser", "Syntax Error: Bracket count mismatch, %i still opened.\n", opened);
         success = false;
     }
 
@@ -795,7 +795,7 @@ bool Nodlang::tokenize(const std::string& _string)
 
 bool Nodlang::tokenize()
 {
-    TOOLS_LOG(TOOLS_VERBOSE, "Parser", "Tokenization ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "Parser", "Tokenization ...\n");
 
     size_t global_cursor       = 0;
     size_t ignored_chars_count = 0;
@@ -807,7 +807,7 @@ bool Nodlang::tokenize()
 
         if ( !new_token )
         {
-            TOOLS_LOG(TOOLS_WARNING, "Parser", TOOLS_KO " Unable to tokenize from \"%20s...\" (at index %llu)\n", _state.buffer_at(current_cursor), global_cursor);
+            TOOLS_LOG(tools::Verbosity_Warning, "Parser", TOOLS_KO " Unable to tokenize from \"%20s...\" (at index %llu)\n", _state.buffer_at(current_cursor), global_cursor);
             return false;
         }
 
@@ -831,7 +831,7 @@ bool Nodlang::tokenize()
             if ( accepts_suffix(back.m_type) )
             {
                 back.suffix_end_grow(ignored_chars_count);
-                TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "      \"%s\" (update) \n", back.string().c_str() );
+                TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "      \"%s\" (update) \n", back.string().c_str() );
             }
             // case 2: increase prefix of the new_token up to wrap the ignored chars
             else if ( new_token )
@@ -842,18 +842,18 @@ bool Nodlang::tokenize()
         }
 
         _state.tokens().push(new_token);
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "%4llu) \"%s\" \n", new_token.m_index, new_token.string().c_str() );
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "%4llu) \"%s\" \n", new_token.m_index, new_token.string().c_str() );
     }
 
     // Append remaining ignored chars to the ribbon's suffix
     if ( ignored_chars_count )
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Found ignored chars after tokenize, adding to the tokens suffix...\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Found ignored chars after tokenize, adding to the tokens suffix...\n");
         ASTToken& tok = _state.tokens().global_token();
         tok.suffix_begin_grow( ignored_chars_count );
     }
 
-    TOOLS_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Tokenization.\n%s\n", _state.tokens().to_string().c_str() );
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Tokenization.\n%s\n", _state.tokens().to_string().c_str() );
 
     return true;
 }
@@ -1019,12 +1019,12 @@ ASTToken Nodlang::parse_token(const char* buffer, size_t buffer_size, size_t& gl
 
 ASTNodeSlot* Nodlang::parse_function_call(ASTScope* parent_scope)
 {
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "parse function call...\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "parse function call...\n");
 
     // Check if the minimum token count required is available ( 0: identifier, 1: open parenthesis, 2: close parenthesis)
     if (!_state.tokens().can_eat(3))
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " 3 tokens min. are required\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " 3 tokens min. are required\n");
         return nullptr;
     }
 
@@ -1038,7 +1038,7 @@ ASTNodeSlot* Nodlang::parse_function_call(ASTScope* parent_scope)
         token_1.m_type == ASTToken_t::parenthesis_open)
     {
         fct_id = token_0.word_to_string();
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Regular function pattern detected.\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Regular function pattern detected.\n");
     }
     else// Try to parse operator like (ex: operator==(..,..))
     {
@@ -1047,11 +1047,11 @@ ASTNodeSlot* Nodlang::parse_function_call(ASTScope* parent_scope)
         if (token_0.m_type == ASTToken_t::keyword_operator && token_1.m_type == ASTToken_t::operator_ && token_2.m_type == ASTToken_t::parenthesis_open)
         {
             fct_id = token_1.word_to_string();// operator
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Operator function-like pattern detected.\n");
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Operator function-like pattern detected.\n");
         }
         else
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Not a function.\n");
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Not a function.\n");
             _state.rollback();
             return nullptr;
         }
@@ -1082,7 +1082,7 @@ ASTNodeSlot* Nodlang::parse_function_call(ASTScope* parent_scope)
     // eat "close bracket supposed" token
     if ( !_state.tokens().eat_if(ASTToken_t::parenthesis_close) )
     {
-        TOOLS_LOG(TOOLS_WARNING, "Parser", TOOLS_KO " Expecting parenthesis close\n");
+        TOOLS_LOG(tools::Verbosity_Warning, "Parser", TOOLS_KO " Expecting parenthesis close\n");
         _state.rollback();
         return nullptr;
     }
@@ -1098,7 +1098,7 @@ ASTNodeSlot* Nodlang::parse_function_call(ASTScope* parent_scope)
     }
 
     _state.commit();
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Function call parsed:\n%s\n", _state.tokens().to_string().c_str() );
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Function call parsed:\n%s\n", _state.tokens().to_string().c_str() );
 
     return fct_node->value_out();
 }
@@ -1113,7 +1113,7 @@ ASTNode* Nodlang::parse_if_block(ASTScope* parent_scope, ASTNodeSlot* flow_out)
         return nullptr;
     }
 
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing conditional structure...\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing conditional structure...\n");
 
     bool    success = false;
     ASTIf*  if_node = _state.graph()->create_cond_struct( parent_scope );
@@ -1123,7 +1123,7 @@ ASTNode* Nodlang::parse_if_block(ASTScope* parent_scope, ASTNodeSlot* flow_out)
 
     if (_state.tokens().eat_if(ASTToken_t::parenthesis_open) )
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing conditional structure's condition...\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing conditional structure's condition...\n");
 
         // condition
         parse_expression_block(if_node->internal_scope(), nullptr, if_node->condition_in());
@@ -1143,11 +1143,11 @@ ASTNode* Nodlang::parse_if_block(ASTScope* parent_scope, ASTNodeSlot* flow_out)
                     if ( ASTNode* else_block = parse_atomic_code_block( if_node->internal_scope(), if_node->branch_out(Branch_FALSE) ) )
                     {
                         success = true;
-                        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " else block parsed.\n");
+                        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " else block parsed.\n");
                     }
                     else
                     {
-                        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Single instruction or root_scope expected\n");
+                        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Single instruction or root_scope expected\n");
                     }
                 }
                 else
@@ -1157,26 +1157,26 @@ ASTNode* Nodlang::parse_if_block(ASTScope* parent_scope, ASTNodeSlot* flow_out)
             }
             else
             {
-                TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Single instruction or root_scope expected\n");
+                TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Single instruction or root_scope expected\n");
             }
         }
         else
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Close bracket expected\n");
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Close bracket expected\n");
         }
     }
 
     if ( success )
     {
         _state.commit();
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Parse conditional structure:\n%s\n", _state.tokens().to_string().c_str() );
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Parse conditional structure:\n%s\n", _state.tokens().to_string().c_str() );
         // TODO: connect true/false branches flow_out to scope flow_leave?"
         return if_node;
     }
 
     _state.graph()->find_and_destroy(if_node);
     _state.rollback();
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Parse conditional structure \n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Parse conditional structure \n");
 
     return {};
 }
@@ -1190,7 +1190,7 @@ ASTNode* Nodlang::parse_for_block(ASTScope* parent_scope, ASTNodeSlot* flow_out)
 
     if ( ASTToken token_for = _state.tokens().eat_if(ASTToken_t::keyword_for) )
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing for loop ...\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing for loop ...\n");
 
         for_node = _state.graph()->create_for_loop( parent_scope );
         for_node->token_for = token_for;
@@ -1200,7 +1200,7 @@ ASTNode* Nodlang::parse_for_block(ASTScope* parent_scope, ASTNodeSlot* flow_out)
         ASTToken open_bracket = _state.tokens().eat_if(ASTToken_t::parenthesis_open);
         if ( open_bracket)
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing for set_name/condition/iter instructions ...\n");
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing for set_name/condition/iter instructions ...\n");
 
             // first we parse three instructions, no matter if we find them, we'll continue (we are parsing something abstract)
 
@@ -1217,27 +1217,27 @@ ASTNode* Nodlang::parse_for_block(ASTScope* parent_scope, ASTNodeSlot* flow_out)
                 if ( block )
                 {
                     success = true;
-                    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Scope or single instruction found\n");
+                    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Scope or single instruction found\n");
                 }
                 else
                 {
-                    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Scope or single instruction expected\n");
+                    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Scope or single instruction expected\n");
                 }
             }
             else
             {
-                TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Close parenthesis was expected.\n");
+                TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Close parenthesis was expected.\n");
             }
         }
         else
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Open parenthesis was expected.\n");
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Open parenthesis was expected.\n");
         }
     }
 
     if ( success )
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " For block parsed\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " For block parsed\n");
         _state.commit();
         // TODO: Should we connect true/false branches to scope's flow_leave Slot?
         return for_node;
@@ -1248,7 +1248,7 @@ ASTNode* Nodlang::parse_for_block(ASTScope* parent_scope, ASTNodeSlot* flow_out)
         _state.graph()->find_and_destroy(for_node);
     }
     _state.rollback();
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " Could not parse for block\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " Could not parse for block\n");
     return {};
 }
 
@@ -1262,7 +1262,7 @@ ASTNode* Nodlang::parse_while_block(ASTScope* parent_scope,  ASTNodeSlot* flow_o
 
     if ( ASTToken token_while = _state.tokens().eat_if(ASTToken_t::keyword_while) )
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing while ...\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing while ...\n");
 
         while_node = _state.graph()->create_while_loop( parent_scope );
         while_node->token_while = token_while;
@@ -1271,7 +1271,7 @@ ASTNode* Nodlang::parse_while_block(ASTScope* parent_scope,  ASTNodeSlot* flow_o
 
         if ( ASTToken open_bracket = _state.tokens().eat_if(ASTToken_t::parenthesis_open) )
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing while condition ... \n");
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing while condition ... \n");
 
             // Parse an optional condition
             parse_expression_block(while_node->internal_scope(), nullptr, while_node->condition_in());
@@ -1285,23 +1285,23 @@ ASTNode* Nodlang::parse_while_block(ASTScope* parent_scope,  ASTNodeSlot* flow_o
                 }
                 else
                 {
-                    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO "  Scope or single instruction expected\n");
+                    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO "  Scope or single instruction expected\n");
                 }
             }
             else
             {
-                TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO "  Parenthesis close expected\n");
+                TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO "  Parenthesis close expected\n");
             }
         }
         else
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO "  Parenthesis close expected\n");
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO "  Parenthesis close expected\n");
         }
     }
 
     if ( success )
     {
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing while:\n%s\n", _state.tokens().to_string().c_str() );
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing while:\n%s\n", _state.tokens().to_string().c_str() );
         _state.commit();
         // TODO: Should we connect true/false branches to scope's flow_leave SLot?
         return while_node;
@@ -1350,7 +1350,7 @@ ASTNodeSlot* Nodlang::parse_variable_declaration(ASTScope* parent_scope)
             }
             else
             {
-                TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO "  Initialization expression expected for %s\n", identifier_token.word_to_string().c_str());
+                TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO "  Initialization expression expected for %s\n", identifier_token.word_to_string().c_str());
             }
         }
             // Declaration without assignment
@@ -1361,14 +1361,14 @@ ASTNodeSlot* Nodlang::parse_variable_declaration(ASTScope* parent_scope)
 
         if ( success )
         {
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Variable declaration: %s %s\n",
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Variable declaration: %s %s\n",
                         variable_node->value()->get_type()->name(),
                         identifier_token.word_to_string().c_str());
             _state.commit();
             return variable_node->value_out();
         }
 
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO "  Initialization expression expected for %s\n", identifier_token.word_to_string().c_str());
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO "  Initialization expression expected for %s\n", identifier_token.word_to_string().c_str());
         _state.graph()->find_and_destroy(variable_node);
     }
 
@@ -1660,7 +1660,7 @@ std::string& Nodlang::serialize_graph(std::string &_out, const Graph* graph ) co
 {
     if ( !graph->root_node() )
     {
-        TOOLS_LOG(TOOLS_ERROR, "Serializer", "a root primary_child is expected to serialize the graph\n");
+        TOOLS_LOG(tools::Verbosity_Error, "Serializer", "a root primary_child is expected to serialize the graph\n");
         return _out;
     }
     return serialize_node(_out, graph->root_node(), SerializeFlag_RECURSE);
@@ -1867,7 +1867,7 @@ ASTToken_t Nodlang::to_literal_token(const TypeDescriptor *type) const
 
 ASTNode* Nodlang::parse_atomic_code_block(ASTScope* parent_scope, ASTNodeSlot* flow_out)
 {
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", "Parsing atomic code block ..\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", "Parsing atomic code block ..\n");
     ASSERT(flow_out);
 
     // most common case
@@ -1886,11 +1886,11 @@ ASTNode* Nodlang::parse_atomic_code_block(ASTScope* parent_scope, ASTNodeSlot* f
             block->set_suffix(tok );
         }
 
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_OK " Block found (class %s)\n", block->get_class()->name() );
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_OK " Block found (class %s)\n", block->get_class()->name() );
         return block;
     }
 
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Parser", TOOLS_KO " No block found\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Parser", TOOLS_KO " No block found\n");
     return nullptr;
 }
 

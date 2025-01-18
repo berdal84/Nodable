@@ -62,19 +62,19 @@ Path Path::get_executable_path()
         {
             path[length] = '\0';
             result = path;
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "tools::system", "executable path: %s\n", result.c_str() );
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "tools::system", "  dirname: %s\n", result.parent_path().c_str() );
-            TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "tools::system", "  basename: %s\n", result.filename().c_str() );
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "tools::system", "executable path: %s\n", result.c_str() );
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "tools::system", "  dirname: %s\n", result.parent_path().c_str() );
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "tools::system", "  basename: %s\n", result.filename().c_str() );
         }
         else
         {
-            TOOLS_LOG(TOOLS_ERROR, "tools::system", "Unable to get executable path\n");
+            TOOLS_LOG(tools::Verbosity_Error, "tools::system", "Unable to get executable path\n");
         }
         delete[] path;
     }
     else
     {
-        TOOLS_LOG(TOOLS_WARNING, "tools::system", "Unable to get executable path!\n");
+        TOOLS_LOG(tools::Verbosity_Warning, "tools::system", "Unable to get executable path!\n");
     }
     return result;
 #else

@@ -60,7 +60,7 @@ void ActionManager::add_action( IAction* _action )// Add a new action (can be tr
 {
     m_actions.push_back( _action );
     m_actions_by_id.insert(std::pair{_action->event_id, _action});
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "ActionManager", "Action '%s' bound to the event_id %i\n", _action->label.c_str(), _action->event_id);
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "ActionManager", "Action '%s' bound to the event_id %i\n", _action->label.c_str(), _action->event_id);
 }
 
 std::string Shortcut::to_string() const

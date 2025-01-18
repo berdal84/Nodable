@@ -576,7 +576,7 @@ void GraphView::_update(float dt)
     ASSERT( graph() );
 
     // Physics Components
-    // TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "GraphView", "Updating constraints ...\n");
+    // TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "GraphView", "Updating constraints ...\n");
 
     if ( _m_physics_dirty )
     {
@@ -601,7 +601,7 @@ void GraphView::_update(float dt)
         if ( auto* _physics = node->component<PhysicsComponent>() )
             _physics->apply_forces(dt);
 
-    // TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "GraphView", "Constraints updated.\n");
+    // TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "GraphView", "Constraints updated.\n");
 
     // NodeViews
     for (ASTNode* node : graph()->nodes() )

@@ -30,19 +30,14 @@
 #define TOOLS_KO   TOOLS_COLOR_BOLDRED "[KO]" TOOLS_COLOR_DEFAULT // red   colored "[KO]" string.
 #define TOOLS_OK TOOLS_COLOR_BOLDGREEN "[OK]" TOOLS_COLOR_DEFAULT // green colored "[OK]" string.
 
-#define TOOLS_ERROR   tools::Verbosity_Error
-#define TOOLS_WARNING tools::Verbosity_Warning
-#define TOOLS_MESSAGE tools::Verbosity_Message
-#define TOOLS_VERBOSE tools::Verbosity_Verbose
+#define TOOLS_LOG(...) tools::log( __VA_ARGS__ )
 
 #ifdef TOOLS_DEBUG
-#   define TOOLS_LOG(...)               tools::log( __VA_ARGS__ )
 #   define TOOLS_DEBUG_LOG(...)         TOOLS_LOG( __VA_ARGS__ )
 #   define TOOLS_LOG_MESSAGE_MAX_COUNT  500000
-#   define TOOLS_LOG_VERBOSITY_DEFAULT  tools::Verbosity_Message
+#   define TOOLS_LOG_VERBOSITY_DEFAULT  tools::Verbosity_Diagnostic
 #   define TOOLS_LOG_MESSAGE_MEMORY_MAX 400*1000*1000
 #else
-#   define TOOLS_LOG(...)               tools::log( __VA_ARGS__ )
 #   define TOOLS_DEBUG_LOG(...)         /* TOOLS_DEBUG_LOG disabled when TOOLS_DEBUG is false */
 #   define TOOLS_LOG_MESSAGE_MAX_COUNT  1000
 #   define TOOLS_LOG_VERBOSITY_DEFAULT  tools::Verbosity_Message
@@ -55,18 +50,20 @@ namespace tools
     typedef int Verbosity;
     enum Verbosity_: int
     {
-        Verbosity_Error   = 0, // lowest level (always logged)
-        Verbosity_Warning = 1,
-        Verbosity_Message = 2,
-        Verbosity_Verbose = 3, // highest level (rarely logged)
-        Verbosity_COUNT
+        Verbosity_Error      = 0, // lowest level (always logged)
+        Verbosity_Warning    = 1,
+        Verbosity_Message    = 2,
+        Verbosity_Diagnostic = 3, // highest level (rarely logged)
+
+        Verbosity_COUNT,
+        Verbosity_FilterAll  = -1
     };
 
     struct MessageData
     {
         using clock_t = std::chrono::time_point<std::chrono::system_clock>;
 
-        string32  category{};                             // short category name (ex: "Game", "App", etc.)
+        const char* category = "";                        // short category name (ex: "Game", "App", etc.)
         Verbosity verbosity{TOOLS_LOG_VERBOSITY_DEFAULT}; // verbosity level
         string512 text{};                                 // message content
         clock_t   date{std::chrono::system_clock::now()}; // printed at date
@@ -80,11 +77,12 @@ namespace tools
     };
 
     LogState&        get_log_state();
-    void             set_log_verbosity(const std::string& category, Verbosity level); // Set verbosity level for a given category
+    void             set_log_verbosity(const char* category, Verbosity level); // Set verbosity level for a given category
     void             set_log_verbosity(Verbosity level); // override verbosity globally
-    Verbosity        get_log_verbosity(const std::string& category);
+    Verbosity        get_log_verbosity(const char* category);
     static Verbosity get_log_verbosity() { return get_log_state().verbosity; }
     void             flush(); // Ensure all messages have been printed out
+    bool             show_log_message(const MessageData&, Verbosity filter); // return true if messages needs to be displayed depending on filter and global verbosity
 
     template<typename...Args>
     void log(Verbosity verbosity, const char* category, const char* format, Args... args) // print a message like "[time|verbosity|category] message"
@@ -96,10 +94,10 @@ namespace tools
         };
 
         constexpr VerbosityInfo verbosity_info[Verbosity_COUNT] = {
-            { "ERR", TOOLS_COLOR_RED     }, // Verbosity_Error
-            { "WRN", TOOLS_COLOR_MAGENTA }, // Verbosity_Warning
-            { "MSG", TOOLS_COLOR_DEFAULT }, // Verbosity_Message
-            { "VRB", TOOLS_COLOR_DEFAULT }, // Verbosity_Verbose
+            { "ERROR"     , TOOLS_COLOR_RED     }, // Verbosity_Error
+            { "WARNING"   , TOOLS_COLOR_MAGENTA }, // Verbosity_Warning
+            { "MESSAGE"   , TOOLS_COLOR_DEFAULT }, // Verbosity_Message
+            { "DIAGNOSTIC", TOOLS_COLOR_DEFAULT }, // Verbosity_Diagnostic
         };
 
         MessageData message;
@@ -137,5 +135,5 @@ namespace tools
 
     static_assert(
         TOOLS_LOG_MESSAGE_MAX_COUNT * (sizeof(MessageData)) < TOOLS_LOG_MESSAGE_MEMORY_MAX,
-        "tools's log messages can go above limit");
+        "tools' log messages can go above limit");
 }

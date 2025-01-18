@@ -34,21 +34,21 @@ Graph::~Graph()
 
 void Graph::_init()
 {
-    TOOLS_LOG(TOOLS_VERBOSE, "Graph", "Initializing ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "Graph", "Initializing ...\n");
     ASSERT( m_node_registry.empty() ); // Root must be first, registry should be empty
 
     // create and _insert root
     ASTNode* root  = ASTUtils::create_root_scope();
     this->_insert(root, nullptr);
 
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Graph", "-- add root node %p (name: %s, class: %s)\n", root, root->name().c_str(), root->get_class()->name());
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Graph", "-- add root node %p (name: %s, class: %s)\n", root, root->name().c_str(), root->get_class()->name());
     ASSERT( root_node() == root );
-    TOOLS_LOG(TOOLS_VERBOSE, "Graph", "Initialized " TOOLS_OK "\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "Graph", "Initialized " TOOLS_OK "\n");
 }
 
 void Graph::_clear()
 {
-    TOOLS_LOG(TOOLS_VERBOSE, "Graph", "Clearing ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "Graph", "Clearing ...\n");
 
     // delete from last to first (which is the root)
     while ( !m_node_registry.empty() )
@@ -64,11 +64,11 @@ void Graph::_clear()
 #ifdef NDBL_DEBUG
     if ( !m_edge_registry.empty() )
     {
-        TOOLS_LOG(TOOLS_ERROR, "Graph", "m_edge_registry should be empty.\n" );
-        TOOLS_LOG(TOOLS_MESSAGE, "Graph", "Dumping %zu edge(s) for debugging purpose ...\n", m_edge_registry.size() );
+        TOOLS_LOG(tools::Verbosity_Error, "Graph", "m_edge_registry should be empty.\n" );
+        TOOLS_LOG(tools::Verbosity_Message, "Graph", "Dumping %zu edge(s) for debugging purpose ...\n", m_edge_registry.size() );
         for ( auto& edge : m_edge_registry)
         {
-            TOOLS_LOG(TOOLS_MESSAGE, "Graph", "   %s\n", to_string(edge.second).c_str() );
+            TOOLS_LOG(tools::Verbosity_Message, "Graph", "   %s\n", to_string(edge.second).c_str() );
         }
         m_edge_registry.clear();
     }
@@ -76,18 +76,18 @@ void Graph::_clear()
 
     assert(m_node_registry.empty());
     assert(m_edge_registry.empty());
-    TOOLS_LOG(TOOLS_VERBOSE, "Graph", "Clear " TOOLS_OK "\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "Graph", "Clear " TOOLS_OK "\n");
 }
 
 void Graph::reset()
 {
-	TOOLS_LOG(TOOLS_VERBOSE,  "Graph", "Resetting ...\n");
+	TOOLS_LOG(tools::Verbosity_Diagnostic,  "Graph", "Resetting ...\n");
 
     this->_clear();
     this->_init();
     signal_reset.emit();
 
-    TOOLS_LOG(TOOLS_VERBOSE, "Graph", "Reset " TOOLS_OK "\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "Graph", "Reset " TOOLS_OK "\n");
 }
 
 bool Graph::update()
@@ -149,24 +149,24 @@ void Graph::_insert(ASTNode* node, ASTScope* scope)
     signal_add_node.emit(node);
     signal_change.broadcast();
 
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Graph", "-- add node %p (name: %s, class: %s)\n", node, node->name().c_str(), node->get_class()->name());
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Graph", "-- add node %p (name: %s, class: %s)\n", node, node->name().c_str(), node->get_class()->name());
 }
 
 NodeRegistry::iterator Graph::_erase(NodeRegistry::iterator it)
 {
     ASTNode* node = *it;
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Graph", "-- node %p (name: \"%s\"): erasing ...\n", node, node->name().c_str() );
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Graph", "-- node %p (name: \"%s\"): erasing ...\n", node, node->name().c_str() );
     const auto& next = m_node_registry.erase( it );
     signal_remove_node.emit(node);
     signal_change.broadcast();
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Graph", "-- node %p (name: \"%s\"): _erased\n", node, node->name().c_str() );
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Graph", "-- node %p (name: \"%s\"): _erased\n", node, node->name().c_str() );
     return next;
 }
 
 void Graph::_clean_node(ASTNode* node)
 {
     ASSERT( node );
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Graph", "-- node %p (name: \"%s\"): pre_erasing ...\n", node, node->name().c_str() );
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Graph", "-- node %p (name: \"%s\"): pre_erasing ...\n", node, node->name().c_str() );
 
     // Identify each edge connected to this node
     auto concerns_node = [&](const std::pair<SlotFlags, ASTSlotLink>& pair )
@@ -195,7 +195,7 @@ void Graph::_clean_node(ASTNode* node)
         _transfer_children( _internal_scope, root_scope());
     }
 
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Graph", "-- node %p (name: \"%s\"): pre__erased\n", node, node->name().c_str() );
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Graph", "-- node %p (name: \"%s\"): pre__erased\n", node, node->name().c_str() );
 }
 
 ASTNode* Graph::create_scope(ASTScope* scope)
@@ -335,7 +335,7 @@ ASTSlotLink Graph::connect(ASTNodeSlot* tail, ASTNodeSlot* head, GraphFlags _fla
 
     signal_change.broadcast();
 
-    TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "Graph", "New edge added\n");
+    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Graph", "New edge added\n");
 
     return edge;
 }

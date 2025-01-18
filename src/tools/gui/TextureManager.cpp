@@ -52,11 +52,11 @@ bool TextureManager::release_all()
             if( GL_NO_ERROR != glGetError())
             {
                 success = false;
-                TOOLS_LOG(TOOLS_WARNING, "TextureManager", "Unable to release: %s (code: %i)\n", key.c_str(), glGetError());
+                TOOLS_LOG(tools::Verbosity_Warning, "TextureManager", "Unable to release: %s (code: %i)\n", key.c_str(), glGetError());
             }
             else
             {
-                TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "Released %s\n", key.c_str());
+                TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "Released %s\n", key.c_str());
             }
         }
         delete texture;
@@ -73,7 +73,7 @@ Texture *TextureManager::load_png_to_gpu(const Path &path)
     if ( error )
     {
         delete texture;
-        TOOLS_LOG(TOOLS_ERROR, "TextureManager", "Unable to load png (code %u): %s\n",  error, path.c_str());
+        TOOLS_LOG(tools::Verbosity_Error, "TextureManager", "Unable to load png (code %u): %s\n",  error, path.c_str());
         VERIFY(false, "Unable to load png");
     }
 
@@ -82,32 +82,32 @@ Texture *TextureManager::load_png_to_gpu(const Path &path)
     if ( error )
     {
         delete texture;
-        TOOLS_LOG(TOOLS_ERROR, "TextureManager", "Unable to load texture to GPU (code %u): %s\n",  error, path.c_str());
+        TOOLS_LOG(tools::Verbosity_Error, "TextureManager", "Unable to load texture to GPU (code %u): %s\n",  error, path.c_str());
         return nullptr;
     }
 
     m_register.emplace(path.string(), texture);
-    TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "File loaded to GPU: %s\n", path.c_str());
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "File loaded to GPU: %s\n", path.c_str());
 
     return texture;
 }
 
 int TextureManager::load_png(const Path& path, Texture* texture)
 {
-    TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "Loading PNG from disk %s ...\n", path.c_str());
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "Loading PNG from disk %s ...\n", path.c_str());
     std::vector<unsigned char> buffer;
     unsigned error = lodepng::load_file(buffer, path.string() ); //load the image file with given filename
     if (error) {
-        TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
+        TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
         return 1;
     }
-    TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "Decoding PNG %s ...\n", path.c_str());
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "Decoding PNG %s ...\n", path.c_str());
     error = lodepng::decode(texture->buffer, (unsigned&)texture->width, (unsigned&)texture->height, buffer); //decode the png
     if (error) {
-        TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
+        TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
         return 2;
     }
-    TOOLS_LOG(TOOLS_VERBOSE, "TextureManager", "PNG read (image: %i x %i px)\n", texture->width, texture->height );
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "PNG read (image: %i x %i px)\n", texture->width, texture->height );
     return 0;
 }
 

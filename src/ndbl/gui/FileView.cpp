@@ -304,8 +304,8 @@ void FileView::set_text(const std::string& text, Isolation mode)
         {
             m_text_editor.SetSelection(selectionStart, selectionEnd);
         }
-        TOOLS_LOG(TOOLS_MESSAGE, "FileView", "Selected text updated from graph.\n");
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "FileView", "%s \n", text.c_str());
+        TOOLS_LOG(tools::Verbosity_Message, "FileView", "Selected text updated from graph.\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "FileView", "%s \n", text.c_str());
     }
     else
     {
@@ -313,8 +313,8 @@ void FileView::set_text(const std::string& text, Isolation mode)
         // auto cmd = std::make_shared<Cmd_ReplaceText>(current_content, text, &m_text_editor);
         // m_file->get_history()->push_command(cmd);
 
-        TOOLS_LOG(TOOLS_MESSAGE, "FileView", "Whole text updated from graph.\n");
-        TOOLS_DEBUG_LOG(TOOLS_VERBOSE, "FileView", "%s \n", text.c_str());
+        TOOLS_LOG(tools::Verbosity_Message, "FileView", "Whole text updated from graph.\n");
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "FileView", "%s \n", text.c_str());
     }
 }
 

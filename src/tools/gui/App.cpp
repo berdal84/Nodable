@@ -52,7 +52,7 @@ void App::run()
 
 void App::shutdown()
 {
-    TOOLS_LOG(TOOLS_MESSAGE, "tools::BaseApp", "Shutting down ...\n");
+    TOOLS_LOG(tools::Verbosity_Message, "tools::BaseApp", "Shutting down ...\n");
 
     // Optionally shutdown view
     if (m_flags & Flag_OWNS_VIEW_MEMORY )
@@ -70,7 +70,7 @@ void App::shutdown()
     // managers
     shutdown_task_manager(m_task_manager);
 
-    TOOLS_LOG(TOOLS_MESSAGE, "tools::BaseApp", "Shutdown OK\n");
+    TOOLS_LOG(tools::Verbosity_Message, "tools::BaseApp", "Shutdown OK\n");
 }
 
 void App::update()

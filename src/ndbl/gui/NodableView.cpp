@@ -41,7 +41,7 @@ void NodableView::update()
 
 void NodableView::init(Nodable * _app)
 {
-    TOOLS_LOG(TOOLS_VERBOSE, "ndbl::NodableView", "init ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "ndbl::NodableView", "init ...\n");
     m_app = _app;
     // Initialize wrapped view and inject some code ...
     tools::App* base_app = _app->get_base_app_handle();
@@ -97,7 +97,7 @@ void NodableView::init(Nodable * _app)
     // TODO: add a list of preset to create operators/functions
     // action_manager->new_action<Event_CreateNode>(label.c_str(), Shortcut{}, EventPayload_CreateNode{CreateNodeType_FUNCTION, invokable->get_sig() } );
 
-    TOOLS_LOG(TOOLS_VERBOSE, "ndbl::NodableView", "init_ex " TOOLS_OK "\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "ndbl::NodableView", "init_ex " TOOLS_OK "\n");
 }
 
 void NodableView::_on_draw_splashscreen_content()
@@ -308,7 +308,7 @@ void NodableView::draw()
                     }
                 };
 
-                menu_item_verbosity(Verbosity_Verbose, "Verbose");
+                menu_item_verbosity(Verbosity_Diagnostic, "Verbose");
                 menu_item_verbosity(Verbosity_Message, "Message");
                 menu_item_verbosity(Verbosity_Warning, "Warning");
                 menu_item_verbosity(Verbosity_Error,   "Error");

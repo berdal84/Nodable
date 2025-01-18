@@ -24,7 +24,7 @@ public:
         app.init();
 
         set_log_verbosity( Verbosity_Message );
-        set_log_verbosity( "Parser", Verbosity_Verbose );
+        set_log_verbosity( "Parser", Verbosity_Diagnostic );
     }
 
     void TearDown() override
@@ -34,7 +34,7 @@ public:
 
     std::string parse_and_serialize(const std::string &_source_code)
     {
-        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "core", "parse_and_serialize parsing \"%s\"\n", _source_code.c_str());
+        TOOLS_DEBUG_LOG(tools::Verbosity_Message, "core", "parse_and_serialize parsing \"%s\"\n", _source_code.c_str());
 
         // parse
         app.parse(_source_code);
@@ -42,7 +42,7 @@ public:
         // serialize
         std::string result;
         app.serialize( result );
-        TOOLS_DEBUG_LOG(TOOLS_MESSAGE, "tools.h", "parse_and_serialize serialize_node() output is: \"%s\"\n", result.c_str());
+        TOOLS_DEBUG_LOG(tools::Verbosity_Message, "tools.h", "parse_and_serialize serialize_node() output is: \"%s\"\n", result.c_str());
 
         return result;
     }
@@ -59,7 +59,7 @@ public:
     
     void log_ribbon() const
     {
-        TOOLS_LOG(TOOLS_MESSAGE, "fixture::core", "%s\n\n", get_language()->_state.string().c_str());
+        TOOLS_LOG(tools::Verbosity_Message, "fixture::core", "%s\n\n", get_language()->_state.string().c_str());
     }
 };
 }
