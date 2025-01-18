@@ -8,11 +8,10 @@ LogState& tools::get_log_state()
     return state;
 }
 
-bool tools::show_log_message(const MessageData& message, Verbosity filter)
+bool tools::show_log_message(const MessageData& message, const VerbosityFilter& filter)
 {
     if ( message.verbosity <= get_log_verbosity( message.category ) )
-        if ( message.verbosity == filter || filter == Verbosity_FilterAll )
-            return true;
+        return filter.data[message.verbosity];
     return false;
 }
 

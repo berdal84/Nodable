@@ -384,23 +384,27 @@ void AppView::begin_draw()
         if ( ImGui::Begin( k_status_window_name ) && !get_log_state().messages.empty())
         {
             const float line_height = ImGui::GetTextLineHeightWithSpacing();
-            static tools::Verbosity verbosity_filter = Verbosity_FilterAll;
 
             if ( ImGui::BeginChild("filters", ImVec2(-1, line_height * 1.2f )) )
             {
                 ImGui::BeginGroup();
                 ImGui::Text("Filter Messages: "); ImGui::SameLine();
 
-                auto draw_filter = [](const char* label, tools::Verbosity verbosity)
+                auto draw_filter = [&](const char* label, tools::Verbosity verbosity)
                 {
-                    bool checked = verbosity_filter == verbosity;
+                    ImGui::Checkbox(label, &get_log_state().verbosity_filter.data[verbosity] );
+                };
+
+                auto draw_filter_all = [&](const char* label)
+                {
+                    bool checked = get_log_state().verbosity_filter.all_checked();
                     if ( ImGui::Checkbox(label, &checked ) )
                     {
-                        verbosity_filter = verbosity;
+                        get_log_state().verbosity_filter.reset_all(checked);
                     }
                 };
 
-                draw_filter("All"         , Verbosity_FilterAll );  ImGui::SameLine();
+                draw_filter_all("All" );                            ImGui::SameLine();
                 draw_filter("Errors"      , Verbosity_Error );      ImGui::SameLine();
                 draw_filter("Warnings"    , Verbosity_Warning );    ImGui::SameLine();
                 draw_filter("Messages"    , Verbosity_Message );    ImGui::SameLine();
@@ -420,7 +424,7 @@ void AppView::begin_draw()
                 while ( message_displayed_count < message_to_display_count && it != get_log_state().messages.rend() )
                 {
                     const MessageData& message = *it;
-                    if ( show_log_message( message, verbosity_filter ) )
+                    if ( show_log_message( message, get_log_state().verbosity_filter ) )
                     {
                         ImRect line_rect{
                             ImGui::GetCursorScreenPos(),

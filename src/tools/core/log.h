@@ -56,7 +56,31 @@ namespace tools
         Verbosity_Diagnostic = 3, // highest level (rarely logged)
 
         Verbosity_COUNT,
-        Verbosity_FilterAll  = -1
+    };
+
+    struct VerbosityFilter
+    {
+        bool data[Verbosity_COUNT]; // TODO: we could use flags
+
+        VerbosityFilter(bool default_value = false)
+        {
+            reset_all(default_value);
+        }
+
+        bool all_checked() const
+        {
+            for( int i = 0; i < Verbosity_COUNT; ++i )
+                if ( !data[i] )
+                    return false;
+            return true;
+        }
+
+        void reset_all(bool default_value = false)
+        {
+            for( int i = 0; i < Verbosity_COUNT; ++i )
+                data[i] = default_value;
+        }
+
     };
 
     struct MessageData
@@ -74,6 +98,7 @@ namespace tools
         Verbosity                        verbosity = TOOLS_LOG_VERBOSITY_DEFAULT;
         std::map<std::string, Verbosity> verbosity_by_category = {};
         std::deque<MessageData>          messages = {};
+        VerbosityFilter                  verbosity_filter{true}; // true => checked by default
     };
 
     LogState&        get_log_state();
@@ -82,7 +107,7 @@ namespace tools
     Verbosity        get_log_verbosity(const char* category);
     static Verbosity get_log_verbosity() { return get_log_state().verbosity; }
     void             flush(); // Ensure all messages have been printed out
-    bool             show_log_message(const MessageData&, Verbosity filter); // return true if messages needs to be displayed depending on filter and global verbosity
+    bool             show_log_message(const MessageData&, const VerbosityFilter& filter); // return true if messages needs to be displayed depending on filter and global verbosity
 
     template<typename...Args>
     void log(Verbosity verbosity, const char* category, const char* format, Args... args) // print a message like "[time|verbosity|category] message"
