@@ -18,7 +18,7 @@ They both rely on external [libraries](./libs/README.md).
 - Ubuntu 22.04+
 
 ### Software
-- clang (version must support C++20)
+- clang (C++20 compatible)
 - Ruby 3+
 - CMake 3.14+ (required to build some libs)
 
@@ -57,3 +57,14 @@ Once built is done, the simplest way to run nodable is:
 ```console
 rake run
 ```
+
+## Dev
+
+During development, you can generate a .clangd file to get static syntax analysis.
+To generate the file, run:
+
+```console
+rake ndbl:app:clangd
+```
+
+This file is read by clangd to perform its analysis. Many IDEs and text editors are compatible with it.
