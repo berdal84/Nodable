@@ -69,13 +69,18 @@ void ASTNodeSlot::add_adjacent(ASTNodeSlot* other)
     signal_change.emit(Event_Add, other);
 }
 
-void ASTNodeSlot::remove_adjacent(ASTNodeSlot* other)
+bool ASTNodeSlot::remove_adjacent(ASTNodeSlot* other)
 {
     auto it = std::find(_adjacent.begin(), _adjacent.end(), other);
-    VERIFY(it != _adjacent.end(), "Slot* not found");
+    if( it == _adjacent.end())
+    {
+        TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "ASTNodeSlot", "remove_adjacent(Slot*) - slot not found");
+        return false;
+    }
     _adjacent.erase(it );
     _flags |= SlotFlag_NOT_FULL;
     signal_change.emit(Event_Remove, other);
+    return true;
 }
 
 void ASTNodeSlot::expand_capacity(size_t capacity )
