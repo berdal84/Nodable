@@ -633,53 +633,42 @@ void GraphView::add_action_to_node_menu(Action_CreateNode* _action )
 
 void GraphView::frame_content(FrameMode mode )
 {
-    const Vec2  pivot = CENTER;
-    const float pivot_margin_ratio = 0.05f;
+    auto frame_root_node_view = [&]() {
+        // Get root node view
+        ASTScope* root_scope = graph()->root_scope();
+        if ( !root_scope ) return;
+        auto root_node_view = root_scope->node()->component<ASTNodeView>();
+        ASSERT(root_node_view);
 
-    switch (mode)
-    {
-        case FRAME_ALL:
-        {
-            ASTScope* root_scope = graph()->root_scope();
-            if ( root_scope == nullptr )
-            {
-                return;
-            }
+        // compute the delta to apply
+        const Vec2 margin(40.f);
+        const Vec2 target = margin + _m_shape.pivot( tools::TOP_LEFT, WORLD_SPACE);
+        const Vec2 origin = root_node_view->shape()->pivot( tools::TOP_LEFT, WORLD_SPACE);
+        const Vec2 delta = target - origin;
 
-            // compute the delta to apply
-            ASTScopeView* scopeview = root_scope->view();
-            const BoxShape2D box{ scopeview->content_rect() };
-            const Vec2 delta = _m_shape.pivot( TOP_LEFT  * ( 1.f - pivot_margin_ratio), WORLD_SPACE) - box.pivot( TOP_LEFT, WORLD_SPACE);
+        // apply the delta
+        root_node_view->translate( delta );
+    };
 
-            // apply the delta
-            root_scope->node()
-                      ->component<ASTNodeView>()
-                      ->translate( delta );
-            break;
-        }
+    if ( mode ==  FrameMode::RootNodeView )
+        return frame_root_node_view();
 
-        case FRAME_SELECTION_ONLY:
-        {
-            auto selected_nodeviews = _m_selection.collect<ASTNodeView*>();
-            if ( selected_nodeviews.empty() )
-            {
-                return;
-            }
+    // Get selected node views rectangle
+    auto selected_nodeviews = _m_selection.collect<ASTNodeView*>();
+    if ( selected_nodeviews.empty() )
+        return frame_root_node_view(); // by default, we frame the root node
 
-            // compute the delta to apply
-            const Rect rect = ASTNodeView::bounding_rect( selected_nodeviews, WORLD_SPACE);
-            const BoxShape2D box{ rect };
-            const Vec2 delta =  _m_shape.pivot( pivot  * ( 1.f - pivot_margin_ratio), WORLD_SPACE) - box.pivot(pivot, WORLD_SPACE);
+    const Rect rect = ASTNodeView::bounding_rect( selected_nodeviews, tools::WORLD_SPACE);
 
-            // apply the delta
-            for (ASTNode* node : graph()->nodes() )
-                if ( ASTNodeView* view = node->component<ASTNodeView>() )
-                    view->spatial_node()->translate( delta );
-            break;
-        }
-        default:
-            VERIFY(false, "unhandled case!");
-    }
+    // compute the delta to apply
+    const Vec2 target = _m_shape.pivot( tools::CENTER, tools::WORLD_SPACE);
+    const Vec2 source = BoxShape2D(rect).pivot(tools::CENTER, WORLD_SPACE);
+    const Vec2 delta =  target - source;
+
+    // apply the delta to all node views
+    for (ASTNode* node : graph()->nodes() )
+        if ( ASTNodeView* view = node->component<ASTNodeView>() )
+            view->spatial_node()->translate( delta );
 }
 
 void GraphView::_on_graph_change()
@@ -732,8 +721,9 @@ void GraphView::reset()
     // physics
     _m_physics_dirty = true;
 
-    // frame all (100ms delayed to ensure layout is correct)
-    get_event_manager()->dispatch_delayed<Event_FrameSelection>( 100, { FRAME_ALL } );
+    //   Note: Instead of waiting an arbitrary period of time, we should rather be able to unfold the graph instantly
+    const size_t dispatch_delay_ms = 100;
+    get_event_manager()->dispatch_delayed<Event_FrameSelection>( dispatch_delay_ms, { FrameMode::RootNodeView } );
 }
 
 bool GraphView::has_an_active_tool() const
