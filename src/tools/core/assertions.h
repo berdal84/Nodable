@@ -1,4 +1,5 @@
 #pragma once
+#include "tools/core/log.h"
 
 #ifndef TOOLS_ASSERTIONS_ENABLE
 #define TOOLS_ASSERTIONS_ENABLE true // When false, any ASSERT/VERIFY macros are disable
@@ -17,7 +18,6 @@
     #else // TOOLS_NOEXCEPT ------------------------------------------------------------------------------
 
         #include <exception> // for std::runtime_error
-        #include "log.h"     // for tools::flush()
 
         #ifdef VERIFY_
             static_assert(false, "VERIFY_ is reserved for tools, it should not be defined here.")
@@ -45,3 +45,10 @@
     #define VERIFY(...)
 
 #endif // TOOLS_ASSERTIONS_ENABLE -----------------------------------------------------------------------
+
+#define TOOLS_UNREACHABLE() \
+do { \
+    tools::log( tools::Verbosity_Error, "Unreachable code %s L%s\n", __FILE__, __LINE__ ); \
+    tools::flush(); \
+    assert(false); \
+} while(0)
