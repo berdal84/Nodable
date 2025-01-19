@@ -29,6 +29,11 @@ $imgui.sources |= FileList[
    "libs/imgui/backends/imgui_impl_sdl.cpp",
    "libs/imgui/backends/imgui_impl_opengl3.cpp",
 ]
+$imgui.cxx_flags |= [
+    "-Wall",
+    "-Werror",
+    "-Wno-nontrivial-memaccess", # ImGui has several warnings like this one: "warning: first argument in call to 'memset' is a pointer to non-trivially copyable type 'ImGuiListClipperData' [-Wnontrivial-memcall]"
+]
 
 $whereami = new_target_from_base("whereami", TargetType::OBJECTS)
 $whereami.sources |= FileList[
