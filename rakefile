@@ -16,15 +16,22 @@ task :help do
     print("Welcome to Nodable's rakefile.\nFor more info, run: rake --tasks\n")
 end
 
+task :rebuild => ['clobber', 'build']
 task :build => ['libs:build', 'tools:build', 'ndbl:build'] do puts "Build DONE" end
 task :test  => ['tools:test', 'ndbl:test']
 task :run   => ['ndbl:app:run']
 
+desc "Rebuild all targets (web & desktop, debug & release)"
 task :rebuild_all do
-    sh "rake clobber build PLATFORM=desktop BUILD_TYPE=release"
-    sh "rake clobber build PLATFORM=desktop BUILD_TYPE=debug"
-    sh "source libs/emsdk/emsdk_env.sh && rake clobber build PLATFORM=web BUILD_TYPE=release"
-    sh "source libs/emsdk/emsdk_env.sh && rake clobber build PLATFORM=web BUILD_TYPE=debug"
+
+    platforms = ["web", "desktop"]
+    build_types = ["debug", "release"]
+
+    platforms.each do |platform|
+        build_types.each do |build_type|
+            sh "rake rebuild PLATFORM=#{platform}  BUILD_TYPE=#{build_type}"
+        end
+    end
 end
 
 task :install do
