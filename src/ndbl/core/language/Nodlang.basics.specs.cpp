@@ -13,45 +13,20 @@ TEST_F(Language_basics, can_get_add_operator_with_short_identifier )
     EXPECT_TRUE(get_language()->find_operator("+", Operator_t::Binary));
     EXPECT_TRUE(get_language()->find_operator("-", Operator_t::Unary));
 }
-
-TEST_F(Language_basics, can_get_add_operator_with_signature )
-{
-    FunctionDescriptor f;
-    f.init<double(double, double)>("+");
-    EXPECT_TRUE(get_language()->find_operator_fct(&f));
-}
-
-TEST_F(Language_basics, can_get_invert_operator_with_signature )
-{
-    FunctionDescriptor f;
-    f.init<double(double)>("-");
-    EXPECT_TRUE(get_language()->find_operator_fct(&f));
-}
-
-TEST_F(Language_basics, by_ref_assign )
-{
-    FunctionDescriptor f;
-    f.init<double(double &, double)>("=");
-    const IInvokable* invokable  = get_language()->find_operator_fct(&f);
-
-    EXPECT_TRUE(invokable != nullptr);
-    EXPECT_TRUE(invokable->get_sig()->arg_at(0).pass_by_ref);
-}
-
 TEST_F(Language_basics, token_t_to_type)
 {
-    EXPECT_EQ(get_language()->get_type(Token_t::keyword_bool)  , type::get<bool>());
-    EXPECT_EQ(get_language()->get_type(Token_t::keyword_double), type::get<double>() );
-    EXPECT_EQ(get_language()->get_type(Token_t::keyword_i16)   , type::get<i16_t>() );
-    EXPECT_EQ(get_language()->get_type(Token_t::keyword_int)   , type::get<i32_t>() );
-    EXPECT_EQ(get_language()->get_type(Token_t::keyword_string), type::get<std::string>() );
-    EXPECT_EQ(get_language()->get_type(Token_t::keyword_any)   , type::get<any>() );
+    EXPECT_EQ(get_language()->get_type(ASTToken_t::keyword_bool)  , type::get<bool>());
+    EXPECT_EQ(get_language()->get_type(ASTToken_t::keyword_double), type::get<double>() );
+    EXPECT_EQ(get_language()->get_type(ASTToken_t::keyword_i16)   , type::get<i16_t>() );
+    EXPECT_EQ(get_language()->get_type(ASTToken_t::keyword_int)   , type::get<i32_t>() );
+    EXPECT_EQ(get_language()->get_type(ASTToken_t::keyword_string), type::get<std::string>() );
+    EXPECT_EQ(get_language()->get_type(ASTToken_t::keyword_any)   , type::get<any>() );
 
-    EXPECT_EQ(get_language()->get_type(Token_t::literal_bool), nullptr);
-    EXPECT_EQ(get_language()->get_type(Token_t::literal_double), nullptr);
-    EXPECT_EQ(get_language()->get_type(Token_t::literal_int), nullptr);
-    EXPECT_EQ(get_language()->get_type(Token_t::literal_string), nullptr);
-    EXPECT_EQ(get_language()->get_type(Token_t::literal_any), nullptr);
+    EXPECT_EQ(get_language()->get_type(ASTToken_t::literal_bool), nullptr);
+    EXPECT_EQ(get_language()->get_type(ASTToken_t::literal_double), nullptr);
+    EXPECT_EQ(get_language()->get_type(ASTToken_t::literal_int), nullptr);
+    EXPECT_EQ(get_language()->get_type(ASTToken_t::literal_string), nullptr);
+    EXPECT_EQ(get_language()->get_type(ASTToken_t::literal_any), nullptr);
 }
 
 TEST_F(Language_basics, type_to_string)

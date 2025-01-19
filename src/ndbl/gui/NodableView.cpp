@@ -10,9 +10,7 @@
 #include "tools/gui/TextureManager.h"
 #include "tools/gui/AppView.h"
 
-#include "ndbl/core/Utils.h"
-#include "ndbl/core/Interpreter.h"
-#include "ndbl/core/Register.h"
+#include "ndbl/core/ASTUtils.h"
 #include "ndbl/core/language/Nodlang.h"
 
 #include "Config.h"
@@ -22,8 +20,7 @@
 #include "GraphView.h"
 #include "History.h"
 #include "Nodable.h"
-#include "NodeView.h"
-#include "build_info.h"
+#include "ASTNodeView.h"
 
 using namespace ndbl;
 using namespace tools;
@@ -44,19 +41,19 @@ void NodableView::update()
 
 void NodableView::init(Nodable * _app)
 {
-    LOG_VERBOSE("ndbl::NodableView", "reset_name ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "ndbl::NodableView", "init ...\n");
     m_app = _app;
     // Initialize wrapped view and inject some code ...
     tools::App* base_app = _app->get_base_app_handle();
     ASSERT(base_app != nullptr);
     m_base_view.init(base_app);
 
-    CONNECT(m_base_view.on_reset_layout              , &NodableView::_on_reset_layout);
-    CONNECT(m_base_view.on_draw_splashscreen_content , &NodableView::_on_draw_splashscreen_content);
+    m_base_view.signal_reset_layout.connect<&NodableView::_on_reset_layout>(this);
+    m_base_view.signal_draw_splashscreen_content.connect<&NodableView::_on_draw_splashscreen_content>(this);
 
     // Load splashscreen image
     Config* cfg = get_config();
-    tools::Path path = App::get_absolute_asset_path(cfg->ui_splashscreen_imagePath );
+    tools::Path path = App::get_asset_path(cfg->ui_splashscreen_imagePath );
     m_logo = get_texture_manager()->load(path);
 
     // Add a bunch of new actions
@@ -78,14 +75,14 @@ void NodableView::init(Nodable * _app)
     action_manager->new_action<Event_Redo>("Redo", Shortcut{SDLK_y, KMOD_CTRL } );
     action_manager->new_action<Event_ToggleIsolationFlags>("Isolation", Shortcut{SDLK_i, KMOD_CTRL }, Condition_ENABLE | Condition_HIGHLIGHTED_IN_TEXT_EDITOR );
     action_manager->new_action<Event_MoveSelection>("Drag whole graph", Shortcut{SDLK_SPACE, KMOD_NONE, "Space + Drag" }, Condition_ENABLE | Condition_HIGHLIGHTED_IN_GRAPH_EDITOR );
-    action_manager->new_action<Event_FrameSelection>("Frame Selection", Shortcut{SDLK_f, KMOD_NONE }, EventPayload_FrameNodeViews{FRAME_SELECTION_ONLY }, Condition_ENABLE_IF_HAS_SELECTION | Condition_HIGHLIGHTED_IN_GRAPH_EDITOR );
-    action_manager->new_action<Event_FrameSelection>("Frame All", Shortcut{SDLK_f, KMOD_LCTRL }, EventPayload_FrameNodeViews{FRAME_ALL } );
+    action_manager->new_action<Event_FrameSelection>("Frame Selection", Shortcut{SDLK_f, KMOD_NONE }, EventPayload_FrameNodeViews{FrameMode::SelectedNodeViews }, Condition_ENABLE_IF_HAS_SELECTION | Condition_HIGHLIGHTED_IN_GRAPH_EDITOR );
+    action_manager->new_action<Event_FrameSelection>("Frame All", Shortcut{SDLK_f, KMOD_LCTRL }, EventPayload_FrameNodeViews{FrameMode::RootNodeView} );
     // (to create block nodes)
     action_manager->new_action<Event_CreateNode>(ICON_FA_CODE " Condition", Shortcut{}, EventPayload_CreateNode{CreateNodeType_BLOCK_CONDITION } );
     action_manager->new_action<Event_CreateNode>(ICON_FA_CODE " For Loop", Shortcut{}, EventPayload_CreateNode{CreateNodeType_BLOCK_FOR_LOOP } );
     action_manager->new_action<Event_CreateNode>(ICON_FA_CODE " While Loop", Shortcut{}, EventPayload_CreateNode{CreateNodeType_BLOCK_WHILE_LOOP } );
     action_manager->new_action<Event_CreateNode>(ICON_FA_CODE " Scope", Shortcut{}, EventPayload_CreateNode{CreateNodeType_BLOCK_SCOPE } );
-    action_manager->new_action<Event_CreateNode>(ICON_FA_CODE " Entry Point", Shortcut{}, EventPayload_CreateNode{CreateNodeType_BLOCK_ENTRY_POINT } );
+    action_manager->new_action<Event_CreateNode>(ICON_FA_CODE " Entry Point", Shortcut{}, EventPayload_CreateNode{CreateNodeType_ROOT } );
     // (to create variables)
     action_manager->new_action<Event_CreateNode>(ICON_FA_DATABASE " Boolean Variable", Shortcut{}, EventPayload_CreateNode{CreateNodeType_VARIABLE_BOOLEAN, create_variable_node_signature<bool>() } );
     action_manager->new_action<Event_CreateNode>(ICON_FA_DATABASE " Double Variable", Shortcut{}, EventPayload_CreateNode{CreateNodeType_VARIABLE_DOUBLE, create_variable_node_signature<double>() } );
@@ -97,16 +94,10 @@ void NodableView::init(Nodable * _app)
     action_manager->new_action<Event_CreateNode>(ICON_FA_FILE " Integer Literal", Shortcut{}, EventPayload_CreateNode{CreateNodeType_LITERAL_INTEGER, create_variable_node_signature<int>() } );
     action_manager->new_action<Event_CreateNode>(ICON_FA_FILE " String Literal", Shortcut{}, EventPayload_CreateNode{CreateNodeType_LITERAL_STRING, create_variable_node_signature<std::string>() } );
     // (to create functions/operators from the API)
-    const Nodlang* language = get_language();
-    VERIFY(language != nullptr, "NodableView: language is null. Did you call init_language() ?");
-    for ( const IInvokable* invokable: language->get_api() )
-    {
-        std::string label;
-        language->serialize_invokable_sig( label, invokable );
-        action_manager->new_action<Event_CreateNode>(label.c_str(), Shortcut{}, EventPayload_CreateNode{CreateNodeType_FUNCTION, invokable->get_sig() } );
-    }
+    // TODO: add a list of preset to create operators/functions
+    // action_manager->new_action<Event_CreateNode>(label.c_str(), Shortcut{}, EventPayload_CreateNode{CreateNodeType_FUNCTION, invokable->get_sig() } );
 
-    LOG_VERBOSE("ndbl::NodableView", "init_ex " OK "\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "ndbl::NodableView", "init_ex " TOOLS_OK "\n");
 }
 
 void NodableView::_on_draw_splashscreen_content()
@@ -129,9 +120,6 @@ void NodableView::_on_draw_splashscreen_content()
     const char *credit = "by Berdal84";
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(credit).x);
     ImGui::TextWrapped("%s", credit);
-
-    // build version
-    ImGui::TextWrapped("%s", BuildInfo::version);
 
     // close on left/rightmouse btn click
     if (ImGui::IsMouseClicked(0) || ImGui::IsMouseClicked(1))
@@ -156,8 +144,8 @@ void NodableView::_on_reset_layout()
 
 void NodableView::shutdown()
 {
-    DISCONNECT(m_base_view.on_reset_layout);
-    DISCONNECT(m_base_view.on_draw_splashscreen_content);
+    assert(m_base_view.signal_reset_layout.disconnect<&NodableView::_on_reset_layout>(this));
+    assert(m_base_view.signal_draw_splashscreen_content.disconnect<&NodableView::_on_draw_splashscreen_content>(this));
 
     // We could do this there, but the base view is responsible for shutdow the texture manager we used, so all textures will be released.
     // get_texture_manager()->release(m_logo);
@@ -175,7 +163,6 @@ void NodableView::draw()
 
     EventManager*   event_manager   = get_event_manager();
     Config*         cfg             = get_config();
-    Interpreter*    interpreter     = get_interpreter();
     tools::Config*  tools_cfg       = tools::get_config();
     bool            redock_all      = true;
     File*           current_file    = m_app->get_current_file();
@@ -184,7 +171,7 @@ void NodableView::draw()
     if (ImGui::BeginMenuBar())
     {
         History* current_file_history = current_file ? &current_file->history : nullptr;
-        auto has_selection = current_file != nullptr ? !current_file->graph().view()->selection().empty()
+        auto has_selection = current_file != nullptr ? !current_file->graph()->component<GraphView>()->selection().empty()
                                                      : false;
 
         if (ImGui::BeginMenu("File"))
@@ -210,7 +197,6 @@ void NodableView::draw()
             ImGui::EndMenu();
         }
 
-        bool interpreter_is_stopped = interpreter->is_program_stopped();
         if (ImGui::BeginMenu("Edit"))
         {
             if (current_file_history)
@@ -219,7 +205,7 @@ void NodableView::draw()
                 ImGuiEx::MenuItem_EventTrigger<Event_Redo>();
                 ImGui::Separator();
             }
-            if (ImGui::MenuItem("Delete Node", "Del.", false, has_selection && interpreter_is_stopped))
+            if (ImGui::MenuItem("Delete Node", "Del.", false, has_selection ))
                 event_manager->dispatch( EventID_DELETE_NODE );
 
             ImGui::EndMenu();
@@ -237,7 +223,7 @@ void NodableView::draw()
                 {
                     cfg->ui_node_detail = _detail;
                     if (current_file != nullptr)
-                        current_file->graph().view()->reset_all_properties();
+                        current_file->graph()->component<GraphView>()->reset_all_properties();
                 }
             };
 
@@ -276,7 +262,7 @@ void NodableView::draw()
         if (ImGui::BeginMenu("Graph"))
         {
 
-            if (ImGui::MenuItem("Reset", NULL, false, interpreter_is_stopped))
+            if (ImGui::MenuItem("Reset"))
                 event_manager->dispatch( EventID_RESET_GRAPH );
 
             ImGuiEx::MenuItem_EventTrigger<Event_ArrangeSelection>(false, has_selection);
@@ -290,28 +276,6 @@ void NodableView::draw()
             ImGui::Separator();
 
             ImGuiEx::MenuItem_EventTrigger<Event_ToggleIsolationFlags>(cfg->isolation);
-
-            ImGui::EndMenu();
-        }
-
-        if ( cfg->has_flags(ConfigFlag_EXPERIMENTAL_INTERPRETER) && ImGui::BeginMenu("Interpreter") )
-        {
-            bool interpreter_is_debugging = interpreter->is_debugging();
-
-            if (ImGui::MenuItem(ICON_FA_PLAY" Run", "", false, interpreter_is_stopped))
-                m_app->run_program();
-
-            if (ImGui::MenuItem(ICON_FA_BUG" Debug", "", false, interpreter_is_stopped))
-                m_app->debug_program();
-
-            if (ImGui::MenuItem(ICON_FA_ARROW_RIGHT" Step Over", "", false, interpreter_is_debugging))
-                m_app->step_over_program();
-
-            if (ImGui::MenuItem(ICON_FA_STOP" Stop", "", false, !interpreter_is_stopped))
-                m_app->stop_program();
-
-            if (ImGui::MenuItem(ICON_FA_UNDO " Reset", "", false, interpreter_is_stopped))
-                m_app->reset_program();
 
             ImGui::EndMenu();
         }
@@ -336,18 +300,18 @@ void NodableView::draw()
 
             if (ImGui::BeginMenu("Verbosity"))
             {
-                auto menu_item_verbosity = [](log::Verbosity _verbosity, const char *_label) {
-                    if (ImGui::MenuItem(_label, "", log::get_verbosity() == _verbosity)) {
-                        log::set_verbosity(_verbosity);
+                auto menu_item_verbosity = [](Verbosity verbosity, const char* label)
+                {
+                    if (ImGui::MenuItem(label, "", get_log_verbosity() == verbosity))
+                    {
+                        set_log_verbosity(verbosity);
                     }
                 };
 
-#ifndef LOG_DISABLE_VERBOSE
-                menu_item_verbosity(log::Verbosity_Verbose, "Verbose");
-#endif
-                menu_item_verbosity(log::Verbosity_Message, "Message");
-                menu_item_verbosity(log::Verbosity_Warning, "Warning");
-                menu_item_verbosity(log::Verbosity_Error, "Error");
+                menu_item_verbosity(Verbosity_Diagnostic, "Verbose");
+                menu_item_verbosity(Verbosity_Message, "Message");
+                menu_item_verbosity(Verbosity_Warning, "Warning");
+                menu_item_verbosity(Verbosity_Error,   "Error");
                 ImGui::EndMenu();
             }
 
@@ -366,8 +330,6 @@ void NodableView::draw()
                 };
                 checkbox_flag("Hybrid history"       , ConfigFlag_EXPERIMENTAL_HYBRID_HISTORY);
                 checkbox_flag("Multi-Selection"      , ConfigFlag_EXPERIMENTAL_MULTI_SELECTION);
-                checkbox_flag("Graph auto-completion", ConfigFlag_EXPERIMENTAL_GRAPH_AUTOCOMPLETION);
-                checkbox_flag("Interpreter"          , ConfigFlag_EXPERIMENTAL_INTERPRETER);
                 ImGui::EndMenu();
             }
             ImGui::EndMenu();
@@ -409,7 +371,7 @@ void NodableView::draw()
     }
 
     // 2. Draw windows
-    // All draw_xxx_window() are ImGui windows docked to a dockspace (defined in on_reset_layout() )
+    // All draw_xxx_window() are ImGui windows docked to a dockspace (defined in signal_reset_layout() )
 
     if(!m_app->has_files())
     {
@@ -433,8 +395,6 @@ void NodableView::draw()
         draw_config_window();
         draw_imgui_config_window();
 
-        if ( cfg->has_flags(ConfigFlag_EXPERIMENTAL_INTERPRETER) )
-            draw_interpreter_window();
         if ( draw_node_properties_window() )
             m_app->get_current_file()->set_text_dirty();
         draw_help_window();
@@ -455,7 +415,7 @@ void NodableView::draw_help_window() const
         ImGui::PopFont();
         ImGui::NewLine();
         ImGui::TextWrapped(
-                "Nodable is child-able.\n"
+                "Nodable is primary_child-able.\n"
                 "\n"
                 "Nodable allows you to edit a program using both text and graph paradigms."
                 "More precisely, it means:"
@@ -463,7 +423,7 @@ void NodableView::draw_help_window() const
         ImGuiEx::BulletTextWrapped("any change on the text will affect the graph");
         ImGuiEx::BulletTextWrapped("any change (structure or values) on the graph will affect the text");
         ImGuiEx::BulletTextWrapped(
-                "but keep in mind the state is the text, any change not affecting the text (such as child positions or orphan child) will be lost.");
+                "but keep in mind the state is the text, any change not affecting the text (such as child positions or orphan primary_child) will be lost.");
         ImGui::NewLine();
         ImGui::PushFont(font_manager->get_font(FontSlot_Heading));
         ImGui::Text("Quick start");
@@ -472,9 +432,9 @@ void NodableView::draw_help_window() const
         ImGui::TextWrapped("Nodable UI is designed as following:\n");
         ImGuiEx::BulletTextWrapped("On the left side a (light) text editor allows to edit source code.\n");
         ImGuiEx::BulletTextWrapped(
-                "At the center, there is the graph editor where you can create_new/delete/connect child\n");
+                "At the center, there is the graph editor where you can create_new/delete/connect primary_child\n");
         ImGuiEx::BulletTextWrapped(
-                "On the right side (this side) you will find many tabs to manage additional config such as child, interpreter, or app properties\n");
+                "On the right side (this side) you will find many tabs to manage additional config such as primary_child, interpreter, or app properties\n");
         ImGuiEx::BulletTextWrapped("At the top, between the menu and the editors, there is a tool bar."
                                        " There, few buttons will serve to compile, run and debug your program.");
         ImGuiEx::BulletTextWrapped("And at the bottom, below the editors, there is a status bar."
@@ -524,16 +484,16 @@ bool NodableView::draw_node_properties_window()
     {
         if( File* current_file = m_app->get_current_file() )
         {
-            const GraphView* graph_view = current_file->graph().view(); // Graph can't be null
-            switch ( graph_view->selection().count<NodeView*>() )
+            const GraphView* graph_view = current_file->graph()->component<GraphView>(); // Graph can't be null
+            switch ( graph_view->selection().count<ASTNodeView*>() )
             {
                 case 0:
                     break;
                 case 1:
                 {
                     ImGui::Indent(10.0f);
-                    auto* first_nodeview = graph_view->selection().first_of<NodeView*>();
-                    changed |= NodeView::draw_as_properties_panel(first_nodeview, &m_show_advanced_node_properties);
+                    auto* first_nodeview = graph_view->selection().first_of<ASTNodeView*>();
+                    changed |= ASTNodeView::draw_as_properties_panel(first_nodeview, &m_show_advanced_node_properties);
                     break;
                 }
                 default:
@@ -544,123 +504,6 @@ bool NodableView::draw_node_properties_window()
     }
     ImGui::End();
     return changed;
-}
-
-void NodableView::draw_interpreter_window()
-{
-    Config* cfg = get_config();
-    if (ImGui::Begin( cfg->ui_interpreter_window_label))
-    {
-        auto* interpreter = get_interpreter();
-
-        ImGui::Text("Interpreter:");
-        ImGui::SameLine();
-        ImGuiEx::DrawHelper("%s", "The interpreter is a sort of implementation of \n"
-                                  "an imaginary hardware able to run a set of simple instructions. This is still WIP.");
-        ImGui::Separator();
-
-        const Code *code = interpreter->get_program_asm_code();
-
-        // VM state
-        {
-            ImGui::Indent();
-            ImGui::Text("State:         %s", interpreter->is_program_running() ? "running" : "stopped");
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "When the interpreter is running, you cannot edit the code or the graph.");
-            ImGui::Text("Debug:         %s", interpreter->is_debugging() ? "ON" : "OFF");
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "When debugging is ON, you can run a program step by step.");
-            ImGui::Text("Has program:   %s", code ? "YES" : "NO");
-            if (code) {
-                ImGui::Text("Program over:  %s", !interpreter->is_there_a_next_instr() ? "YES" : "NO");
-            }
-            ImGui::Unindent();
-        }
-
-        // VM Registers
-        ImGui::Separator();
-        ImGui::Text("CPU:");
-        ImGui::SameLine();
-        ImGuiEx::DrawHelper("%s", "This is the interpreter's CPU"
-                                  "\nIt contains few registers to store temporary values "
-                                  "\nlike instruction pointer, last child's value or last comparison result");
-        ImGui::Indent();
-        {
-            ImGui::Separator();
-            ImGui::Text("registers:");
-            ImGui::Separator();
-
-            ImGui::Indent();
-
-            auto draw_register_value = [&](Register _register) {
-                ImGui::Text("%4s: %12s", Register_to_string(_register),
-                            interpreter->read_cpu_register(_register).to_string().c_str());
-            };
-
-            draw_register_value(Register_rax);
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "primary accumulator");
-            draw_register_value(Register_rdx);
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "state register");
-            draw_register_value(Register_eip);
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "instruction pointer");
-
-            ImGui::Unindent();
-        }
-        ImGui::Unindent();
-
-        // Assembly-like code
-        ImGui::Separator();
-        ImGui::Text("Memory:");
-        ImGui::SameLine();
-        ImGuiEx::DrawHelper("%s", "Memory.");
-        ImGui::Separator();
-        {
-            ImGui::Indent();
-
-            ImGui::Text("Bytecode:");
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "The bytecode is the result of the Compilation process."
-                                          "\nAfter source code has_flags been parsed to a syntax tree, "
-                                          "\nthe tree (or graph) is converted by the Compiler to an Assembly-like code.");
-            ImGui::Checkbox("Auto-scroll ?", &m_scroll_to_curr_instr);
-            ImGui::SameLine();
-            ImGuiEx::DrawHelper("%s", "to scroll automatically to the current instruction");
-            ImGui::Separator();
-            {
-                ImGui::BeginChild("AssemblyCodeChild", ImGui::GetContentRegionAvail(), true);
-
-                if (code) {
-                    auto current_instr = interpreter->get_next_instr();
-                    for (Instruction *each_instr: code->get_instructions()) {
-                        auto str = Instruction::to_string(*each_instr);
-                        if (each_instr == current_instr) {
-                            if (m_scroll_to_curr_instr && interpreter->is_program_running()) {
-                                ImGui::SetScrollHereY();
-                            }
-                            ImGui::TextColored(ImColor(200, 0, 0), ">%s", str.c_str());
-                            ImGui::SameLine();
-                            ImGuiEx::DrawHelper("%s", "This is the next instruction to evaluate");
-                        } else {
-                            ImGui::Text(" %s", str.c_str());
-                        }
-                    }
-                } else {
-                    ImGui::TextWrapped("Nothing loaded, try to compile, run or debug.");
-                    ImGui::SameLine();
-                    ImGuiEx::DrawHelper("%s", "To see a compiled program here you need first to:"
-                                                  "\n- Select a piece of code in the text editor"
-                                                  "\n- Click on \"Compile\" button."
-                                                  "\n- Ensure there is no errors in the status bar (bottom).");
-                }
-                ImGui::EndChild();
-            }
-            ImGui::Unindent();
-        }
-    }
-    ImGui::End();
 }
 
 void NodableView::draw_startup_window(ImGuiID dockspace_id)
@@ -700,31 +543,35 @@ void NodableView::draw_startup_window(ImGuiID dockspace_id)
             ImGui::NewLine();
 
             ImGui::Text("%s", "Open an example");
-            std::vector<std::pair<std::string, std::string>> examples;
-            examples.emplace_back("Single expressions    ", "examples/arithmetic.cpp");
-            examples.emplace_back("Multi instructions    ", "examples/multi-instructions.cpp");
-            examples.emplace_back("Conditional Structures", "examples/if-else.cpp");
-            examples.emplace_back("For Loop              ", "examples/for-loop.cpp");
 
-            int i = 0;
-            ImVec2 small_btn_size(btn_size.x, btn_size.y * 0.66f);
+            struct Example {
+                const char* label;
+                const char* path;
+            };
 
-            for (const auto& [text, path]: examples) {
-                std::string label;
-                label.append(ICON_FA_BOOK" ");
-                label.append(text);
-                if (i++ % 2) ImGui::SameLine();
-                if (ImGui::Button(label.c_str(), small_btn_size))
+            const std::array<Example, 4> examples = {
+                Example{ ICON_FA_BOOK" Single expressions    ", "examples/arithmetic.cpp" },
+                Example{ ICON_FA_BOOK" Multi instructions    ", "examples/multi-instructions.cpp" },
+                Example{ ICON_FA_BOOK" Conditional Structures", "examples/if-else.cpp" },
+                Example{ ICON_FA_BOOK" For Loop              ", "examples/for-loop.cpp" }
+            };
+
+            const ImVec2 example_btn_size(btn_size.x, btn_size.y * 0.66f);
+            const int columns = 2;
+
+            ImGui::NewLine();
+            for (size_t i = 0; i < examples.size(); ++i )
+            {
+                if (i % columns != 0) ImGui::SameLine();
+                if (ImGui::Button(examples[i].label, example_btn_size))
                 {
-                    m_app->open_asset_file(path.c_str());
+                    m_app->open_asset_file(examples[i].path);
                 }
             }
 
             ImGui::PopFont();
 
             ImGui::NewLine();
-            ImGui::Separator();
-            ImGui::TextColored(ImVec4(0, 0, 0, 0.30f), "%s", BuildInfo::version);
             ImGui::Unindent();
         }
         ImGui::EndChild();
@@ -795,15 +642,15 @@ void NodableView::draw_config_window()
             ImGui::Indent();
             if ( ImGui::CollapsingHeader("Colors", flags ))
             {
-                ImGui::ColorEdit4("default"     , &cfg->ui_node_fill_color[NodeType_DEFAULT].x );
-                ImGui::ColorEdit4("entry point" , &cfg->ui_node_fill_color[NodeType_ENTRY_POINT].x );
-                ImGui::ColorEdit4("condition"   , &cfg->ui_node_fill_color[NodeType_BLOCK_IF].x );
-                ImGui::ColorEdit4("for loop"    , &cfg->ui_node_fill_color[NodeType_BLOCK_FOR_LOOP].x );
-                ImGui::ColorEdit4("while loop"  , &cfg->ui_node_fill_color[NodeType_BLOCK_WHILE_LOOP].x );
-                ImGui::ColorEdit4("variable"    , &cfg->ui_node_fill_color[NodeType_VARIABLE].x );
-                ImGui::ColorEdit4("literal"     , &cfg->ui_node_fill_color[NodeType_LITERAL].x );
-                ImGui::ColorEdit4("function"    , &cfg->ui_node_fill_color[NodeType_FUNCTION].x );
-                ImGui::ColorEdit4("operator"    , &cfg->ui_node_fill_color[NodeType_OPERATOR].x );
+                ImGui::ColorEdit4("default"     , &cfg->ui_node_fill_color[ASTNodeType_DEFAULT].x );
+                ImGui::ColorEdit4("entry point" , &cfg->ui_node_fill_color[ASTNodeType_SCOPE].x );
+                ImGui::ColorEdit4("condition"   , &cfg->ui_node_fill_color[ASTNodeType_IF_ELSE].x );
+                ImGui::ColorEdit4("for loop"    , &cfg->ui_node_fill_color[ASTNodeType_FOR_LOOP].x );
+                ImGui::ColorEdit4("while loop"  , &cfg->ui_node_fill_color[ASTNodeType_WHILE_LOOP].x );
+                ImGui::ColorEdit4("variable"    , &cfg->ui_node_fill_color[ASTNodeType_VARIABLE].x );
+                ImGui::ColorEdit4("literal"     , &cfg->ui_node_fill_color[ASTNodeType_LITERAL].x );
+                ImGui::ColorEdit4("function"    , &cfg->ui_node_fill_color[ASTNodeType_FUNCTION].x );
+                ImGui::ColorEdit4("operator"    , &cfg->ui_node_fill_color[ASTNodeType_OPERATOR].x );
                 ImGui::Separator();
                 ImGui::ColorEdit4("highlighted"         , &cfg->ui_node_highlightedColor.x);
                 ImGui::ColorEdit4("shadow"              , &cfg->ui_node_shadowColor.x);
@@ -866,7 +713,7 @@ void NodableView::draw_config_window()
         if (ImGui::CollapsingHeader("Scope", flags ))
         {
             ImGui::SliderFloat4("margins", &cfg->ui_scope_content_rect_margin.min.x, 2, 25);
-            ImGui::SliderFloat4("child margin", &cfg->ui_scope_child_margin, 2, 25);
+            ImGui::SliderFloat4("primary_child margin", &cfg->ui_scope_child_margin, 2, 25);
             ImGui::SliderFloat("border radius", &cfg->ui_scope_border_radius, 0, 20);
             ImGui::SliderFloat("border thickness", &cfg->ui_scope_border_thickness, 0, 4);
             ImGui::ColorEdit4("fill color (light)", &cfg->ui_scope_fill_col_light.x);
@@ -911,51 +758,6 @@ void NodableView::draw_toolbar_window()
         ImGui::PopStyleVar();
         ImGui::PushFont(font_manager->get_font(FontSlot_ToolBtn));
         ImGui::BeginGroup();
-
-        if ( cfg->has_flags(ConfigFlag_EXPERIMENTAL_INTERPRETER) )
-        {
-            Interpreter* interpreter = get_interpreter();
-            bool running             = interpreter->is_program_running();
-            bool debugging           = interpreter->is_debugging();
-            bool stopped             = interpreter->is_program_stopped();
-
-
-            // compile
-            if (ImGui::Button(ICON_FA_DATABASE " compile", button_size) && stopped) {
-                m_app->compile_and_load_program();
-            }
-            ImGui::SameLine();
-
-            // run
-            if (running) ImGui::PushStyleColor(ImGuiCol_Button, cfg->tools_cfg->button_activeColor);
-
-            if (ImGui::Button(ICON_FA_PLAY " run", button_size) && stopped) {
-                m_app->run_program();
-            }
-            if (running) ImGui::PopStyleColor();
-
-            ImGui::SameLine();
-
-            // debug
-            if (debugging) ImGui::PushStyleColor(ImGuiCol_Button, cfg->tools_cfg->button_activeColor);
-            if (ImGui::Button(ICON_FA_BUG " debug", button_size) && stopped) {
-                m_app->debug_program();
-            }
-            if (debugging) ImGui::PopStyleColor();
-            ImGui::SameLine();
-
-            // stepOver
-            if (ImGui::Button(ICON_FA_ARROW_RIGHT " step over", button_size) && interpreter->is_debugging()) {
-                interpreter->debug_step_over();
-            }
-            ImGui::SameLine();
-
-            // stop
-            if (ImGui::Button(ICON_FA_STOP " stop", button_size) && !stopped) {
-                m_app->stop_program();
-            }
-            ImGui::SameLine();
-        }
 
         // reset
         if (ImGui::Button(ICON_FA_UNDO " regen. graph", button_size)) {

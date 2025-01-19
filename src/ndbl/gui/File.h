@@ -9,7 +9,6 @@
 #include "tools/core/log.h"
 
 #include "Isolation.h"
-#include "ndbl/core/NodeFactory.h"
 #include "ndbl/gui/FileView.h"
 #include "ndbl/gui/History.h"
 #include "ndbl/gui/Nodable.h"
@@ -18,7 +17,7 @@
 namespace ndbl
 {
     // forward declarations
-    class Node;
+    class ASTNode;
     class Graph;
     class GraphView;
     class History;
@@ -61,7 +60,7 @@ namespace ndbl
         void                   update(); // to call each frame
         void                   set_graph_dirty() { _flags |= Flags_GRAPH_IS_DIRTY; }
         void                   set_text_dirty() {_flags |= Flags_TEXT_IS_DIRTY; }
-        Graph&                 graph() { return *_graph; };
+        Graph*                 graph() { return _graph; };
         std::string            filename() const;
         void                   set_isolation(Isolation mode);
         size_t                 size() const;

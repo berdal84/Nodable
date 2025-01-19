@@ -60,5 +60,5 @@ std::vector<Vec2>* BezierCurveSegment2D::tesselate(std::vector<Vec2>* path, cons
 Rect BezierCurveSegment2D::bbox(const tools::BezierCurveSegment2D& segment )
 {
     const std::vector<Vec2> points{ segment.p1, segment.p2, segment.p3, segment.p4};
-    return Rect::bbox(&points);
+    return Rect::bounding_rect(&points);
 }

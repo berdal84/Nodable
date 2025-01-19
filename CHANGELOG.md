@@ -2,16 +2,20 @@
 Nodable Change log :
 ====================
 
-Author: Bérenger Dalle-Cort, 2017-2024
+Author: Bérenger Dalle-Cort, 2017-2025
 
 ### v1.0:
+    - use now C++20
+    - introduced ASTScope (represented in GraphView too)
+    - removed every single line related to compilation and execution (it's out of scope now)
+    - removed WIN32 and macOS platforms
+    - added WEB platform (uses emscripten)
     - graph is now always abstract
     - interpreter (build, run, debug etc) is disabled by default and is considered out of scope, but can be enabled via the Developer>Experimental menu,
     - improved the Graph user interface to create_new graph more easily,
     - implemented an optimized StateMachine to simplify code (it avoids an OOP version of it! Thanks to Rémi ;)),
     - refactor the whole app (uses init/get/shutdown pattern for managers),
     - fix memory leaks,
-    - targets macox12 instead of 10.5 (Github does not support it),
     
 ### v0.9:
     - fix graph creation (ForLoopNode / WhileLoopNode)

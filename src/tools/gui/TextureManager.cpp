@@ -1,11 +1,6 @@
 #include "TextureManager.h"
-
-#include <gl3w/GL/gl3w.h>
-#include <gl3w/GL/glcorearb.h>
+#include "tools/gui/GL/helpers.h"
 #include <lodepng/lodepng.h>
-#include <map>
-#include <string>
-#include <vector>
 
 #include "Texture.h"
 #include "tools/core/log.h"
@@ -57,11 +52,11 @@ bool TextureManager::release_all()
             if( GL_NO_ERROR != glGetError())
             {
                 success = false;
-                LOG_WARNING("TextureManager", "Unable to release: %s (code: %i)\n", key.c_str(), glGetError());
+                TOOLS_LOG(tools::Verbosity_Warning, "TextureManager", "Unable to release: %s (code: %i)\n", key.c_str(), glGetError());
             }
             else
             {
-                LOG_MESSAGE("TextureManager", "Released %s\n", key.c_str());
+                TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "Released %s\n", key.c_str());
             }
         }
         delete texture;
@@ -78,7 +73,7 @@ Texture *TextureManager::load_png_to_gpu(const Path &path)
     if ( error )
     {
         delete texture;
-        LOG_ERROR("TextureManager", "Unable to load png (code %u): %s\n",  error, path.c_str());
+        TOOLS_LOG(tools::Verbosity_Error, "TextureManager", "Unable to load png (code %u): %s\n",  error, path.c_str());
         VERIFY(false, "Unable to load png");
     }
 
@@ -87,32 +82,32 @@ Texture *TextureManager::load_png_to_gpu(const Path &path)
     if ( error )
     {
         delete texture;
-        LOG_ERROR("TextureManager", "Unable to load texture to GPU (code %u): %s\n",  error, path.c_str());
+        TOOLS_LOG(tools::Verbosity_Error, "TextureManager", "Unable to load texture to GPU (code %u): %s\n",  error, path.c_str());
         return nullptr;
     }
 
     m_register.emplace(path.string(), texture);
-    LOG_MESSAGE("TextureManager", "File loaded to GPU: %s\n", path.c_str());
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "File loaded to GPU: %s\n", path.c_str());
 
     return texture;
 }
 
 int TextureManager::load_png(const Path& path, Texture* texture)
 {
-    LOG_MESSAGE("TextureManager", "Loading PNG from disk %s ...\n", path.c_str());
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "Loading PNG from disk %s ...\n", path.c_str());
     std::vector<unsigned char> buffer;
     unsigned error = lodepng::load_file(buffer, path.string() ); //load the image file with given filename
     if (error) {
-        LOG_MESSAGE("TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
+        TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
         return 1;
     }
-    LOG_MESSAGE("TextureManager", "Decoding PNG %s ...\n", path.c_str());
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "Decoding PNG %s ...\n", path.c_str());
     error = lodepng::decode(texture->buffer, (unsigned&)texture->width, (unsigned&)texture->height, buffer); //decode the png
     if (error) {
-        LOG_MESSAGE("TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
+        TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "Error: %i %s\n", error, lodepng_error_text(error) );
         return 2;
     }
-    LOG_MESSAGE("TextureManager", "PNG read (image: %i x %i px)\n", texture->width, texture->height );
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "TextureManager", "PNG read (image: %i x %i px)\n", texture->width, texture->height );
     return 0;
 }
 

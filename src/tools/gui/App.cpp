@@ -1,7 +1,6 @@
 #include "App.h"
 
 #include "tools/core/TaskManager.h"
-#include "tools/core/memory/memory.h"
 #include "tools/core/System.h"
 
 #include "AppView.h"
@@ -29,8 +28,8 @@ void App::init()
 void App::init_ex(AppView* _view, Config* _config)
 {
     // Guards
-    VERIFY(m_view == nullptr, "A view already exist. Did you call reset_name twice?");
-    VERIFY(m_config == nullptr, "A config already exist. Did you call reset_name twice?");
+    VERIFY(m_view == nullptr, "A view already exist. Did you call set_name twice?");
+    VERIFY(m_config == nullptr, "A config already exist. Did you call set_name twice?");
     VERIFY(_config != nullptr, "You must provide a config");
     VERIFY(_view != nullptr, "You must provide a view");
 
@@ -42,9 +41,18 @@ void App::init_ex(AppView* _view, Config* _config)
     m_task_manager    = init_task_manager();
 }
 
+void App::run()
+{    
+    while( !should_stop() )
+    {
+        update();
+        draw();
+    }
+}
+
 void App::shutdown()
 {
-    LOG_MESSAGE("tools::BaseApp", "Shutting down ...\n");
+    TOOLS_LOG(tools::Verbosity_Message, "tools::BaseApp", "Shutting down ...\n");
 
     // Optionally shutdown view
     if (m_flags & Flag_OWNS_VIEW_MEMORY )
@@ -62,7 +70,7 @@ void App::shutdown()
     // managers
     shutdown_task_manager(m_task_manager);
 
-    LOG_MESSAGE("tools::BaseApp", "Shutdown OK\n");
+    TOOLS_LOG(tools::Verbosity_Message, "tools::BaseApp", "Shutdown OK\n");
 }
 
 void App::update()
@@ -90,11 +98,12 @@ Path& App::make_absolute(Path& _path)
 {
     if ( _path.is_absolute() )
         return _path;
-    _path = Path::get_executable_path().parent_path() / "assets" / _path;
+    // note: in PLATFORM_WEB, parent_path is "."
+    _path = Path::get_executable_path().parent_path() / _path;
     return _path;
 }
 
-Path App::get_absolute_asset_path(const char* _str)
+Path App::get_asset_path(const char* _str)
 {
     Path asset_path{_str};
     App::make_absolute(asset_path);

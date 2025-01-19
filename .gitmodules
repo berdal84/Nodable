@@ -7,21 +7,18 @@
 [submodule "libs/ImGuiColorTextEdit"]
 	path = libs/ImGuiColorTextEdit
 	url = ../ImGuiColorTextEdit
-[submodule "libs/SDL"]
-	path = libs/SDL
-	url = https://github.com/libsdl-org/SDL
 [submodule "libs/whereami"]
 	path = libs/whereami
 	url = https://github.com/gpakosz/whereami.git
 [submodule "libs/nativefiledialog-extended"]
 	path = libs/nativefiledialog-extended
 	url = https://github.com/btzy/nativefiledialog-extended.git
-[submodule "libs/freetype"]
-	path = libs/freetype
-	url = https://github.com/freetype/freetype/
 [submodule "libs/google/benchmark"]
 	path = libs/google/benchmark
 	url = https://github.com/google/benchmark.git
 [submodule "libs/glm"]
 	path = libs/glm
 	url = https://github.com/g-truc/glm.git
+[submodule "libs/emsdk"]
+	path = libs/emsdk
+	url = https://github.com/emscripten-core/emsdk.git

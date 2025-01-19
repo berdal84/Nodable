@@ -2,16 +2,19 @@
 
 #include <algorithm>
 
+#if PLATFORM_WEB
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#endif
+
 #include "tools/core/assertions.h"
 #include "tools/core/System.h"
 #include "tools/core/EventManager.h"
 
-#include "ndbl/core/FunctionNode.h"
-#include "ndbl/core/LiteralNode.h"
-#include "ndbl/core/Slot.h"
-#include "ndbl/core/Interpreter.h"
+#include "ndbl/core/ASTFunctionCall.h"
+#include "ndbl/core/ASTLiteral.h"
+#include "ndbl/core/ASTNodeSlot.h"
 #include "ndbl/core/language/Nodlang.h"
-#include "ndbl/core/ComponentFactory.h"
 
 #include "commands/Cmd_ConnectEdge.h"
 #include "commands/Cmd_DeleteEdge.h"
@@ -23,30 +26,53 @@
 #include "File.h"
 #include "GraphView.h"
 #include "NodableView.h"
-#include "NodeView.h"
-#include "SlotView.h"
-#include "ndbl/core/Utils.h"
+#include "ASTNodeView.h"
+#include "ASTNodeSlotView.h"
+#include "ndbl/core/ASTUtils.h"
 
 using namespace ndbl;
 using namespace tools;
 
+Nodable* Nodable::s_instance = nullptr;
+
 void Nodable::init()
 {
-    LOG_VERBOSE("ndbl::Nodable", "init_ex ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "ndbl::Nodable", "init ...\n");
 
     m_config = init_config();
     m_view = new NodableView();
     m_base_app.init_ex(m_view->get_base_view_handle(), m_config->tools_cfg ); // the pointers are owned by this class, base app just use them.
     m_language          = init_language();
-    m_interpreter       = init_interpreter();
-    m_node_factory      = init_node_factory();
-    m_component_factory = init_component_factory();
     m_view->init(this); // must be last
 
-    log::set_verbosity("Physics", log::Verbosity_Error );
-    log::set_verbosity("FileView", log::Verbosity_Error );
+    s_instance = this;
 
-    LOG_VERBOSE("ndbl::Nodable", "init_ex OK\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "ndbl::Nodable", "init " TOOLS_OK "\n");
+}
+
+void Nodable::_do_frame()
+{
+    update();
+    draw();
+};
+
+#if PLATFORM_WEB
+void emscripten_do_frame()
+{
+    Nodable::instance()->_do_frame();
+}
+#endif
+
+void Nodable::run()
+{
+#if PLATFORM_WEB
+    emscripten_set_main_loop(&emscripten_do_frame, 0, true);
+#else
+    while( !should_stop() )
+    {
+        _do_frame();
+    }
+#endif
 }
 
 void Nodable::update()
@@ -57,13 +83,13 @@ void Nodable::update()
     // 1. delete flagged files
     for( File* file : m_flagged_to_delete_file )
     {
-        LOG_VERBOSE("Nodable", "Delete files flagged to delete: %s\n", file->filename().c_str());
+        TOOLS_LOG(tools::Verbosity_Diagnostic, "Nodable", "Delete files flagged to delete: %s\n", file->filename().c_str());
         delete file;
     }
     m_flagged_to_delete_file.clear();
 
     // 2. Update current file
-    if (m_current_file && !m_interpreter->is_program_running())
+    if (m_current_file)
     {
         m_current_file->set_isolation( m_config->isolation ); // might change
         m_current_file->update();
@@ -74,7 +100,7 @@ void Nodable::update()
     // Nodable events
     IEvent*       event = nullptr;
     EventManager* event_manager     = get_event_manager();
-    GraphView*    graph_view        = m_current_file ? m_current_file->graph().view() : nullptr; // TODO: should be included in the event
+    GraphView*    graph_view        = m_current_file ? m_current_file->graph()->component<GraphView>() : nullptr; // TODO: should be included in the event
     History*      curr_file_history = m_current_file ? &m_current_file->history : nullptr; // TODO: should be included in the event
     while( (event = event_manager->poll_event()) )
     {
@@ -82,8 +108,6 @@ void Nodable::update()
         {
             case EventID_RESET_GRAPH:
             {
-                if ( !m_interpreter->is_program_stopped() )
-                    m_interpreter->stop_program();
                 m_current_file->set_graph_dirty();
                 break;
             }
@@ -129,7 +153,7 @@ void Nodable::update()
                     open_file(path);
                     break;
                 }
-                LOG_MESSAGE("App", "Browse file aborted by user.\n");
+                TOOLS_LOG(tools::Verbosity_Diagnostic, "App", "Browse file aborted by user.\n");
                 break;
 
             }
@@ -186,7 +210,7 @@ void Nodable::update()
             {
                 auto _event = reinterpret_cast<Event_FrameSelection*>( event );
                 VERIFY(graph_view, "a graph_view is required");
-                graph_view->frame_nodes(_event->data.mode);
+                graph_view->frame_content(_event->data.mode);
                 break;
             }
 
@@ -203,10 +227,10 @@ void Nodable::update()
                 {
                     for(const Selectable& elem : graph_view->selection() )
                     {
-                        if ( auto nodeview = elem.get_if<NodeView*>() )
-                            graph_view->graph()->destroy_next_frame( nodeview->node() );
-                        else if ( auto scopeview = elem.get_if<ScopeView*>() )
-                            graph_view->graph()->destroy_next_frame( scopeview->scope() );
+                        if ( auto nodeview = elem.get_if<ASTNodeView*>() )
+                            graph_view->graph()->flag_node_to_delete(nodeview->node(), GraphFlag_NONE);
+                        else if ( auto scopeview = elem.get_if<ASTScopeView*>() )
+                            graph_view->graph()->flag_node_to_delete(scopeview->node(), GraphFlag_ALLOW_SIDE_EFFECTS);
                     }
                 }
 
@@ -221,11 +245,11 @@ void Nodable::update()
                     {
                         switch ( elem.index() )
                         {
-                            case Selectable::index_of<NodeView*>():
-                                elem.get<NodeView*>()->arrange_recursively();
+                            case Selectable::index_of<ASTNodeView*>():
+                                elem.get<ASTNodeView*>()->arrange_recursively();
                                 break;
-                            case Selectable::index_of<ScopeView*>():
-                                elem.get<ScopeView*>()->arrange_content();
+                            case Selectable::index_of<ASTScopeView*>():
+                                elem.get<ASTScopeView*>()->arrange_content();
                                 break;
                         }
                     }
@@ -236,12 +260,13 @@ void Nodable::update()
 
             case Event_SelectNext::id:
             {
-                if ( graph_view && graph_view->selection().contains<NodeView*>() )
+                if ( graph_view && graph_view->selection().contains<ASTNodeView*>() )
                 {
                     graph_view->selection().clear();
-                    for(NodeView* view : graph_view->selection().collect<NodeView*>() )
-                        for (NodeView* successor : Utils::get_components<NodeView>( view->node()->flow_outputs() ) )
-                            graph_view->selection().append( successor );
+                    for(auto* _view : graph_view->selection().collect<ASTNodeView*>() )
+                        for (auto* _successor : _view->node()->component<ASTNode>()->flow_outputs() )
+                            if (auto* _successor_view = _successor->component<ASTNodeView>() )
+                                graph_view->selection().append( _successor_view );
                 }
                 break;
             }
@@ -251,7 +276,7 @@ void Nodable::update()
                 if ( graph_view )
                     break;
 
-                for( NodeView* view : graph_view->selection().collect<NodeView*>() )
+                for( ASTNodeView* view : graph_view->selection().collect<ASTNodeView*>() )
                 {
                     auto _event = reinterpret_cast<Event_ToggleFolding*>(event);
                     _event->data.mode == RECURSIVELY ? view->expand_toggle_rec()
@@ -264,20 +289,20 @@ void Nodable::update()
             {
                 ASSERT(curr_file_history != nullptr);
                 auto _event = reinterpret_cast<Event_SlotDropped*>(event);
-                Slot* tail = _event->data.first;
-                Slot* head = _event->data.second;
+                ASTNodeSlot* tail = _event->data.first;
+                ASTNodeSlot* head = _event->data.second;
                 ASSERT(head != tail);
                 if ( tail->order() == SlotFlag_ORDER_2ND )
                 {
                     if ( head->order() == SlotFlag_ORDER_2ND )
                     {
-                        LOG_ERROR("Nodable", "Unable to connect incompatible edges\n");
+                        TOOLS_LOG(tools::Verbosity_Error, "Nodable", "Unable to connect incompatible edges\n");
                         break; // but if it still the case, that's because edges are incompatible
                     }
-                    LOG_VERBOSE("Nodable", "Swapping edges to try to connect them\n");
+                    TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "Nodable", "Swapping edges to try to connect them\n");
                     std::swap(tail, head);
                 }
-                DirectedEdge edge(tail, head);
+                ASTSlotLink edge(tail, head);
                 auto cmd = std::make_shared<Cmd_ConnectEdge>(edge);
                 curr_file_history->push_command(cmd);
 
@@ -296,13 +321,13 @@ void Nodable::update()
             {
                 ASSERT(curr_file_history != nullptr);
                 auto _event = static_cast<Event_SlotDisconnectAll*>(event);
-                Slot* slot = _event->data.first;
+                ASTNodeSlot* slot = _event->data.first;
 
                 auto cmd_grp = std::make_shared<Cmd_Group>("Disconnect All Edges");
                 Graph* graph = _event->data.first->node->graph();
-                for(Slot* adjacent_slot: slot->adjacent() )
+                for(ASTNodeSlot* adjacent_slot: slot->adjacent() )
                 {
-                    auto each_cmd = std::make_shared<Cmd_DeleteEdge>(DirectedEdge{slot, adjacent_slot}, graph );
+                    auto each_cmd = std::make_shared<Cmd_DeleteEdge>(ASTSlotLink{slot, adjacent_slot}, graph );
                     cmd_grp->push_cmd( std::static_pointer_cast<AbstractCommand>(each_cmd) );
                 }
                 curr_file_history->push_command(std::static_pointer_cast<AbstractCommand>(cmd_grp));
@@ -315,13 +340,15 @@ void Nodable::update()
                 Graph* graph = _event->data.graph;
 
                 // 1) create the node
-                if ( !graph->root() )
+                if ( !graph->root_node() )
                 {
-                    LOG_ERROR("Nodable", "Unable to create_new child, no root found on this graph.\n");
+                    TOOLS_LOG(tools::Verbosity_Error, "Nodable", "Unable to create_new primary_child, no root found on this graph.\n");
                     continue;
                 }
 
-                Node* new_node  = graph->create_node(_event->data.node_type, _event->data.node_signature );
+                ASTNode* new_node  = graph->create_node( _event->data.node_type,
+                                                         _event->data.node_signature,
+                                                         graph->root_scope() );
 
                 // Insert an end of line and end of instruction
                 switch ( _event->data.node_type )
@@ -330,14 +357,14 @@ void Nodable::update()
                     case CreateNodeType_BLOCK_FOR_LOOP:
                     case CreateNodeType_BLOCK_WHILE_LOOP:
                     case CreateNodeType_BLOCK_SCOPE:
-                    case CreateNodeType_BLOCK_ENTRY_POINT:
-                        new_node->set_suffix( Token::s_end_of_line );
+                    case CreateNodeType_ROOT:
+                        new_node->set_suffix(ASTToken::s_end_of_line );
                         break;
                     case CreateNodeType_VARIABLE_BOOLEAN:
                     case CreateNodeType_VARIABLE_DOUBLE:
                     case CreateNodeType_VARIABLE_INTEGER:
                     case CreateNodeType_VARIABLE_STRING:
-                        new_node->set_suffix( Token::s_end_of_instruction );
+                        new_node->set_suffix(ASTToken::s_end_of_instruction );
                         break;
                     case CreateNodeType_LITERAL_BOOLEAN:
                     case CreateNodeType_LITERAL_DOUBLE:
@@ -348,42 +375,31 @@ void Nodable::update()
                 }
 
                 // 2) handle connections
-                SlotView* slot_view = _event->data.active_slotview;
-                if ( !slot_view)
-                {
-                    // Experimental: we try to connect a parent-less child
-                    if ( !graph->is_root( new_node ) && m_config->has_flags( ConfigFlag_EXPERIMENTAL_GRAPH_AUTOCOMPLETION ) )
-                    {
-                        Scope* root_scope = graph->root()->internal_scope();
-                        VERIFY( root_scope != nullptr, "inner main_scope is expected on a root child");
-                        root_scope->push_back(new_node);
-                    }
-                }
-                else
+                if ( ASTNodeSlotView* slot_view = _event->data.active_slotview )
                 {
                     SlotFlags             complementary_flags = switch_order(slot_view->slot->type_and_order());
                     const TypeDescriptor* type                = slot_view->property()->get_type();
-                    Slot*                 complementary_slot  = new_node->find_slot_by_property_type(complementary_flags, type);
+                    ASTNodeSlot*                 complementary_slot  = new_node->find_slot_by_property_type(complementary_flags, type);
 
-                    if ( complementary_slot )
+                    if ( !complementary_slot )
                     {
                         // TODO: this case should not happens, instead we should check ahead of time whether or not this not can be attached
-                        LOG_ERROR( "GraphView", "unable to connect this child" );
+                        TOOLS_LOG(tools::Verbosity_Error,  "GraphView", "unable to connect this primary_child" );
                     }
-                    if ( complementary_slot )
+                    else
                     {
-                        Slot* out = slot_view->slot;
-                        Slot* in  = complementary_slot;
+                        ASTNodeSlot* out = slot_view->slot;
+                        ASTNodeSlot* in  = complementary_slot;
 
                         if ( out->has_flags( SlotFlag_ORDER_2ND ) )
                             std::swap( out, in );
 
-                        graph->connect(out, in, ConnectFlag_ALLOW_SIDE_EFFECTS );
+                        graph->connect(out, in, GraphFlag_ALLOW_SIDE_EFFECTS );
 
                         // Ensure has a "\n" when connecting using CODEFLOW (to split lines)
-                        if ( Utils::is_instruction( out->node ) && out->type() == SlotFlag_TYPE_FLOW )
+                        if (ASTUtils::is_instruction(out->node ) && out->type() == SlotFlag_TYPE_FLOW )
                         {
-                            Token& token = out->node->suffix();
+                            ASTToken& token = out->node->suffix();
                             std::string buffer = token.string();
                             if ( buffer.empty() || std::find(buffer.rbegin(), buffer.rend(), '\n') == buffer.rend() )
                                 token.suffix_push_back("\n");
@@ -392,18 +408,18 @@ void Nodable::update()
                 }
 
                 // set new_node's view position, select it
-                if ( auto view = new_node->get_component<NodeView>() )
+                if ( auto view = new_node->component<ASTNodeView>() )
                 {
-                    view->spatial_node().set_position(_event->data.desired_screen_pos, WORLD_SPACE);
-                    graph->view()->selection().clear();
-                    graph->view()->selection().append(view);
+                    view->spatial_node()->set_position(_event->data.desired_screen_pos, WORLD_SPACE);
+                    graph_view->selection().clear();
+                    graph_view->selection().append(view);
                 }
                 break;
             }
 
             default:
             {
-                LOG_VERBOSE("App", "Ignoring and event, this case is not handled\n");
+                TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "App", "Ignoring and event, this case is not handled\n");
             }
         }
 
@@ -414,26 +430,24 @@ void Nodable::update()
 
 void Nodable::shutdown()
 {
-    LOG_VERBOSE("ndbl::Nodable", "shutdown ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "ndbl::Nodable", "_handle_shutdown ...\n");
 
     for( File* each_file : m_loaded_files )
     {
-        LOG_VERBOSE("ndbl::App", "Delete file %s ...\n", each_file->path.c_str());
+        TOOLS_LOG(tools::Verbosity_Diagnostic, "ndbl::App", "Delete file %s ...\n", each_file->path.c_str());
         delete each_file;
     }
 
     // shutdown managers & co.
-    shutdown_interpreter(m_interpreter);
-    shutdown_node_factory(m_node_factory);
-    shutdown_component_factory(m_component_factory);
     shutdown_language(m_language);
     m_view->shutdown();
     m_base_app.shutdown();
     shutdown_config(m_config);
 
     delete m_view;
+    s_instance = nullptr;
 
-    LOG_VERBOSE("ndbl::Nodable", "shutdown " OK "\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "ndbl::Nodable", "_handle_shutdown " TOOLS_OK "\n");
 }
 
 File* Nodable::open_asset_file(const tools::Path& _path)
@@ -456,7 +470,7 @@ File* Nodable::open_file(const tools::Path& _path)
     }
 
     delete file;
-    LOG_ERROR("File", "Unable to open file %s (%s)\n", _path.filename().c_str(), _path.c_str());
+    TOOLS_LOG(tools::Verbosity_Error, "File", "Unable to open file %s (%s)\n", _path.filename().c_str(), _path.c_str());
     return nullptr;
 }
 
@@ -475,20 +489,20 @@ void Nodable::save_file( File* _file) const
 
 	if ( !File::write(*_file, _file->path) )
     {
-        LOG_ERROR("ndbl::App", "Unable to save %s (%s)\n", _file->filename().c_str(), _file->path.c_str());
+        TOOLS_LOG(tools::Verbosity_Error, "ndbl::App", "Unable to save %s (%s)\n", _file->filename().c_str(), _file->path.c_str());
         return;
     }
-    LOG_MESSAGE("ndbl::App", "File saved: %s\n", _file->path.c_str());
+    TOOLS_LOG(tools::Verbosity_Message, "ndbl::App", "File saved: %s\n", _file->path.c_str());
 }
 
 void Nodable::save_file_as(File* _file, const tools::Path& _path) const
 {
     if ( !File::write(*_file, _path) )
     {
-        LOG_ERROR("ndbl::App", "Unable to save %s (%s)\n", _path.filename().c_str(), _path.c_str());
+        TOOLS_LOG(tools::Verbosity_Error, "ndbl::App", "Unable to save %s (%s)\n", _path.filename().c_str(), _path.c_str());
         return;
     }
-    LOG_MESSAGE("ndbl::App", "File saved: %s\n", _path.c_str());
+    TOOLS_LOG(tools::Verbosity_Message, "ndbl::App", "File saved: %s\n", _path.c_str());
 }
 
 void Nodable::close_file( File* _file)
@@ -511,73 +525,9 @@ void Nodable::close_file( File* _file)
     }
 }
 
-bool Nodable::compile_and_load_program() const
-{
-    if (!m_current_file)
-    {
-        return false;
-    }
-
-    Compiler compiler{};
-    auto asm_code = compiler.compile_syntax_tree(&m_current_file->graph());
-    if (!asm_code)
-    {
-        return false;
-    }
-
-    m_interpreter->release_program();
-    bool loaded = m_interpreter->load_program(asm_code);
-    return loaded;
-}
-
-void Nodable::run_program()
-{
-    if (compile_and_load_program() )
-    {
-        m_interpreter->run_program();
-    }
-}
-
-void Nodable::debug_program()
-{
-    if (compile_and_load_program() )
-    {
-        m_interpreter->debug_program();
-    }
-}
-
-void Nodable::step_over_program()
-{
-    m_interpreter->debug_step_over();
-    GraphView* graph_view = m_current_file->graph().view();
-
-    if (!m_interpreter->is_there_a_next_instr() )
-    {
-        graph_view->selection().clear();
-        return;
-    }
-
-    const Node* next_node = m_interpreter->get_next_node();
-    if ( !next_node )
-        return;
-
-    graph_view->selection().clear();
-    graph_view->selection().append( next_node->get_component<NodeView>() );
-}
-
-void Nodable::stop_program()
-{
-    m_interpreter->stop_program();
-}
-
-void Nodable::reset_program()
+void Nodable::reset_current_graph()
 {
     if(!m_current_file) return;
-
-    if (m_interpreter->is_program_running() )
-    {
-        m_interpreter->stop_program();
-    }
 
     // n.b. nodable is still text oriented
     m_current_file->set_graph_dirty();
