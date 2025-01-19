@@ -20,6 +20,13 @@ task :build => ['libs:build', 'tools:build', 'ndbl:build'] do puts "Build DONE" 
 task :test  => ['tools:test', 'ndbl:test']
 task :run   => ['ndbl:app:run']
 
+task :rebuild_all do
+    sh "rake clobber build PLATFORM=desktop BUILD_TYPE=release"
+    sh "rake clobber build PLATFORM=desktop BUILD_TYPE=debug"
+    sh "source libs/emsdk/emsdk_env.sh && rake clobber build PLATFORM=web BUILD_TYPE=release"
+    sh "source libs/emsdk/emsdk_env.sh && rake clobber build PLATFORM=web BUILD_TYPE=debug"
+end
+
 task :install do
 
     if not BUILD_OS_LINUX
