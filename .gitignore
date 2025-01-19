@@ -58,3 +58,6 @@ _screenshots/
 /.idea
 .gitconfig
 .cache
+
+# Generate by a rake task, try `rake <target>:clangd`
+.clangd
