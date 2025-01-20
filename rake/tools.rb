@@ -2,7 +2,7 @@ require_relative 'base'
 require_relative 'libs'
 
 #---------------------------------------------------------------------------
-$tools_core = new_target_from_base("tools_core", TargetType::OBJECTS)
+$tools_core = new_target_from_base("tools_core", TARGET_TYPE_OBJECTS)
 $tools_core.sources |= FileList[
     "src/tools/core/reflection/qword.cpp",
     "src/tools/core/reflection/Type.cpp",
@@ -23,7 +23,7 @@ if PLATFORM_DESKTOP
 end
 
 #---------------------------------------------------------------------------
-$tools_gui = new_target_from_base("tools_gui", TargetType::OBJECTS)
+$tools_gui = new_target_from_base("tools_gui", TARGET_TYPE_OBJECTS)
 $tools_gui.sources |= FileList[
     "src/tools/gui/geometry/BezierCurveSegment2D.cpp",
     "src/tools/gui/geometry/BoxShape2D.cpp",
@@ -49,7 +49,7 @@ end
 
 #---------------------------------------------------------------------------
 
-app = new_target_from_base("tools-gui-example", TargetType::EXECUTABLE)
+app = new_target_from_base("tools-gui-example", TARGET_TYPE_EXECUTABLE)
 app.sources |= FileList[
     "src/tools/gui-example/AppExample.cpp",
     "src/tools/gui-example/AppExampleView.cpp",
@@ -65,7 +65,7 @@ app.link_library |= [$tools_core, $tools_gui]
 
 #---------------------------------------------------------------------------
 
-tools_test = new_target_from_base("tools-test", TargetType::EXECUTABLE)
+tools_test = new_target_from_base("tools-test", TARGET_TYPE_EXECUTABLE)
 tools_test.sources |= FileList[
     "src/tools/core/Delegate.specs.cpp",
     "src/tools/core/string.specs.cpp",

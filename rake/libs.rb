@@ -3,22 +3,22 @@ require_relative 'base'
 # declare here the external libraries we need to build as OBJECTS
 
 #---------------------------------------------------------------------------
-$gl3w = new_target_from_base("gl3w", TargetType::OBJECTS)
+$gl3w = new_target_from_base("gl3w", TARGET_TYPE_OBJECTS)
 $gl3w.sources |= FileList[
     "libs/gl3w/GL/gl3w.c"
 ]
 
-$text_editor = new_target_from_base("text_editor", TargetType::OBJECTS)
+$text_editor = new_target_from_base("text_editor", TARGET_TYPE_OBJECTS)
 $text_editor.sources |= FileList[
     "libs/ImGuiColorTextEdit/TextEditor.cpp"
 ]
 
-$lodepng = new_target_from_base("lodepng", TargetType::OBJECTS)
+$lodepng = new_target_from_base("lodepng", TARGET_TYPE_OBJECTS)
 $lodepng.sources |= FileList[
     "libs/lodepng/lodepng.cpp"
 ]
 
-$imgui = new_target_from_base("imgui", TargetType::OBJECTS)
+$imgui = new_target_from_base("imgui", TARGET_TYPE_OBJECTS)
 $imgui.sources |= FileList[
    "libs/imgui/imgui.cpp",
    "libs/imgui/imgui_demo.cpp",
@@ -35,7 +35,7 @@ $imgui.cxx_flags |= [
     "-Wno-nontrivial-memaccess", # ImGui has several warnings like this one: "warning: first argument in call to 'memset' is a pointer to non-trivially copyable type 'ImGuiListClipperData' [-Wnontrivial-memcall]"
 ]
 
-$whereami = new_target_from_base("whereami", TargetType::OBJECTS)
+$whereami = new_target_from_base("whereami", TARGET_TYPE_OBJECTS)
 $whereami.sources |= FileList[
     "libs/whereami/src/whereami.c"
 ]

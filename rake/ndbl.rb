@@ -2,7 +2,7 @@ require_relative 'base'
 require_relative 'tools'
 
 #---------------------------------------------------------------------------
-ndbl_core = new_target_from_base("ndbl_core", TargetType::OBJECTS)
+ndbl_core = new_target_from_base("ndbl_core", TARGET_TYPE_OBJECTS)
 ndbl_core.sources |= FileList[
     "src/ndbl/core/language/Nodlang.cpp",
     "src/ndbl/core/ASTForLoop.cpp",
@@ -25,7 +25,7 @@ ndbl_core.sources |= FileList[
 ]
 
 #---------------------------------------------------------------------------
-ndbl_gui = new_target_from_base("ndbl_gui", TargetType::OBJECTS)
+ndbl_gui = new_target_from_base("ndbl_gui", TARGET_TYPE_OBJECTS)
 ndbl_gui.sources |= FileList[
     "src/ndbl/gui/ASTNodeSlotView.cpp", 
     "src/ndbl/gui/ASTNodeView.cpp", 
@@ -42,7 +42,7 @@ ndbl_gui.sources |= FileList[
     "src/ndbl/gui/PhysicsComponent.cpp",       
 ]
 #---------------------------------------------------------------------------
-ndbl_app = new_target_from_base("nodable", TargetType::EXECUTABLE)
+ndbl_app = new_target_from_base("nodable", TARGET_TYPE_EXECUTABLE)
 ndbl_app.sources |= FileList[
     "src/ndbl/app/main.cpp",
 ]
@@ -83,7 +83,7 @@ ndbl_app.link_library |= [
     ndbl_gui
 ]
 #---------------------------------------------------------------------------
-ndbl_test = new_target_from_base("ndbl-specs", TargetType::EXECUTABLE)
+ndbl_test = new_target_from_base("ndbl-specs", TARGET_TYPE_EXECUTABLE)
 ndbl_test.sources |= FileList[
     "src/ndbl/core/**/*.specs.cpp"
 ]
