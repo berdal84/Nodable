@@ -2,7 +2,7 @@ require "rbconfig"
 require 'json'
 require 'date' # To add date in .clang export
 
-VERBOSE            = false
+VERBOSE            = ENV["VERBOSE"] == "1"
 BUILD_OS           = RbConfig::CONFIG['build_os']
 HOST_OS            = RbConfig::CONFIG['host_os']
 PLATFORM           = (ENV["PLATFORM"] || "desktop").downcase
@@ -101,14 +101,14 @@ def get_self_objects( target )
     to_objects( target.sources )
 end
 
-def get_objects_with_deps( target )
+def get_objects__incl_deps( target )
     
     # Take this target's objects
     objects = get_self_objects( target )
 
     # Append dependencies's objects
     target.link_library.each do |other_target|
-        objects |= get_objects_with_deps( other_target )
+        objects |= get_objects__incl_deps( other_target )
     end
 
     objects
@@ -135,13 +135,14 @@ def compile_file(src, target)
     sh "#{command}", verbose: VERBOSE
 end
 
-def link_binary( binary_path, target )
+def link_binary( target )
 
     if (target.type != TARGET_TYPE_EXECUTABLE)
         raise "Target type is expected to be: '#{TARGET_TYPE_EXECUTABLE}', actual: #{target.type}"
     end
 
-    objects        = get_objects_with_deps(target).join(" ")
+    binary_path    = get_binary_path(target)
+    objects        = get_objects__incl_deps(target).join(" ")
     defines        = target.defines.map{|d| "-D\"#{d}\"" }.join(" ")
     compiler_flags = target.compiler_flags.join(" ")
     linker_flags   = target.linker_flags.join(" ")
@@ -203,8 +204,25 @@ def get_compile_file_command(src, target) # Generate the command (as string) to 
     cmd.join(" ")
 end
 
-def copy_asset(pattern) # pattern: "<source>:<destination>" (destination is optional)
+def get_assets_src(target)
+    assets = []
+    target.assets.each do |pattern|
+        source, destination = split_asset_pattern(pattern)
+        assets.append( source )
+    end
+    assets
+end
 
+def get_assets_dest(target)
+    assets = []
+    target.assets.each do |pattern|
+        source, destination =  split_asset_pattern(pattern)
+        assets.append( destination )
+    end
+    assets
+end
+
+def split_asset_pattern(pattern)  # pattern: "<source>:<destination>" (destination is optional)
     arr = pattern.split(':')
 
     # Source is required
@@ -212,7 +230,11 @@ def copy_asset(pattern) # pattern: "<source>:<destination>" (destination is opti
 
     # Destination is optional, by default we copy relative to repository root
     destination = "#{BIN_DIR}/#{arr[1] || source}";
-    
+
+    [source, destination]
+end
+
+def copy_asset(source, destination)
     FileUtils.rm_f destination
     FileUtils.mkdir_p File.dirname(destination)
     FileUtils.copy_file( source, destination )
@@ -222,7 +244,7 @@ end
 def tasks_for_target(target)
 
     objects = get_self_objects(target)
-    objects_with_deps = get_objects_with_deps(target)
+    objects_with_deps = get_objects__incl_deps(target)
 
     desc "Clean intermediate files (#{target.name})"
     task :clean do
@@ -249,33 +271,34 @@ def tasks_for_target(target)
         
     elsif target.type == TARGET_TYPE_EXECUTABLE
 
-        binary = get_binary_path( target )
-
         desc "Compile and link binary (#{target.name})"
-        multitask :build => [binary, :copy_assets] do
+        task :build => [:link, :copy_assets] do
             puts "#{target.name} | Build DONE"
         end
 
-        # TODO: bad design
-        #         we must: 1) generate the list of the desired assets (in their build path)
-        #                  2) add a task per asset like: file build/bin/assets/file.txt => assets/file.txt
-        task :copy_assets do
-            target.assets.each do |pattern|
-                copy_asset(pattern)
+        # assets
+        assets_src = get_assets_src(target)
+        assets_dst = get_assets_dest(target)
+        multitask :copy_assets => assets_dst do 
+            puts "Assets copy DONE"
+        end
+        target.assets.each_with_index do |_, i|
+            file assets_dst[i] => assets_src[i] do
+                copy_asset(assets_src[i], assets_dst[i])
             end
         end
         
-        desc "Link the executable binary (#{target.name})"
-        file binary => :link
+        task :link => get_binary_path(target)
 
-        desc "Link the executable binary (#{target.name})"
-        multitask :link => objects_with_deps do |task|
-            puts "#{target.name} | Linking '#{binary}'..."
-            link_binary( binary, target )
-            puts "#{target.name} | Linking '#{binary}' DONE"
+        file get_binary_path(target) => :compile_objects do
+            puts "#{target.name} | Linking '#{get_binary_path(target)}'..."
+            link_binary(target)
+            puts "#{target.name} | Linking '#{get_binary_path(target)}' DONE"
         end
 
-        desc "Run the #{target.name}"
+        multitask :compile_objects => objects_with_deps
+
+        desc "Run #{target.name}"
         task :run => :build do
 
             if PLATFORM_DESKTOP

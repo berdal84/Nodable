@@ -29,7 +29,7 @@ task :rebuild_all do
 
     platforms.each do |platform|
         build_types.each do |build_type|
-            sh "rake rebuild PLATFORM=#{platform}  BUILD_TYPE=#{build_type}"
+            sh "rake -m clobber build PLATFORM=#{platform}  BUILD_TYPE=#{build_type}"
         end
     end
 end
