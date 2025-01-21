@@ -17,7 +17,7 @@ task :help do
 end
 
 task :rebuild => ['clobber', 'build']
-task :build => ['libs:build', 'tools:build', 'ndbl:build'] do puts "Build DONE" end
+multitask :build => ['libs:build', 'tools:build', 'ndbl:build'] do puts "Build DONE" end
 task :test  => ['tools:test', 'ndbl:test']
 task :run   => ['ndbl:app:run']
 
