@@ -86,3 +86,10 @@ task :install do
         sh "sudo cmake --install #{nfd_build_dir} --config #{nfd_config}"
     end
 end
+
+
+desc "Count Line Of Code (requires cloc, count in ./src by default)"
+task :cloc, [:arg1] do |t, args|
+    _path = args[:arg1] || "./src"
+    sh "cloc --by-file-by-lang #{_path}"
+end
