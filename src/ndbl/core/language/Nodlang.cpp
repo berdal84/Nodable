@@ -761,11 +761,16 @@ bool Nodlang::is_syntax_valid()
             {
                 if (opened <= 0)
                 {
-                    TOOLS_LOG(tools::Verbosity_Error, "Parser",
-                              "Syntax Error: Unexpected close bracket after \"... %s\" (position %llu)\n",
-                              _state.tokens().range_to_string(token->m_index, -10).c_str(),
-                              token->offset()
-                          );
+                    const size_t token_count = 10;
+                    const size_t begin       = token->m_index < token_count ? 0 : token->m_index - token_count;
+                    const size_t end         = token->m_index + 1;
+                    TOOLS_LOG(
+                        tools::Verbosity_Error,
+                        "Parser",
+                        "Syntax Error: Unexpected close bracket after \"... %s\" (position %llu)\n",
+                        _state.tokens().range_to_string(begin, end).c_str(),
+                        token->offset()
+                    );
                     success = false;
                 }
                 opened--;

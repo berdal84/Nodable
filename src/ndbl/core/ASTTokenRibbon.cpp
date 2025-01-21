@@ -126,25 +126,15 @@ bool ASTTokenRibbon::can_eat(size_t count) const
     return m_cursor + count <= m_tokens.size() ;
 }
 
-std::string ASTTokenRibbon::range_to_string(size_t pos, int size)
+std::string ASTTokenRibbon::range_to_string(size_t begin, size_t end)
 {
-    ASSERT( size != 0);
-    ASSERT( pos < m_tokens.size() );
-
-    // ensure size is positive
-    if( size < 0 )
-    {
-        ASSERT( -size < m_tokens.size() - pos );
-        pos  = pos + size;
-        size = -size;
-    }
-    else
-    {
-        ASSERT( pos + size < m_tokens.size() );
-    }
+    ASSERT(begin <= end);
+    ASSERT(end <= m_tokens.size() );
 
     std::string result;
-    for( size_t i = pos; i < pos + size; ++i )
-        result = result + m_tokens[pos].string();
+    for( size_t i = begin; i < end; ++i )
+    {
+        result.append( m_tokens[i].string() );
+    }
     return result;
 }
