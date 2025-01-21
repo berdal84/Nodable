@@ -16,7 +16,11 @@ task :help do
     print("Welcome to Nodable's rakefile.\nFor more info, run: rake --tasks\n")
 end
 
-task :rebuild => ['clobber', 'build']
+desc "Rebuild from scratch"
+task :rebuild => [:clobber, :build] do
+    print("Rebuild DONE\n")
+end
+
 multitask :build => ['libs:build', 'tools:build', 'ndbl:build'] do puts "Build DONE" end
 task :test  => ['tools:test', 'ndbl:test']
 task :run   => ['ndbl:app:run']
