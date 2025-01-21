@@ -11,9 +11,25 @@ CLOBBER.include [BUILD_DIR] # final files
 
 task :default => :help
 
-desc "says hello"
+desc "Print help message"
 task :help do
-    print("Welcome to Nodable's rakefile.\nFor more info, run: rake --tasks\n")
+    message = 
+%{=-=-=-=-=-=-=-=- Welcome to Nodable's rakefile =-=-=-=-=-=-=-=-
+
+    To start, run:
+        rake --tasks
+
+    It will print the list of all tasks
+
+    Syntax for rake is:
+        rake <task>
+        rake <task1> <task2>
+
+    Some useful tasks:
+        clobber, clean, build, run, test.
+
+}
+    puts(message)
 end
 
 desc "Rebuild from scratch"
