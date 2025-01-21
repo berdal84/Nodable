@@ -302,9 +302,9 @@ def tasks_for_target(target)
         task :run => :build do
 
             if PLATFORM_DESKTOP
-                sh "./#{binary}"
+                sh "./#{get_binary_path(target)}"
             elsif PLATFORM_WEB
-                sh "emrun --hostname #{HTTP_SERVER_HOSTNAME} --port #{HTTP_SERVER_PORT} #{binary}"
+                sh "emrun --hostname #{HTTP_SERVER_HOSTNAME} --port #{HTTP_SERVER_PORT} #{get_binary_path(target)}"
             end
         end
     end
