@@ -129,10 +129,22 @@ def compile_file(src, target)
     FileUtils.mkdir_p File.dirname( src_to_dep( src ) )
 
     # Get the command as string
-    command = get_compile_file_command(src, target)
+    # build a command from an array of strings, similarly to docker
+    # [<program>, <arg1>, <arg2>, ...]
+
+    is_cpp = File.extname( src ) == ".cpp"
+
+    cmd = [is_cpp ? $cxx_compiler : $c_compiler]
+    cmd += target.compiler_flags
+    cmd += is_cpp ? target.cxx_flags : target.c_flags
+    cmd += ['-c'] # no linking
+    cmd += format_includes(target)
+    cmd += format_defines(target)
+    cmd += get_dependency_flags(src)
+    cmd += ["-o", src_to_obj( src ), src]
 
     # Run the command
-    sh "#{command}", verbose: VERBOSE
+    sh "#{cmd.join(" ")}", verbose: VERBOSE
 end
 
 def link_binary( target )
@@ -183,25 +195,8 @@ def format_includes(target)
     target.includes.map{|f| "-I#{File.absolute_path(f)}"}
 end
 
-def get_compile_file_command(src, target) # Generate the command (as string) to compile a given file
-
-    # build a command from an array of strings, similarly to docker
-    # [<program>, <arg1>, <arg2>, ...]
-
-    if File.extname( src ) == ".cpp"
-       cmd = [$cxx_compiler, target.compiler_flags, target.cxx_flags]
-    else
-       cmd = [$c_compiler, target.compiler_flags, target.c_flags]
-    end
-
-    cmd |= ['-c']
-    cmd |= format_includes(target)
-    cmd |= format_defines(target)
-    
-    cmd |= ["-MD", "-MF#{src_to_dep( src )}"]
-    cmd |= ["-o", src_to_obj( src ), src]
-
-    cmd.join(" ")
+def get_dependency_flags(source)
+    ["-MD", "-MF#{src_to_dep(source)}"]
 end
 
 def get_assets_src(target)
