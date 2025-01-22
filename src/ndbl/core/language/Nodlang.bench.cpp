@@ -2,7 +2,7 @@
 #include <random>
 #include "ndbl/core/language/Nodlang.h"
 #include "ndbl/core/Graph.h"
-#include "ndbl/core/NodeFactory.h"
+#include "ndbl/core/ASTNodeUtils.h"
 #include "tools/core/reflection/reflection"
 #include "tools/core/string.h"
 
@@ -33,7 +33,6 @@ using namespace tools;
 class NodlangFixture : public benchmark::Fixture {
 public:
     Nodlang*           language;
-    NodeFactory*       factory;
     Graph*             graph;
     std::random_device random_device;  // Will be used to obtain a seed for the random number engine
     std::mt19937       generator; // Standard mersenne_twister_engine
@@ -47,19 +46,17 @@ public:
     void SetUp(const ::benchmark::State& state)
     {
         language = init_language();;
-        factory  = init_node_factory();
         graph    = new Graph(factory);
-        log::set_verbosity(log::Verbosity_Error);
+        log_set_verbosity(Verbosity_Error);
     }
 
     void TearDown(const ::benchmark::State& state)
     {
         delete graph;
-        shutdown_node_factory(nullptr);
-        shutdown_language(nullptr);
+        shutdown_language(language);
     }
 
-    inline std::string get_random_double_as_string()
+    std::string get_random_double_as_string()
     {
         return std::to_string( distribution(generator) );
     }

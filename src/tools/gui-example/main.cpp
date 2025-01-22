@@ -10,12 +10,7 @@ int main(int argc, char *argv[])
         // Instantiate the application using the predefined configuration
         AppExample app;
         app.init();
-
-        while( !app.should_stop() )
-        {
-            app.update();
-            app.draw();
-        }
+        app.run();
         app.shutdown();
     }
     TOOLS_catch

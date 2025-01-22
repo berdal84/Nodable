@@ -74,7 +74,7 @@ namespace tools
             return _unique_elem.size();
         }
 
-        bool append(Element& elem)  // Constant on average, worst case linear in the size of the container.
+        bool append(const Element& elem)  // Constant on average, worst case linear in the size of the container.
         {
             const auto& [_, inserted] = _unique_elem.insert( _hash(elem) );
             if ( inserted )

@@ -7,13 +7,7 @@
 
 using namespace tools;
 
-ViewState::ViewState()
-: ViewState(1.f, 1.f)
+ViewState::ViewState(Flags flags)
+: _flags(flags)
 {
-}
-
-ViewState::ViewState(float width, float height)
-: _shape()
-{
-    _shape.set_size({width, height});
 }
