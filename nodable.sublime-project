@@ -1,0 +1,36 @@
+{
+	"folders":
+	[
+		{
+			"path": "~/nodable",
+			"folder_exclude_patterns": ["build-*", ".vscode", ".idea", ".cache"]
+		},
+	],
+	"build_systems": [{
+		"name": "Nodable (release)",
+		"shell_cmd": "rake ndbl:app:build",
+		"env": {
+			"BUILD_TYPE": "release"
+		},
+		"variants": [{
+			"name": "rebuild",
+			"shell_cmd": "rake clobber ndbl:app:build",
+		},{
+			"name": "run",
+			"shell_cmd": "rake ndbl:app:build run"
+		}]
+	},{
+		"name": "Nodable (debug)",
+		"shell_cmd": "rake ndbl:app:build",
+		"env": {
+			"BUILD_TYPE": "debug"
+		},
+		"variants": [{
+			"name": "rebuild",
+			"shell_cmd": "rake clobber ndbl:app:build",
+		},{
+			"name": "run",
+			"shell_cmd": "rake ndbl:app:build run"
+		}],
+	}]
+}
