@@ -13,11 +13,12 @@ namespace tools
         friend AppExampleView;
     public:
         void        init();
+        void        run();
+        void        shutdown();
         void        update();
         void        draw();
-        void        shutdown();
-        inline bool should_stop() const { return m_base_app.should_stop(); };
-        inline App* base_app_handle() { return &m_base_app; }
+        bool        should_stop() const { return m_base_app.should_stop(); };
+        App*        base_app_handle() { return &m_base_app; }
     private:
         void        request_stop();
 

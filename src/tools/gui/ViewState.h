@@ -23,8 +23,7 @@ namespace tools
             Flags_Hovered  = 1 << 3,
         };
 
-		ViewState();
-		ViewState(float width, float height);
+		ViewState(Flags flags = Flags_Visible);
 
         bool                 pinned() const              { return _flags & Flags_Pinned; }
         bool                 selected() const            { return _flags & Flags_Selected;   }
@@ -34,13 +33,7 @@ namespace tools
         void                 set_selected(bool b = true) { _flags = (_flags & ~Flags_Selected) | ( b * Flags_Selected ) ;}
         void                 set_visible(bool b = true)  { _flags = (_flags & ~Flags_Visible)  | ( b * Flags_Visible  ) ;}
         void                 set_hovered(bool b = true)  { _flags = (_flags & ~Flags_Hovered)  | ( b * Flags_Hovered  ) ;}
-        BoxShape2D&          shape()                     { return _shape; }
-        const BoxShape2D&    shape() const               { return _shape; }
-        SpatialNode2D&       spatial_node()              { return _shape.spatial_node(); };
-        const SpatialNode2D& spatial_node() const        { return _shape.spatial_node(); };
-
     private:
-        Flags      _flags = Flags_Visible;
-        BoxShape2D _shape; // in PARENT_SPACE
+        Flags      _flags = Flags_None;
     };
 }

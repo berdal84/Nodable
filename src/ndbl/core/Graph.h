@@ -3,33 +3,32 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <memory> // std::shared_ptr
+#include <queue>
+#include <set>
 
-#include "ndbl/core/Node.h"
-#include "ndbl/core/NodeFactory.h"
-#include "ndbl/core/WhileLoopNode.h"
+#include "ASTUtils.h"
+#include "ASTSlotLink.h"
+#include "ASTScope.h"
+#include "tools/core/Component.h" // for ComponentBag<T>
+
 #include "tools/core/reflection/reflection"
 #include "tools/core/types.h"
-#include "tools/core/Optional.h"
 
 namespace ndbl
 {
-    // forward declarations
-    class Nodlang;
-    class NodeFactory;
-    class GraphView;
-    class VariableRefNode;
+    // forward decl
+    class ASTScope;
 
-    typedef int ConnectFlags;
-    enum ConnectFlag_
+    typedef int GraphFlags;
+    enum GraphFlag_
     {
-        ConnectFlag_NONE               = 0,
-        ConnectFlag_ALLOW_SIDE_EFFECTS = 1 << 0,
+        GraphFlag_NONE               = 0,
+        GraphFlag_ALLOW_SIDE_EFFECTS = 1 << 0,
     };
 
     enum CreateNodeType
     {
-        CreateNodeType_BLOCK_ENTRY_POINT,
+        CreateNodeType_ROOT,
         CreateNodeType_BLOCK_CONDITION,
         CreateNodeType_BLOCK_FOR_LOOP,
         CreateNodeType_BLOCK_WHILE_LOOP,
@@ -45,89 +44,103 @@ namespace ndbl
         CreateNodeType_FUNCTION,
     };
 
+    typedef std::vector<ASTNode*>                  NodeRegistry;
+    typedef std::multimap<SlotFlags , ASTSlotLink> EdgeRegistry;
+
     /**
-     * @brief To manage a graph (child and edges)
+     * @brief To manage a graph (primary_child and edges)
      */
 	class Graph
 	{
 	public:
-        typedef std::unordered_set<Node*> NodeRegistry;
-        typedef std::multimap<SlotFlags , DirectedEdge> EdgeRegistry;
-
- 		Graph(NodeFactory* factory);
+ 		Graph();
 		~Graph();
-
-        // signals (can be connected)
-
-        SIGNAL(on_reset);
-        SIGNAL(on_change);
-        SIGNAL(on_add   , Node*);
-        SIGNAL(on_remove, Node*);
-
-        // general
-
+//====== Data =======================================================================================================
+    public:
+        tools::SimpleSignal           signal_reset;
+        tools::SimpleBroadcastSignal  signal_change;
+        tools::Signal<void(ASTNode*)> signal_add_node;
+        tools::Signal<void(ASTNode*)> signal_remove_node;
+        using ScopeChanged = void(ASTNode*, ASTScope* /* old_scope */, ASTScope* /* new_scope */ ) ;
+        tools::Signal<ScopeChanged>   signal_change_scope;
+        tools::SimpleSignal           signal_is_complete; // user defined, usually when parser or user is done
+    private:
+        NodeRegistry                  m_node_registry;
+        EdgeRegistry                  m_edge_registry;
+        tools::ComponentBag<Graph>    m_components;
+//====== Common Methods ================================================================================================
+    public:
         bool                     update();
-        void                     clear();  // Delete all nodes, wires, edges and reset scope.
-        Scope*                   main_scope() { return m_root ? m_root->internal_scope() : nullptr; };
-        inline GraphView*        view() const { return m_view; };
-        inline void              set_view(GraphView* view = nullptr) { ASSERT(view != nullptr); m_view = view; }
-        inline bool              is_empty() const { return m_root.empty(); };
-        inline tools::Optional<Node*> root() const { return m_root; }
-        inline bool              is_root(const Node* node) const { return m_root == node; }
-
-        // node related
-
-        Node*                    create_node(); // Create a raw node.
-        Node*                    create_node(CreateNodeType, const tools::FunctionDescriptor* _signature = nullptr); // Create a given node type in a simple way.
-        Node*                    create_entry_point();
-        VariableNode*            create_variable(const tools::TypeDescriptor *_type, const std::string &_name);
-        VariableRefNode*         create_variable_ref();
-        VariableNode*            create_variable_decl(const tools::TypeDescriptor* _type, const char* _name);
-        LiteralNode*             create_literal(const tools::TypeDescriptor *_type);
-        FunctionNode*            create_function(const tools::FunctionDescriptor&);
-        FunctionNode*            create_operator(const tools::FunctionDescriptor&);
-        IfNode*                  create_cond_struct();
-        ForLoopNode*             create_for_loop();
-        WhileLoopNode*           create_while_loop();
-        Node*                    create_empty_instruction();
-        void                     destroy(Node* _node);
-        std::vector<Scope *>     scopes();
-        std::set<Scope *>        root_scopes();
+        void                     reset();  // Delete all nodes, wires, edges and reset scope.
+        bool                     is_empty() const { return root_scope()->empty(); };
+        ASTNode*                 root_node() const { return m_node_registry.front(); /* we have the guarantee it exists, see constructor */}
+        ASTScope*                root_scope() const;
+        template<class T> T*              component() const  { return m_components.get<T>(); }
+        tools::ComponentBag<Graph>*       components()       { return &m_components; }
+        const tools::ComponentBag<Graph>* components() const { return &m_components; }
+    private:
+        void                    _init();
+        void                    _clear();
+//====== Node(s) Related ===============================================================================================
+    public:
+        ASTNode*                 create_node() { return create_node( this->root_scope() ); }
+        ASTNode*                 create_node(ASTScope*); // Create a raw node.
+        ASTNode*                 create_node(CreateNodeType type, const tools::FunctionDescriptor* desc = nullptr) { return create_node(type, desc, this->root_scope()); }
+        ASTNode*                 create_node(CreateNodeType, const tools::FunctionDescriptor*, ASTScope*);
+        ASTVariable*             create_variable(const tools::TypeDescriptor* type, const std::string& name) { return create_variable(type, name, this->root_scope()); }
+        ASTVariable*             create_variable(const tools::TypeDescriptor* type, const std::string& name, ASTScope* scope );
+        ASTVariableRef*          create_variable_ref() { return create_variable_ref( this->root_scope()); }
+        ASTVariableRef*          create_variable_ref(ASTScope*);
+        ASTVariable*             create_variable_decl(const tools::TypeDescriptor* type, const char* name) { return create_variable_decl(type, name, this->root_scope()); }
+        ASTVariable*             create_variable_decl(const tools::TypeDescriptor* _type, const char* _name, ASTScope*);
+        ASTLiteral*              create_literal(const tools::TypeDescriptor* type) { return create_literal(type, this->root_scope()); }
+        ASTLiteral*              create_literal(const tools::TypeDescriptor *_type, ASTScope*);
+        ASTFunctionCall*         create_function(const tools::FunctionDescriptor& desc) { return create_function(desc, this->root_scope()); }
+        ASTFunctionCall*         create_function(const tools::FunctionDescriptor&, ASTScope*);
+        ASTFunctionCall*         create_operator(const tools::FunctionDescriptor& desc) { return create_operator(desc, this->root_scope()); }
+        ASTFunctionCall*         create_operator(const tools::FunctionDescriptor&, ASTScope*);
+        ASTIf*                   create_cond_struct() { return create_cond_struct(root_scope()); }
+        ASTIf*                   create_cond_struct(ASTScope*);
+        ASTForLoop*              create_for_loop() { return create_for_loop(root_scope()); }
+        ASTForLoop*              create_for_loop(ASTScope*);
+        ASTWhileLoop*            create_while_loop() { return create_while_loop(root_scope()); }
+        ASTWhileLoop*            create_while_loop(ASTScope*);
+        ASTNode*                 create_empty_instruction() { return create_empty_instruction(root_scope()); }
+        ASTNode*                 create_empty_instruction(ASTScope*);
+        ASTNode*                 create_scope(ASTScope* scope);
+        void                     find_and_destroy(ASTNode* node);
+        std::vector<ASTScope *>  scopes();
+        std::set<ASTScope *>     root_scopes();
         NodeRegistry&            nodes() {return m_node_registry;}
         const NodeRegistry&      nodes()const {return m_node_registry;}
-        void                     destroy_next_frame_ex(Node* node, bool with_inputs );
-        void                     destroy_next_frame(Node* node) { destroy_next_frame_ex( node, false ); }
-        void                     destroy_next_frame(Scope* scope);
+        void                     flag_node_to_delete(ASTNode* node, GraphFlags = GraphFlag_NONE);
+        bool                     contains(ASTNode*) const;
 
-        template<typename T> inline VariableNode* create_variable_decl(const char*  _name = "var"){ return create_variable_decl(tools::type::get<T>(), _name); }
-        template<typename T> inline LiteralNode*  create_literal() { return create_literal( tools::type::get<T>()); }
-
-        // edge related
-
-        DirectedEdge  connect(Slot* tail, Slot* head, ConnectFlags = ConnectFlag_NONE );
-        void          connect(const std::set<Slot*>& tails, Slot* head, ConnectFlags _flags);
-        DirectedEdge  connect_to_variable(Slot* output_slot, VariableNode* variable );
-        DirectedEdge  connect_or_merge(Slot* tail, Slot* head);
-        void          disconnect( const DirectedEdge& edge, ConnectFlags = ConnectFlag_NONE );
-        EdgeRegistry& get_edge_registry() { return m_edge_registry; }
-
+        template<typename T> ASTVariable* create_variable_decl(const char* name = "var")          { return create_variable_decl( tools::type::get<T>(), name, this->root_scope()); }
+        template<typename T> ASTVariable* create_variable_decl(const char* name, ASTScope* scope ){ return create_variable_decl( tools::type::get<T>(), name, scope); }
+        template<typename T> ASTLiteral*  create_literal()                 { return create_literal( tools::type::get<T>(), this->root_scope() ); }
+        template<typename T> ASTLiteral*  create_literal(ASTScope* scope ) { return create_literal( tools::type::get<T>(), scope ); }
     private:
-        void on_disconnect_value_side_effects(DirectedEdge);
-        void on_disconnect_flow_side_effects(DirectedEdge);
-        void on_connect_value_side_effects(DirectedEdge);
-        void on_connect_flow_side_effects(DirectedEdge);
+        void                    _insert(ASTNode*, ASTScope*);
+        NodeRegistry::iterator  _erase(NodeRegistry::iterator);
+        void                    _clean_node(ASTNode* node);
 
-        // registries management
-        void add(Node*);           // ... to the registry.
-        void remove(Node*);        // ... from the registry.
-        DirectedEdge add(const DirectedEdge&);    // ... to the registry.
-        void remove(const DirectedEdge&); // ... from the registry.
-
-        tools::Optional<Node*> m_root;
-        const NodeFactory* m_factory  = nullptr;
-        GraphView*         m_view     = nullptr; // non-owned
-        NodeRegistry       m_node_registry;
-        NodeRegistry       m_node_to_delete;
-        EdgeRegistry       m_edge_registry;
+        void                    _reset_scope(ASTNode* scoped_node);
+        void                    _transfer_children(ASTScope* from, ASTScope* to);
+        void                    _change_scope(ASTNode *node, ASTScope* desired_scope);
+//====== Edge(s) Related ===============================================================================================
+    public:
+        ASTSlotLink             connect(ASTNodeSlot* tail, ASTNodeSlot* head, GraphFlags = GraphFlag_NONE );
+        void                    connect(const std::set<ASTNodeSlot*>& tails, ASTNodeSlot* head, GraphFlags _flags);
+        ASTSlotLink             connect_to_variable(ASTNodeSlot* output_slot, ASTVariable* variable );
+        ASTSlotLink             connect_or_merge(ASTNodeSlot* tail, ASTNodeSlot* head);
+        EdgeRegistry::iterator  disconnect(const ASTSlotLink&, GraphFlags = GraphFlag_NONE);
+        const EdgeRegistry&     edges() const { return m_edge_registry; }
+    private:
+        void                    _handle_disconnect_value_side_effects(const ASTSlotLink&);
+        void                    _handle_disconnect_flow_side_effects(const ASTSlotLink&);
+        void                    _handle_connect_value_side_effects(const ASTSlotLink&);
+        void                    _handle_connect_flow_side_effects(const ASTSlotLink&);
+        EdgeRegistry::iterator  _disconnect(EdgeRegistry::iterator, GraphFlags = GraphFlag_NONE );
     };
 }

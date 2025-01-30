@@ -1,6 +1,9 @@
 #include "FileSystem.h"
 #include "tools/core/log.h"
+
+#ifdef PLATFORM_DESKTOP
 #include <whereami.h> // to locate executable directory
+#endif
 
 using namespace tools;
 
@@ -46,6 +49,7 @@ bool Path::create_directories(const Path& path)
 
 Path Path::get_executable_path()
 {
+#if PLATFORM_DESKTOP
     char* path = nullptr;
     int length, dirname_length;
     length = wai_getExecutablePath(nullptr, 0, &dirname_length);
@@ -58,19 +62,22 @@ Path Path::get_executable_path()
         {
             path[length] = '\0';
             result = path;
-            LOG_MESSAGE("tools::system", "executable path: %s\n", result.c_str() );
-            LOG_MESSAGE("tools::system", "  dirname: %s\n", result.parent_path().c_str() );
-            LOG_MESSAGE("tools::system", "  basename: %s\n", result.filename().c_str() );
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "tools::system", "executable path: %s\n", result.c_str() );
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "tools::system", "  dirname: %s\n", result.parent_path().c_str() );
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "tools::system", "  basename: %s\n", result.filename().c_str() );
         }
         else
         {
-            LOG_ERROR("tools::system", "Unable to get executable path\n");
+            TOOLS_LOG(tools::Verbosity_Error, "tools::system", "Unable to get executable path\n");
         }
         delete[] path;
     }
     else
     {
-        LOG_WARNING("tools::system", "Unable to get executable path!\n");
+        TOOLS_LOG(tools::Verbosity_Warning, "tools::system", "Unable to get executable path!\n");
     }
     return result;
+#else
+    return "./fake-executable";
+#endif
 }

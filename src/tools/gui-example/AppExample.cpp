@@ -17,6 +17,15 @@ void AppExample::init()
     //
 }
 
+void AppExample::run()
+{
+    while( !should_stop() )
+    {
+        update();
+        draw();
+    }
+}
+
 void AppExample::update()
 {
     m_base_app.update();

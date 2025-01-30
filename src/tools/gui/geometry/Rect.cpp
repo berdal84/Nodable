@@ -4,7 +4,7 @@
 
 using namespace tools;
 
-Rect tools::Rect::bbox(const std::vector<Vec2>* points )
+Rect tools::Rect::bounding_rect(const std::vector<Vec2>* points )
 {
     ASSERT(points->empty() == false);
     Vec2 first = points->front();
@@ -19,19 +19,15 @@ Rect tools::Rect::bbox(const std::vector<Vec2>* points )
     return result;
 }
 
-Rect Rect::bbox(const std::vector<Rect>* rects )// Return a rectangle overlapping all the rectangles.
+Rect Rect::bounding_rect(const std::vector<Rect>& rect )
 {
-    if( rects->empty() )
-        return {};
-    if ( rects->size() == 1 )
-        return rects->front();
-    Rect result = rects->front();
-    for(auto i = 1; i < rects->size(); ++i )
-        result = Rect::merge(result, (*rects)[i] );
+    Rect result; // default rectangle has zero area, so it will be ignored by bounding_rect
+    for(size_t i = 0; i < rect.size(); ++i)
+        result = Rect::bounding_rect(result, rect[i]);
     return result;
 }
 
-Rect Rect::merge(const Rect& a, const Rect& b )// Return a rectangle overlapping the two rectangles
+Rect Rect::bounding_rect(const Rect& a, const Rect& b )
 {
     ASSERT(!a.is_inverted());
     ASSERT(!b.is_inverted());
@@ -102,3 +98,16 @@ std::vector<Rect> &Rect::align_top(std::vector<Rect>& out, float y)
     return out;
 }
 
+std::vector<Rect>& Rect::center(std::vector<Rect>& out, float x)
+{
+    if ( out.size() == 0 )
+        return out;
+
+    const Rect  bounding = Rect::bounding_rect(out);
+    const float delta    = x - bounding.center().x;
+
+    for (Rect& r : out )
+        r.translate_x( delta );
+
+    return out;
+}

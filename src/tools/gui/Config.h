@@ -17,7 +17,6 @@ namespace tools
         Config() = default;
 
         const char*           app_default_title        = "Default App Title";
-        bool                  vsync                    = false;
         bool                  runtime_debug            = false;
         bool                  fps_limit_on             = true;
         float                 fps_limit                = 60;
@@ -39,7 +38,7 @@ namespace tools
             1.25f,
             2.0f, // LG
         };
-        std::array<Vec4, log::Verbosity_COUNT> log_color
+        std::array<Vec4, Verbosity_COUNT> log_color
         {
             Vec4(0.5f, 0.0f, 0.0f, 1.0f), // red
             Vec4(0.5f, 0.0f, 0.5f, 1.0f), // violet
@@ -62,7 +61,7 @@ namespace tools
                     "default" // FontSlot_ToolBtn
             },
             {
-                "FA-solid-900",           // Icon font name
+                "FA-solid-900",                  // Icon font name
                 "fonts/fa-solid-900.ttf"  // Icon font path
             },
             1.0f  // subsampling

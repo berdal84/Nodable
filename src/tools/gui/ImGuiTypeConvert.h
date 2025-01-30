@@ -7,7 +7,7 @@
 
 namespace tools
 {
-    inline ImRect toImGui(const Rect& r) { return { r.min, r.max }; };
-    inline ImVec2 toImGui(const Vec2& v) { return { v.x, v.y }; };
-    inline ImVec4 toImGui(const Vec4& v) { return { v.x, v.y, v.z, v.w }; };
+    ImRect toImGui(const Rect& r) { return { r.min, r.max }; };
+    ImVec2 toImGui(const Vec2& v) { return { v.x, v.y }; };
+    ImVec4 toImGui(const Vec4& v) { return { v.x, v.y, v.z, v.w }; };
 }

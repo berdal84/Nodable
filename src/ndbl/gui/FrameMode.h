@@ -2,9 +2,9 @@
 
 namespace ndbl
 {
-    enum FrameMode
+    enum class FrameMode
     {
-        FRAME_SELECTION_ONLY = 0,
-        FRAME_ALL = 1
+        SelectedNodeViews = 0,
+        RootNodeView = 1
     };
 }

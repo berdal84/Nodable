@@ -2,50 +2,41 @@
 
 using namespace tools;
 
-log::Verbosity log::s_verbosity = Verbosity_DEFAULT;
-
-
-log::MessageDeque& log::get_messages()
+LogState& tools::get_log_state()
 {
-    static std::deque<log::Message> logs;
-    return logs;
+    static LogState state{};
+    return state;
 }
 
-std::map<std::string, log::Verbosity>& log::get_verbosity_by_category()
+bool tools::show_log_message(const MessageData& message, const VerbosityFilter& filter)
 {
-    // use singleton pattern instead of static member to avoid static code issues
-    static std::map<std::string, log::Verbosity> verbosity_by_category;
-    return verbosity_by_category;
+    if ( message.verbosity <= get_log_verbosity( message.category ) )
+        return filter.data[message.verbosity];
+    return false;
 }
 
-void log::set_verbosity(const std::string& _category, Verbosity _level)
+void tools::set_log_verbosity(const char* category, Verbosity level)
 {
-    get_verbosity_by_category().insert_or_assign(_category, _level );
+    get_log_state().verbosity_by_category.insert_or_assign(category, level );
 }
 
-void log::set_verbosity(Verbosity _level)
+void tools::set_log_verbosity(Verbosity level)
 {
-    s_verbosity = _level;
-    get_verbosity_by_category().clear(); // ensure no overrides remains
+    get_log_state().verbosity = level;
+    get_log_state().verbosity_by_category.clear(); // ensure no overrides remains
 }
 
-log::Verbosity log::get_verbosity(const std::string& _category)
+Verbosity tools::get_log_verbosity(const char* category)
 {
-    std::map<std::string, log::Verbosity>& verbosity_by_category = get_verbosity_by_category();
-    const auto& pair = verbosity_by_category.find(_category);
-    if (pair != verbosity_by_category.end() )
+    const auto& pair = get_log_state().verbosity_by_category.find( category );
+    if (pair != get_log_state().verbosity_by_category.end() )
     {
         return pair->second;
     }
-    return s_verbosity;
+    return get_log_state().verbosity;
 }
 
-log::Verbosity log::get_verbosity()
-{
-    return s_verbosity;
-}
-
-void log::flush()
+void tools::flush()
 {
     std::cout << std::flush;
 }

@@ -50,7 +50,7 @@ namespace testing
             while((std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() < (long long)(duration_in_sec * 1000.f)))
             {
                 end = std::chrono::system_clock::now();
-                LOG_MESSAGE("Test", "Loop iteration %llu (time: %0.1f/%0.1f sec)\n"
+                TOOLS_LOG(tools::Verbosity_Message, "Test", "Loop iteration %llu (time: %0.1f/%0.1f sec)\n"
                 , iteration
                 , float(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000.0f
                 , duration_in_sec);
@@ -62,7 +62,7 @@ namespace testing
 
         void save_screenshot(ndbl::Nodable & app, const char* relative_path)
         {
-            LOG_MESSAGE("Test", "Taking screenshot ...\n");
+            TOOLS_LOG(tools::Verbosity_Message, "Test", "Taking screenshot ...\n");
             auto path = tools::Path::get_executable_path().parent_path() / "screenshots" / relative_path;
             if (!tools::Path::exists(path.parent_path()))
             {

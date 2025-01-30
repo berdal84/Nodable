@@ -4,11 +4,11 @@
 
 using namespace tools;
 
-int main(int argc, char **argv) {
-
+int main(int argc, char **argv)
+{
     ::testing::InitGoogleTest(&argc, argv);
 
-    log::set_verbosity(log::Verbosity_Message);
+    log_set_verbosity(Verbosity_Message);
 
     type_register::log_statistics();
 

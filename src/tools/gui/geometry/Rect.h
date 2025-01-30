@@ -37,68 +37,68 @@ namespace tools
         Rect& operator=(const RectT& _rect)
         { *this = Rect{_rect}; return *this; }
 
-        inline float height() const
+        float height() const
         { return max.y - min.y; }
 
-        inline float width() const
+        float width() const
         { return max.x - min.x; }
 
-        inline Vec2 center() const
+        Vec2 center() const
         { return min + size() / 2.f; }
 
-        inline Vec2 top_left() const
+        Vec2 top_left() const
         { return min; }
 
-        inline Vec2 bottom_left() const
+        Vec2 bottom_left() const
         { return { min.x, max.y }; }
 
-        inline Vec2 bottom_right() const
+        Vec2 bottom_right() const
         { return max; }
 
-        inline Vec2 top_right() const
+        Vec2 top_right() const
         { return { max.x, min.y }; }
 
-        inline Vec2 left() const
+        Vec2 left() const
         { return { min.x, center().y }; }
 
-        inline Vec2 right() const
+        Vec2 right() const
         { return { max.x, center().y }; }
 
-        inline Vec2 size() const
+        Vec2 size() const
         { return { width(), height()}; }
 
-        inline Rect&  translate_x( float d )
+        Rect&  translate_x( float d )
         {
             min.x += d;
             max.x += d;
             return *this;
         }
 
-        inline Rect&  translate_y( float d )
+        Rect&  translate_y( float d )
         {
             min.y += d;
             max.y += d;
             return *this;
         }
 
-        inline Rect& translate(const Vec2& _delta )
+        Rect& translate(const Vec2& _delta )
         {
             min += _delta;
             max += _delta;
             return *this;
         }
 
-        inline Rect& expand(const Vec2&  offset) // Expand rectangle on both x and y axis
+        Rect& expand(const Vec2&  offset) // Expand rectangle on both x and y axis
         {
             min -= offset;
             max += offset;
             return *this;
         }
 
-        inline bool is_inverted() const
+        bool is_inverted() const
         { return min.x > max.x || min.y > max.y; }
 
-        inline bool has_area() const
+        bool has_area() const
         { return width() != 0.f && height() != 0.f; }
 
         static Rect normalize(const Rect& _rect)
@@ -111,11 +111,12 @@ namespace tools
         
         static bool contains(const Rect& a, const Rect& b );
         static bool contains(const Rect& rect, const Vec2& point );
-        static Rect merge(const Rect& a, const Rect& b );
-        static Rect bbox(const std::vector<Rect>* rects );
-        static Rect bbox(const std::vector<Vec2>* points );
+        static Rect bounding_rect(const Rect& a, const Rect& b );
+        static Rect bounding_rect(const std::vector<Rect>& rect );
+        static Rect bounding_rect(const std::vector<Vec2>* points );
         static std::vector<Rect>& make_row( std::vector<Rect> &out, float gap = 0.0f );
-        static std::vector<Rect>& align_top(std::vector<Rect>& out, float p);
+        static std::vector<Rect>& align_top(std::vector<Rect>& out, float y);
+        static std::vector<Rect>& center(std::vector<Rect>& out, float x);
     };
 
 }

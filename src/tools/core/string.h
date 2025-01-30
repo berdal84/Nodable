@@ -114,16 +114,16 @@ namespace tools
             }
         }
 
-        inline bool heap_allocated() const
+        bool heap_allocated() const
         { return m_alloc_strategy == alloc_strategy::HEAP; }
 
-        inline const char* data() const
+        const char* data() const
         { return m_ptr != nullptr ? const_cast<const char*>(m_ptr) : ""; }
 
-        inline const char* c_str() const
+        const char* c_str() const
         { return data(); }
 
-        inline basic_string& append(const CharT* str, size_t length)
+        basic_string& append(const CharT* str, size_t length)
         {
             if( m_capacity < m_length + length )
             {
@@ -134,33 +134,33 @@ namespace tools
             m_ptr[m_length] = 0;
             return *this;
         }
-        inline basic_string& append(const basic_string& str)
+        basic_string& append(const basic_string& str)
         { return append(str.m_ptr, str.m_length); }
 
-        inline basic_string& append(const CharT* str)
+        basic_string& append(const CharT* str)
         { return append(str, strlen(str)); }
 
         template<typename ...Args>
-        inline size_t append_fmt(const char* _format, Args...args )
+        size_t append_fmt(const char* _format, Args...args )
         { return m_length = snprintf(m_ptr+m_length, m_capacity-m_length, _format, args... ); }
 
-        inline size_t append_fmt(const char* _str )
+        size_t append_fmt(const char* _str )
         { return m_length = snprintf(m_ptr+m_length, m_capacity-m_length, "%s", _str ); }
 
         /** provided to easily switch to/from std::string */
-        inline basic_string& push_back(CharT str)
+        basic_string& push_back(CharT str)
         { return append(&str, 1); }
 
-        inline size_t capacity() const
+        size_t capacity() const
         { return m_capacity; }
 
-        inline size_t length() const
+        size_t length() const
         { return m_length; }
 
-        inline bool is_empty() const
+        bool is_empty() const
         { return m_length == 0; }
 
-        inline void clear()
+        void clear()
         {
             m_length = 0;
             if( m_ptr != nullptr) m_ptr[0] = 0;

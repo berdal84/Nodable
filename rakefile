@@ -1,0 +1,115 @@
+require 'fileutils'
+require 'rake/clean'
+
+require_relative 'rake/libs'
+require_relative 'rake/base'
+require_relative 'rake/tools'
+require_relative 'rake/ndbl'
+
+CLEAN.include [OBJ_DIR, DEP_DIR] # intermediate files
+CLOBBER.include [BUILD_DIR] # final files
+
+task :default => :help
+
+desc "Print help message"
+task :help do
+    message = 
+%{=-=-=-=-=-=-=-=- Welcome to Nodable's rakefile =-=-=-=-=-=-=-=-
+
+    To start, run:
+        rake --tasks
+
+    It will print the list of all tasks
+
+    Syntax for rake is:
+        rake <task>
+        rake <task1> <task2>
+
+    Some useful tasks:
+        clobber, clean, build, run, test.
+
+}
+    puts(message)
+end
+
+desc "Rebuild from scratch"
+task :rebuild => [:clobber, :build] do
+    print("Rebuild DONE\n")
+end
+
+multitask :build => ['libs:build', 'tools:build', 'ndbl:build'] do puts "Build DONE" end
+task :test  => ['tools:test', 'ndbl:test']
+task :run   => ['ndbl:app:run']
+
+desc "Rebuild all targets (web & desktop, debug & release)"
+task :rebuild_all do
+
+    platforms = ["web", "desktop"]
+    build_types = ["debug", "release"]
+
+    platforms.each do |platform|
+        build_types.each do |build_type|
+            sh "rake -m clobber build PLATFORM=#{platform}  BUILD_TYPE=#{build_type}"
+        end
+    end
+end
+
+task :install do
+
+    if not BUILD_OS_LINUX
+        raise "Your system (#{BUILD_OS}) is not supported by this script"
+    end
+
+    packages = [
+        "build-essential",
+        "libegl1-mesa-dev",
+        "libdbus-1-dev",
+        "libgtk-3-dev", # for NDF (native file dialog), can theoretically be removed see NFD_sdl.h
+        "libgtest-dev",
+        "libfreetype-dev",
+        "libsdl2-dev",
+        # "libstdc++-11-dev", comes with clang in principle
+    ].join(" ")
+
+    sh "sudo apt-get update && sudo apt-get install #{packages}"
+
+    if PLATFORM_WEB
+
+        # Install EMSDK
+        #--------------
+
+        # Download and install the latest SDK tools.
+        sh "libs/emsdk/emsdk install latest"
+
+        # Make the "latest" SDK "active" for the current user. (writes .emscripten file)
+        sh "libs/emsdk/emsdk activate latest"
+
+    elsif PLATFORM_DESKTOP   
+
+        # Install NFD (native file dialog)
+        #---------------------------------
+
+        nfd_src_dir   = "./libs/nativefiledialog-extended"
+        nfd_build_dir = "./#{BUILD_DIR}/libs/nativefiledialog-extended"
+        nfd_config    = "Release"
+
+        # Make build directory
+        FileUtils.mkdir_p nfd_build_dir
+        
+        # Configure project
+        sh "cmake -S #{nfd_src_dir} -B #{nfd_build_dir}"
+
+        # Build project
+        sh "cmake --build #{nfd_build_dir} --config #{nfd_config}"
+
+        # Install (in /usr/local)
+        sh "sudo cmake --install #{nfd_build_dir} --config #{nfd_config}"
+    end
+end
+
+
+desc "Count Line Of Code (requires cloc, count in ./src by default)"
+task :cloc, [:arg1] do |t, args|
+    _path = args[:arg1] || "./src"
+    sh "cloc --by-file-by-lang #{_path}"
+end

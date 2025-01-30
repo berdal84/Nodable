@@ -35,7 +35,7 @@ namespace ndbl
         void toggle_fullscreen();
         bool pick_file_path(tools::Path& _out_path, DialogType) const;
         void save_screenshot(tools::Path&) const;
-        inline tools::AppView* get_base_view_handle() { return &m_base_view; }
+        tools::AppView* get_base_view_handle() { return &m_base_view; }
         void _on_draw_splashscreen_content();
         void _on_reset_layout();
     protected:
@@ -50,7 +50,6 @@ namespace ndbl
         void draw_config_window();
         void draw_startup_window(ImGuiID dockspace_id);
         void draw_toolbar_window();
-        void draw_interpreter_window();
 
         tools::Texture*    m_logo                    = nullptr;
         bool               m_show_properties_editor  = false;

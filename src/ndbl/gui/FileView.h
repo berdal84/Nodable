@@ -12,7 +12,7 @@ namespace ndbl
 {
     // forward declarations
     class File;
-    class IAppCtx;
+    class GraphView;
     class Graph;
 
     enum OverlayPos {
@@ -44,8 +44,8 @@ namespace ndbl
         FileView(const FileView&) = delete;
 		~FileView() = default;
 
-        SIGNAL(on_text_view_changed);
-        SIGNAL(on_graph_view_changed);
+        tools::SimpleSignal signal_text_view_changed;
+        tools::SimpleSignal signal_graph_view_changed;
 
         void                           update(float d);
         void                           init(File& _file);
@@ -67,6 +67,7 @@ namespace ndbl
     private:
         std::array<std::vector<OverlayData>, OverlayType_COUNT> m_overlay_data;
         File*        m_file;
+        GraphView*   m_graph_view;
         std::string  m_text_overlay_window_name;
         std::string  m_graph_overlay_window_name;
 		TextEditor   m_text_editor;

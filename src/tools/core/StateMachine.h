@@ -26,8 +26,8 @@ namespace tools
     //
     struct State
     {
-        const char*      name  = nullptr;
-        Delegate_NoArgs  delegate[When_COUNT];
+        const char*      name{};
+        SimpleDelegate   delegate[When_COUNT]{};
     };
 
     class StateMachine
@@ -53,19 +53,19 @@ namespace tools
             ASSERT(state != nullptr);
 
             // Override the delegate
-            state->delegate[when] = Delegate_NoArgs::from_method<TMethod>(m_context_ptr);
+            state->delegate[when] = SimpleDelegate::from_method<TMethod>(m_context_ptr);
         }
 
         void change_state(const char* name);
         void exit_state();
 
     private:
+        bool   started() const { return m_current_state != nullptr; }
         void   add_state(State*);
         State* get_state(const char* name);
-        void   change_state(State*);
+        void   set_next_state(State *state);
 
         void*  m_context_ptr;
-        bool   m_started       = false;
         State* m_default_state = nullptr;
         State* m_current_state = nullptr;
         State* m_next_state    = nullptr;

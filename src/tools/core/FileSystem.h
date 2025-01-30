@@ -27,13 +27,13 @@ namespace tools
         bool         empty() const;
         Path         parent_path() const;
 
-        inline static bool exists(const Path& path)
+        static bool exists(const Path& path)
         { return std::filesystem::exists(path.m_path); };
 
-        inline Path& operator=(const char* other)
+        Path& operator=(const char* other)
         { m_path = other; return *this; }
 
-        inline Path& operator/(const Path& other)
+        Path& operator/(const Path& other)
         { m_path /= other.m_path; return *this; }
 
         static bool  create_directories(const Path&);

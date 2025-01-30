@@ -1,17 +1,18 @@
 #include "AppView.h"
-
+#include <lodepng/lodepng.h> // to save screenshot as PNG
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/backends/imgui_impl_sdl.h>
-#include <lodepng/lodepng.h> // to save screenshot as PNG
-#include <nfd.h>
-#include <gl3w.h>
+
+#if PLATFORM_DESKTOP
+    #include <nfd.h>
+#endif
 
 #include "tools/core/log.h"
 #include "tools/core/System.h"
 #include "tools/core/EventManager.h"
-#include "tools/core/memory/memory.h"
 #include "tools/gui/TextureManager.h"
 #include "tools/gui/FontManager.h"
+#include "tools/gui/GL/helpers.h"
 
 #include "App.h"
 #include "Config.h"
@@ -23,6 +24,7 @@ constexpr const char* k_status_window_name = "Status Bar";
 
 void AppView::init(App* _app)
 {
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "init ...\n");
     ASSERT(_app != nullptr);
     m_app = _app;
     Config* cfg = get_config();
@@ -34,19 +36,34 @@ void AppView::init(App* _app)
     // Setup SDL
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0)
     {
-        LOG_ERROR( "tools::App", "SDL Error: %s\n", SDL_GetError());
-        VERIFY(false, "Unable to flag_initialized SDL");
+        TOOLS_LOG(tools::Verbosity_Error,  "tools::AppView", "SDL Error: %s\n", SDL_GetError());
+        VERIFY(false, "Unable to initialize SDL");
     }
 
     // Setup window
-    LOG_VERBOSE("tools::App", "setup SDL ...\n");
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "setup SDL ...\n");
+
+    // Decide GL+GLSL versions
+#if PLATFORM_DESKTOP
+    // GL 3.0 + GLSL 130
+    const char* glsl_version = "#version 130";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#elif PLATFORM_WEB
+    // GL ES 2.0 + GLSL 100
+    const char* glsl_version = "#version 100";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#endif
+
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    
     SDL_DisplayMode current;
     SDL_GetCurrentDisplayMode(0, &current);
     m_title = cfg->app_default_title;
@@ -56,19 +73,22 @@ void AppView::init(App* _app)
                                      800,
                                      600,
                                      SDL_WINDOW_OPENGL |
-                                             SDL_WINDOW_RESIZABLE |
-                                             SDL_WINDOW_MAXIMIZED |
-                                             SDL_WINDOW_SHOWN
+                                     SDL_WINDOW_RESIZABLE |
+                                     SDL_WINDOW_MAXIMIZED |
+                                     SDL_WINDOW_SHOWN
     );
-
+    VERIFY(m_sdl_window, "SDL_CreateWindow failed" );
+    
     m_sdl_gl_context = SDL_GL_CreateContext(m_sdl_window);
-    SDL_GL_SetSwapInterval((int)cfg->vsync);
+    VERIFY(m_sdl_gl_context, "SDL_GL_CreateContext failed" );
 
-    LOG_VERBOSE("tools::App", "gl3w init_ex ...\n");
+#if PLATFORM_DESKTOP
+    SDL_GL_SetSwapInterval(1); // https://wiki.libsdl.org/SDL2/SDL_GL_SetSwapInterval
     gl3wInit();
+#endif
 
     // Setup Dear ImGui binding
-    LOG_VERBOSE("tools::App", "ImGui init_ex ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "init ImGui ...\n");
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -83,7 +103,7 @@ void AppView::init(App* _app)
     // Override ImGui's default Style
     // TODO: consider declaring new members in Config rather than modifying values from there.
     //       see colors[ImGuiCol_Button]
-    LOG_VERBOSE("tools::App", "patch ImGui's style ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "patch ImGui's style ...\n");
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4 * colors = style.Colors;
     colors[ImGuiCol_Text]                   = Vec4(0.20f, 0.20f, 0.20f, 1.00f);
@@ -165,46 +185,49 @@ void AppView::init(App* _app)
     }
 
     // Setup Platform/Renderer bindings
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "init backend for OpenGL ...\n");
     if( !ImGui_ImplSDL2_InitForOpenGL(m_sdl_window, m_sdl_gl_context) )
     {
-        LOG_ERROR("tools::App", "Unable to init_ex NFD\n");
-        VERIFY(false, "Unable to flag_initialized NFD");
+        TOOLS_LOG(tools::Verbosity_Error, "tools::AppView", "Unable to ImGui_ImplSDL2_InitForOpenGL\n");
     }
-    if( !ImGui_ImplOpenGL3_Init(/* default glsl_version*/) )
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "init OpenGL (glsl_version: %s) ...\n", glsl_version);
+    if( !ImGui_ImplOpenGL3_Init(glsl_version) )
     {
-        LOG_ERROR("tools::App", "Unable to init_ex NFD\n");
-        VERIFY(false, "Unable to flag_initialized NFD");
+        TOOLS_LOG(tools::Verbosity_Error, "tools::AppView", "Unable to ImGui_ImplSDL2_InitForOpenGL\n");
     }
+#if PLATFORM_DESKTOP
     if (NFD_Init() != NFD_OKAY)
     {
-        LOG_ERROR("tools::App", "Unable to init_ex NFD\n");
-        VERIFY(false, "Unable to flag_initialized NFD");
+        TOOLS_LOG(tools::Verbosity_Error, "tools::AppView", "Unable to NFD_Init\n");
     }
-
+#endif
     show_splashscreen = cfg->show_splashscreen_default;
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "init DONE\n");
 }
 
 void AppView::shutdown()
 {
-    LOG_MESSAGE("tools::AppView", "Shutting down ...\n");
-    LOG_MESSAGE("tools::AppView", "Shutting down managers ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "Shutting down ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "Shutting down managers ...\n");
     shutdown_action_manager(m_action_manager);
     shutdown_event_manager(m_event_manager);
     shutdown_font_manager(m_font_manager);
     shutdown_texture_manager(m_texture_manager);
-    LOG_MESSAGE("tools::AppView", "Shutting down OpenGL3 ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "Shutting down OpenGL3 ...\n");
     ImGui_ImplOpenGL3_Shutdown();
-    LOG_MESSAGE("tools::AppView", "Shutting down SDL2 ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "Shutting down SDL2 ...\n");
     ImGui_ImplSDL2_Shutdown();
-    LOG_MESSAGE("tools::AppView", "Destroying ImGui context ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "Destroying ImGui context ...\n");
     ImGui::DestroyContext    ();
-    LOG_MESSAGE("tools::AppView", "Shutdown SDL ...\n");
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "Shutdown SDL ...\n");
     SDL_GL_DeleteContext     (m_sdl_gl_context);
     SDL_DestroyWindow        (m_sdl_window);
     SDL_Quit                 ();
-    LOG_MESSAGE("tools::AppView", "Quitting NFD (Native File Dialog) ...\n");
+#if PLATFORM_DESKTOP
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "Quitting NFD (Native File Dialog) ...\n");
     NFD_Quit();
-    LOG_MESSAGE("tools::AppView", "Shutdown OK\n");
+#endif
+    TOOLS_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "Shutdown OK\n");
 }
 
 void AppView::update()
@@ -346,7 +369,7 @@ void AppView::begin_draw()
             dock_window( k_status_window_name, Dockspace_BOTTOM );
 
             // Possibly execute some user-defined code
-            on_reset_layout.emit();
+            signal_reset_layout.emit();
 
             // Finish the build
             ImGui::DockBuilderFinish( m_dockspaces[Dockspace_ROOT] );
@@ -358,49 +381,62 @@ void AppView::begin_draw()
         ImGui::DockSpace( get_dockspace( Dockspace_ROOT ) );
 
         // Status Window
-        log::MessageDeque& messages = log::get_messages();
-        if ( ImGui::Begin( k_status_window_name ) && !messages.empty())
+        if ( ImGui::Begin( k_status_window_name ) && !get_log_state().messages.empty())
         {
             const float line_height = ImGui::GetTextLineHeightWithSpacing();
-            static int verbosity_filter = -1; // all
-
 
             if ( ImGui::BeginChild("filters", ImVec2(-1, line_height * 1.2f )) )
             {
                 ImGui::BeginGroup();
-                ImGui::Text("Filter:"); ImGui::SameLine();
-                if ( ImGui::RadioButton("All", verbosity_filter == -1 ) )
-                    verbosity_filter = -1; ImGui::SameLine();
-                if ( ImGui::RadioButton("Debug", verbosity_filter == log::Verbosity_Verbose ) )
-                    verbosity_filter = log::Verbosity_Verbose; ImGui::SameLine();
-                if ( ImGui::RadioButton("Messages", verbosity_filter == log::Verbosity_Message ) )
-                    verbosity_filter = log::Verbosity_Message; ImGui::SameLine();
-                if ( ImGui::RadioButton("Warnings", verbosity_filter == log::Verbosity_Warning ) )
-                    verbosity_filter = log::Verbosity_Warning; ImGui::SameLine();
-                if ( ImGui::RadioButton("Errors", verbosity_filter == log::Verbosity_Error ) )
-                    verbosity_filter = log::Verbosity_Error; ImGui::SameLine();
+                ImGui::Text("Filter Messages: "); ImGui::SameLine();
+
+                auto draw_filter = [&](const char* label, tools::Verbosity verbosity)
+                {
+                    ImGui::Checkbox(label, &get_log_state().verbosity_filter.data[verbosity] );
+                };
+
+                auto draw_filter_all = [&](const char* label)
+                {
+                    bool checked = get_log_state().verbosity_filter.all_checked();
+                    if ( ImGui::Checkbox(label, &checked ) )
+                    {
+                        get_log_state().verbosity_filter.reset_all(checked);
+                    }
+                };
+
+                draw_filter_all("All" );                            ImGui::SameLine();
+                draw_filter("Errors"      , Verbosity_Error );      ImGui::SameLine();
+                draw_filter("Warnings"    , Verbosity_Warning );    ImGui::SameLine();
+                draw_filter("Messages"    , Verbosity_Message );    ImGui::SameLine();
+                draw_filter("Diagnostics" , Verbosity_Diagnostic ); ImGui::SameLine();
+
                 ImGui::EndGroup();
             }
             ImGui::EndChild();
 
             if ( ImGui::BeginChild("messages") )
             {
-                u32_t message_to_display_count = std::min( messages.size(), cfg->log_message_display_max_count );
-                auto it = messages.rbegin();
+                u32_t message_to_display_count = std::min( get_log_state().messages.size(), cfg->log_message_display_max_count );
                 size_t message_processed_count = 0;
                 size_t message_displayed_count = 0;
 
-                while ( message_displayed_count < message_to_display_count && it != messages.rend() )
+                auto it = get_log_state().messages.rbegin();
+                while ( message_displayed_count < message_to_display_count && it != get_log_state().messages.rend() )
                 {
-                    if ( it->verbosity <= verbosity_filter || verbosity_filter == -1 )
+                    const MessageData& message = *it;
+                    if ( show_log_message( message, get_log_state().verbosity_filter ) )
                     {
-                        ImRect line_rect{ ImGui::GetCursorScreenPos(), ImGui::GetCursorScreenPos() };
+                        ImRect line_rect{
+                            ImGui::GetCursorScreenPos(),
+                            ImGui::GetCursorScreenPos()
+                        };
+
                         line_rect.Max.y += line_height;
                         line_rect.Max.x += 100.0f;
 
                         if ( ImGui::IsRectVisible( line_rect.Min, line_rect.Max ) )// draw only when line is visible to optimize rendering
                         {
-                            ImGui::TextColored( cfg->log_color[it->verbosity], "%s", it->text.c_str() );
+                            ImGui::TextColored( cfg->log_color[message.verbosity], "%s", message.text.c_str() );
                             ++message_displayed_count;
                         }
                         else
@@ -448,10 +484,12 @@ void AppView::end_draw()
 
     SDL_GL_MakeCurrent(m_sdl_window, m_sdl_gl_context);
     ImGuiIO& io = ImGui::GetIO();
+
     glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
     Vec4& color = cfg->background_color.value;
     glClearColor( color.x, color.y, color.z, color.w);
     glClear(GL_COLOR_BUFFER_BIT);
+
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Update and Render additional Platform Windows
@@ -493,6 +531,7 @@ void AppView::end_draw()
     SDL_SetWindowTitle(m_sdl_window, title);
 }
 
+#if PLATFORM_DESKTOP
 bool AppView::pick_file_path(Path& _out_path, DialogType _dialog_type) const
 {
     nfdchar_t *picked_path;
@@ -515,13 +554,27 @@ bool AppView::pick_file_path(Path& _out_path, DialogType _dialog_type) const
             NFD_FreePath(picked_path);
             return true;
         case NFD_CANCEL:
-            LOG_MESSAGE("tools::AppView", "User pressed cancel.");
+            TOOLS_DEBUG_LOG(tools::Verbosity_Diagnostic, "tools::AppView", "pick_file_path cancelled by user");
             return false;
         default:
-            LOG_ERROR("tools::AppView", "%s\n", NFD_GetError());
+            TOOLS_LOG(tools::Verbosity_Error, "tools::AppView", "%s\n", NFD_GetError());
             return false;
     }
 }
+
+#elif PLATFORM_WEB
+
+EM_JS(void, call_pick_file_path, (bool), {
+  alert('pick_file_path_impl not implemented yet');
+  throw 'all done';
+});
+bool AppView::pick_file_path(Path& _out_path, DialogType _dialog_type) const
+{
+    bool result;
+    call_pick_file_path(result);
+    return result;
+}
+#endif
 
 ImGuiID AppView::get_dockspace(Dockspace dockspace)const
 {
@@ -547,14 +600,20 @@ void AppView::draw_splashscreen()
     auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize;
     if ( ImGui::BeginPopupModal( cfg->splashscreen_window_label, &show_splashscreen, flags) )
     {
-        on_draw_splashscreen_content.emit();
+        signal_draw_splashscreen_content.emit();
         ImGui::EndPopup();
     }
 }
 
+
+
 std::vector<unsigned char> AppView::take_screenshot() const
 {
-    LOG_MESSAGE("tools::AppView", "Taking screenshot ...\n");
+#if PLATFORM_WEB
+    return {};
+    // TODO: some glXXX are unavailable, but anyways it's not something we need in WEB, we can use browser for that.
+#else
+    TOOLS_LOG(tools::Verbosity_Message, "tools::AppView", "Taking screenshot ...\n");
     int width, height;
     SDL_GetWindowSize(m_sdl_window, &width, &height);
     GLsizei stride = 4 * width;
@@ -574,9 +633,11 @@ std::vector<unsigned char> AppView::take_screenshot() const
 
     std::vector<unsigned char> out;
     lodepng::encode(out, flipped.data(), width, height, LCT_RGBA);
-    LOG_MESSAGE("tools::AppView", "Taking screenshot OK\n");
+    TOOLS_LOG(tools::Verbosity_Message, "tools::AppView", "Taking screenshot " TOOLS_OK "\n");
     return out;
+#endif
 }
+
 
 bool AppView::is_fullscreen() const
 {
@@ -596,9 +657,9 @@ int AppView::fps()
 void AppView::save_screenshot( tools::Path path) const
 {
     std::vector<unsigned char> out = take_screenshot();
-    LOG_MESSAGE("tools::App", "Save screenshot ...\n");
+    TOOLS_LOG(tools::Verbosity_Message, "tools::App", "Save screenshot ...\n");
     lodepng::save_file(out, path.string());
-    LOG_MESSAGE("tools::App", "Save screenshot OK (%s)\n", path.c_str());
+    TOOLS_LOG(tools::Verbosity_Message, "tools::App", "Save screenshot " TOOLS_OK " (%s)\n", path.c_str());
 }
 
 void AppView::set_title( const char* title )

@@ -196,9 +196,9 @@ namespace tools
         const IInvokableMethod*   get_method(const char* _name) const;
         bool                      is_child_of(std::type_index _possible_parent_id, bool _selfCheck = true) const;
         template<class T>
-        inline bool               is_child_of() const { return is_child_of(std::type_index(typeid(T)), true); }
+        bool               is_child_of() const { return is_child_of(std::type_index(typeid(T)), true); }
         template<class T>
-        inline bool               is_not_child_of() const { return !is_child_of<T>(); }
+        bool               is_not_child_of() const { return !is_child_of<T>(); }
 
     protected:
         std::unordered_set<std::type_index>                      m_parents;
@@ -372,7 +372,7 @@ namespace tools
     }
 
     template<class TargetClass>
-    inline TargetClass* cast(TargetClass* source_ptr)
+    TargetClass* cast(TargetClass* source_ptr)
     { return source_ptr; }
 
     template<class TargetClass, class SourceClass>

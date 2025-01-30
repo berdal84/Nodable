@@ -1,5 +1,4 @@
 #include "ndbl/gui/Nodable.h"
-#include "tools/core/memory/memory.h"
 #include "tools/core/TryCatch.h"
 
 using namespace tools;
@@ -11,11 +10,7 @@ int main(int argc, char *argv[])
     {
         Nodable app;
         app.init();
-        while ( !app.should_stop() )
-        {
-            app.update();
-            app.draw();
-        }
+        app.run();
         app.shutdown();
     }
     TOOLS_catch

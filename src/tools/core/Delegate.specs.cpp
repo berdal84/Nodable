@@ -4,14 +4,14 @@
 
 using namespace tools;
 
-TEST(Delegate, default_constructor )
+TEST(SimpleDelegate, default_constructor )
 {
-    Delegate<void> d{};
+    SimpleDelegate d;
 }
 
-TEST(Delegate, default_call )
+TEST(SimpleDelegate, default_call )
 {
-    Delegate<void> d{};
+    SimpleDelegate d;
     d.call();
 }
 
@@ -26,7 +26,7 @@ TEST(Delegate, void_no_args__on_classes )
     };
 
     MyClass obj;
-    auto d = Delegate<void>::from_method<&MyClass::method>(&obj);
+    auto d = SimpleDelegate::from_method<&MyClass::method>(&obj);
     d.call();
 
     EXPECT_TRUE(success);
@@ -34,34 +34,29 @@ TEST(Delegate, void_no_args__on_classes )
 
 TEST(Delegate, void_no_args__on_structs )
 {
-    static bool success = false;
-
     struct MyStruct
     {
-        void method() { success = true; };
+        bool ok = false;
+        void set_ok() { ok = true; };
     };
 
     MyStruct obj;
-    auto d = Delegate<void>::from_method<&MyStruct::method>(&obj);
+    auto d = SimpleDelegate::from_method<&MyStruct::set_ok>(&obj);
     d.call();
-
-    EXPECT_TRUE(success);
+    EXPECT_TRUE(obj.ok);
 }
 
 TEST(Delegate, bind )
 {
-    static bool success = false;
-
     struct MyStruct
     {
-        void method() { success = true; };
+        bool ok = false;
+        void set_ok() { ok = true; };
     };
 
     MyStruct obj;
-
-    auto d = Delegate<void>::from_method<&MyStruct::method>();
+    auto d = SimpleDelegate::from_method<&MyStruct::set_ok>(nullptr);
     d.bind(&obj);
     d.call();
-
-    EXPECT_TRUE(success);
+    EXPECT_TRUE(obj.ok);
 }

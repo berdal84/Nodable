@@ -12,7 +12,7 @@ namespace tools
     static double clamped_lerp(double a, double b, double f)
     { return glm::mix(a, b, glm::clamp( f, 0.0, 1.0) ); }
 
-    inline float wave(float min, float max, double time, float speed)
+    static float wave(float min, float max, double time, float speed)
     {
         float factor = 0.5f * ( 1.0f + std::sin( time * speed ) );
         return clamped_lerp(min, max, factor);
